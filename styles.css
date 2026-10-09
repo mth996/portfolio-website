@@ -552,3 +552,43 @@ body.home .project-library .project-scene:not(.project-featured) .scene-art.scen
  background:#050608!important;
  transform:none!important;
 }
+
+
+/* 2026-10-10 — Poster showcase row: Traces + In the Dark */
+body.home .project-library .project-scene[href="traces-white-soul.html"],
+body.home .project-library .project-scene[href="in-the-dark.html"]{
+ overflow:hidden;
+}
+body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
+body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+ aspect-ratio:4/5!important;
+ min-height:0!important;
+ height:auto!important;
+ padding:0!important;
+ background:#050608!important;
+ border:0!important;
+ border-bottom:0!important;
+ display:block!important;
+ position:relative!important;
+}
+body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art>img,
+body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art>img{
+ position:absolute!important;
+ inset:0!important;
+ width:100%!important;
+ height:100%!important;
+ max-height:none!important;
+ object-fit:contain!important;
+ object-position:center!important;
+ background:#050608!important;
+}
+body.home .project-library .project-scene[href="traces-white-soul.html"]:hover .scene-art,
+body.home .project-library .project-scene[href="in-the-dark.html"]:hover .scene-art{
+ transform:none!important;
+}
+@media(max-width:760px){
+ body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
+ body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+  aspect-ratio:4/5!important;
+ }
+}
