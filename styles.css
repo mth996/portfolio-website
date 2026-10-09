@@ -523,3 +523,32 @@ body.home .project-library .project-scene:not(.project-featured) .scene-art.scen
  object-fit:cover!important;
  object-position:center!important;
 }
+
+
+/* 2026-10-10 — Pair portrait projects and preserve complete poster artwork */
+body.home .project-library .project-scene:has(.scene-art--traces),
+body.home .project-library .project-scene:has(.scene-art--in-the-dark){
+ align-self:stretch;
+}
+body.home .project-library .project-scene:not(.project-featured) .scene-art.scene-art--traces,
+body.home .project-library .project-scene:not(.project-featured) .scene-art.scene-art--in-the-dark{
+ aspect-ratio:16/9!important;
+ min-height:0!important;
+ height:auto!important;
+ display:block!important;
+ position:relative!important;
+ background:#050608!important;
+ overflow:hidden!important;
+}
+body.home .project-library .project-scene:not(.project-featured) .scene-art.scene-art--traces>img,
+body.home .project-library .project-scene:not(.project-featured) .scene-art.scene-art--in-the-dark>img{
+ position:absolute!important;
+ inset:0!important;
+ width:100%!important;
+ height:100%!important;
+ max-height:none!important;
+ object-fit:contain!important;
+ object-position:center!important;
+ background:#050608!important;
+ transform:none!important;
+}
