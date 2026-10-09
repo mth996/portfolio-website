@@ -196,3 +196,22 @@ body.home .profile-section .section-title{
  line-height:1.04;
  text-shadow:0 2px 0 rgba(114,221,255,.08),0 14px 30px rgba(0,0,0,.36);
 }
+
+
+/* 2026-10-09 — Prevent Museum Conservation title/art collision */
+body.home .project-scene--museum .scene-copy{
+ min-width:0;
+ padding-right:18px;
+}
+body.home .project-scene--museum .scene-copy h3{
+ font-size:clamp(1.75rem,3.15vw,3.35rem);
+ line-height:1.07;
+ max-width:94%;
+}
+@media(max-width:760px){
+ body.home .project-scene--museum .scene-copy{padding-right:0}
+ body.home .project-scene--museum .scene-copy h3{
+  font-size:clamp(1.8rem,7.9vw,2.95rem);
+  max-width:100%;
+ }
+}
