@@ -320,3 +320,46 @@ body.home .hero h1 span{
  font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
  font-weight:900;
 }
+
+
+/* 2026-10-09 — Homepage readability and section-heading normalization */
+body.home .showcase-head{
+ text-align:center;
+}
+body.home .showcase-head .section-title{
+ font-size:clamp(2.65rem,5.2vw,4.5rem);
+ max-width:none;
+ width:100%;
+ text-align:center;
+}
+body.home .showcase-head p{
+ font-size:1.12rem;
+ line-height:1.78;
+}
+body.home .scene-copy p{
+ font-size:1.08rem;
+ line-height:1.72;
+}
+body.home .profile-copy{
+ font-size:1.08rem;
+ line-height:1.85;
+}
+body.home .profile-copy>p:first-child{
+ font-size:1.22rem;
+ line-height:1.8;
+}
+@media(max-width:760px){
+ body.home .showcase-head .section-title{
+  font-size:clamp(2.35rem,10.5vw,3.5rem);
+ }
+ body.home .showcase-head p,
+ body.home .scene-copy p{
+  font-size:1.03rem;
+ }
+ body.home .profile-copy{
+  font-size:1.03rem;
+ }
+ body.home .profile-copy>p:first-child{
+  font-size:1.12rem;
+ }
+}
