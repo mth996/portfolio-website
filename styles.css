@@ -292,13 +292,10 @@ body.home .project-scene--museum .scene-copy h3{
 /* 2026-10-09 — Clean mobile hero outline rendering */
 @media(max-width:760px){
  body.home .hero h1 span{
-  -webkit-text-stroke:0!important;
-  text-shadow:
-   -1px -1px 0 rgba(157,123,255,.82),
-    1px -1px 0 rgba(157,123,255,.82),
-   -1px  1px 0 rgba(157,123,255,.82),
-    1px  1px 0 rgba(157,123,255,.82)!important;
+  color:transparent!important;
+  -webkit-text-fill-color:transparent!important;
+  -webkit-text-stroke:1px rgba(157,123,255,.82)!important;
+  text-shadow:none!important;
   filter:none!important;
-  color:#050608!important;
  }
 }
