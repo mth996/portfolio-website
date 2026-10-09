@@ -46,3 +46,18 @@ body.home .profile-section{background:radial-gradient(circle at 12% 50%,rgba(141
  body.home .project-scene:nth-child(n) .scene-art{transform:none}
  body.home .project-scene:hover .scene-art{transform:translateY(-3px)}
 }
+
+/* Case-study title alignment and legibility */
+.project-hero h1{
+ font-size:clamp(3rem,7vw,6.4rem);
+ line-height:1.02;
+ letter-spacing:.005em;
+ max-width:1000px;
+ overflow-wrap:normal;
+ word-break:normal;
+}
+.project-hero .kicker{margin-bottom:18px}
+.project-hero .meta{margin-top:22px}
+@media(max-width:760px){
+ .project-hero h1{font-size:clamp(2.8rem,12vw,4.8rem);line-height:1.04;letter-spacing:0}
+}
