@@ -289,15 +289,17 @@ body.home .project-scene--museum .scene-copy h3{
 }
 
 
-/* 2026-10-09 — Clean mobile hero outline rendering */
+/* 2026-10-09 — Stable mobile hero outline rendering */
 @media(max-width:760px){
  body.home .hero h1 span{
-  color:transparent!important;
+  color:rgba(157,123,255,.82)!important;
   -webkit-text-fill-color:transparent!important;
-  -webkit-text-stroke:1px rgba(157,123,255,.82)!important;
-  text-shadow:none!important;
+  -webkit-text-stroke:0!important;
+  text-shadow:
+   -1px -1px 0 rgba(157,123,255,.82),
+    1px -1px 0 rgba(157,123,255,.82),
+   -1px  1px 0 rgba(157,123,255,.82),
+    1px  1px 0 rgba(157,123,255,.82)!important;
   filter:none!important;
-  font-family:"Arial Black","Arial Narrow",Arial,sans-serif!important;
-  font-weight:900;
  }
 }
