@@ -303,3 +303,20 @@ body.home .project-scene--museum .scene-copy h3{
   filter:none!important;
  }
 }
+
+
+/* 2026-10-09 — Unified homepage display typography
+   Match hero, Selected Projects and Get in Touch to Design / Immersion. */
+body.home .hero h1,
+body.home .showcase-head .section-title,
+body.home .footer h2{
+ font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+ font-weight:900;
+ font-stretch:normal;
+}
+
+/* Preserve the existing hero color treatments while using the unified face. */
+body.home .hero h1 span{
+ font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+ font-weight:900;
+}
