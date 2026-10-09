@@ -592,3 +592,52 @@ body.home .project-library .project-scene[href="in-the-dark.html"]:hover .scene-
   aspect-ratio:4/5!important;
  }
 }
+
+
+/* 2026-10-10 — Large borderless poster row, desktop and phone */
+body.home .project-library .project-scene[href="traces-white-soul.html"],
+body.home .project-library .project-scene[href="in-the-dark.html"]{
+ border:0!important;
+ background:transparent!important;
+ border-radius:0!important;
+ overflow:visible!important;
+}
+body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
+body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+ aspect-ratio:3/4!important;
+ width:100%!important;
+ height:auto!important;
+ min-height:0!important;
+ border:0!important;
+ background:transparent!important;
+ box-shadow:none!important;
+ overflow:hidden!important;
+}
+body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art>img,
+body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art>img{
+ object-fit:contain!important;
+ object-position:center!important;
+ background:transparent!important;
+}
+body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-copy,
+body.home .project-library .project-scene[href="in-the-dark.html"] .scene-copy{
+ border:0!important;
+ background:#080a0d;
+}
+@media(min-width:761px){
+ body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
+ body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+  aspect-ratio:1/1.08!important;
+ }
+}
+@media(max-width:760px){
+ body.home .project-library .project-scene[href="traces-white-soul.html"],
+ body.home .project-library .project-scene[href="in-the-dark.html"]{
+  width:100%!important;
+ }
+ body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
+ body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+  aspect-ratio:3/4!important;
+  width:100%!important;
+ }
+}
