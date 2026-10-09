@@ -184,3 +184,15 @@ body.home .scene-copy h3{
   line-height:1.07;
  }
 }
+
+
+/* 2026-10-09 — Unify profile statement typography */
+body.home .profile-section .section-title{
+ font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
+ font-weight:900;
+ font-stretch:normal;
+ text-transform:uppercase;
+ letter-spacing:.018em;
+ line-height:1.04;
+ text-shadow:0 2px 0 rgba(114,221,255,.08),0 14px 30px rgba(0,0,0,.36);
+}
