@@ -168,3 +168,19 @@ body.home .footer a{border-color:rgba(114,221,255,.42)}
  body.home .showcase-head:after{display:none}
  body.home .scene-copy h3{line-height:1.04;letter-spacing:.005em}
 }
+
+
+/* 2026-10-09 — Compact homepage project titles */
+body.home .scene-copy h3{
+ font-size:clamp(1.9rem,3.65vw,3.75rem);
+ line-height:1.06;
+ letter-spacing:.01em;
+ max-width:100%;
+ margin-bottom:20px;
+}
+@media(max-width:760px){
+ body.home .scene-copy h3{
+  font-size:clamp(1.9rem,8.5vw,3.15rem);
+  line-height:1.07;
+ }
+}
