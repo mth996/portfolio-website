@@ -246,3 +246,25 @@ body.home .project-scene--museum .scene-copy h3{
   white-space:normal;
  }
 }
+
+
+/* 2026-10-09 — Mobile titles: target two lines maximum */
+@media(max-width:760px){
+ body.home .scene-copy h3{
+  font-size:clamp(1.5rem,6.35vw,2.35rem);
+  line-height:1.08;
+  letter-spacing:0;
+  max-width:100%;
+ }
+ body.home .project-scene--museum .scene-copy h3{
+  font-size:clamp(1.4rem,5.85vw,2.15rem);
+  line-height:1.08;
+ }
+ .project-hero h1{
+  font-size:clamp(1.8rem,7.4vw,2.75rem);
+  line-height:1.07;
+  letter-spacing:.005em;
+  max-width:100%;
+  white-space:normal;
+ }
+}
