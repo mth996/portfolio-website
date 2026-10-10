@@ -643,8 +643,8 @@ body.home .project-library .project-scene[href="in-the-dark.html"] .scene-copy{
 }
 
 /* 2026-10-10 — Keep portrait posters tall and undistorted */
-body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
-body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+body.home .project-library .project-scene:not(.project-featured) .scene-art.scene-art--traces,
+body.home .project-library .project-scene:not(.project-featured) .scene-art.scene-art--in-the-dark{
  aspect-ratio:3 / 4!important;
 }
 
