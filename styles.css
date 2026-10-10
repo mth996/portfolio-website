@@ -641,3 +641,20 @@ body.home .project-library .project-scene[href="in-the-dark.html"] .scene-copy{
   width:100%!important;
  }
 }
+
+/* 2026-10-10 — Keep portrait posters tall and undistorted */
+body.home .project-library .project-scene[href="traces-white-soul.html"] .scene-art,
+body.home .project-library .project-scene[href="in-the-dark.html"] .scene-art{
+ aspect-ratio:3 / 4!important;
+}
+
+/* Match the featured project title to the library card titles */
+body.home .project-library .project-featured .scene-copy h3{
+ font-size:clamp(1.45rem,2.25vw,2.2rem);
+ line-height:1.08;
+}
+@media(max-width:760px){
+ body.home .project-library .project-featured .scene-copy h3{
+  font-size:clamp(1.45rem,6.5vw,2.05rem);
+ }
+}
