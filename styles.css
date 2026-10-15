@@ -1390,7 +1390,7 @@ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
  -webkit-text-fill-color:#f3f5f8!important;
  -webkit-text-stroke:.25px rgba(255,255,255,.22);
  background:none!important;
- filter:none!important;
+ filter:none;
  text-shadow:2px 3px 0 rgba(57,64,83,.96)!important;
 }
 body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
