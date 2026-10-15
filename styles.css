@@ -1006,6 +1006,7 @@ body.home .journey-head .section-title{
   0 12px 28px rgba(93,124,255,.14);
 }
 body.home .journey-head .section-title span{
+ text-shadow:none;
  filter:
   drop-shadow(2px 2px 0 #35305d)
   drop-shadow(5px 5px 0 rgba(13,14,27,.82));
