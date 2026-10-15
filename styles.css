@@ -1326,9 +1326,10 @@ body.home .hero h1.hero-title .hero-title-line--sub .hero-char{
  }
 }
 @keyframes hero-edge-glint{
- 0%,100%{-webkit-text-stroke:.25px rgba(255,255,255,.2)}
- 7%,17%{-webkit-text-stroke:1px var(--glint-color)}
- 24%{-webkit-text-stroke:.25px rgba(255,255,255,.2)}
+ 0%,4%,100%{-webkit-text-stroke:.25px rgba(255,255,255,.2)}
+ 5%,9%{-webkit-text-stroke:1.8px var(--glint-color)}
+ 12%{-webkit-text-stroke:.7px var(--glint-color)}
+ 17%{-webkit-text-stroke:.25px rgba(255,255,255,.2)}
 }
 body.home .showcase-head .section-title,
 body.home .profile-section .section-title,
