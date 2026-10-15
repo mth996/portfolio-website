@@ -98,7 +98,7 @@ body.home:before{
 }
 body.home .kicker{color:#8fa3b6}
 body.home .hero .kicker{color:var(--accent)}
-body.home .hero h1 span{
+body.home .hero h1:not(.hero-title) span{
  -webkit-text-stroke:1px rgba(157,123,255,.72);
  filter:drop-shadow(0 0 24px rgba(157,123,255,.08));
 }
@@ -291,7 +291,7 @@ body.home .project-scene--museum .scene-copy h3{
 
 /* 2026-10-09 — Stable mobile hero outline rendering */
 @media(max-width:760px){
- body.home .hero h1 span{
+ body.home .hero h1:not(.hero-title) span{
   color:rgba(157,123,255,.82)!important;
   -webkit-text-fill-color:transparent!important;
   -webkit-text-stroke:0!important;
@@ -316,7 +316,7 @@ body.home .footer h2{
 }
 
 /* Preserve the existing hero color treatments while using the unified face. */
-body.home .hero h1 span{
+body.home .hero h1:not(.hero-title) span{
  font-family:"Arial Black","Helvetica Neue",Arial,sans-serif;
  font-weight:900;
 }
@@ -703,7 +703,7 @@ body.home .project-scene:hover .scene-link,body.home .project-scene:focus-visibl
 
 /* 2026-10-16 — Stronger hero outline on small screens */
 @media(max-width:760px){
- body.home .hero h1 span{
+ body.home .hero h1:not(.hero-title) span{
   color:#c4b5fd!important;
   -webkit-text-fill-color:transparent!important;
   -webkit-text-stroke:0!important;
@@ -733,7 +733,7 @@ body.home .hero h1{
  letter-spacing:-.045em;
  white-space:nowrap;
 }
-body.home .hero h1 span{
+body.home .hero h1:not(.hero-title) span{
  display:block;
  font-size:.76em;
  line-height:1.05;
@@ -767,7 +767,7 @@ body.home .showcase-head p{
   line-height:1.06;
   letter-spacing:-.05em;
  }
- body.home .hero h1 span{font-size:.76em}
+ body.home .hero h1:not(.hero-title) span{font-size:.76em}
  body.home .hero .lead{
   margin-top:20px;
   font-size:1rem;
@@ -828,7 +828,7 @@ body.home .hero h1{
   0 16px 32px rgba(5,7,14,.52),
   0 0 30px rgba(91,190,255,.13);
 }
-body.home .hero h1 span{
+body.home .hero h1:not(.hero-title) span{
  filter:
   drop-shadow(2px 2px 0 #463a75)
   drop-shadow(5px 5px 0 #292344)
@@ -867,7 +867,7 @@ body.home .footer h2 span{
    0 10px 22px rgba(0,0,0,.46),
    0 0 20px rgba(91,190,255,.12);
  }
- body.home .hero h1 span{
+ body.home .hero h1:not(.hero-title) span{
   filter:
    drop-shadow(2px 2px 0 #463a75)
    drop-shadow(4px 4px 0 rgba(12,11,23,.68))!important;
@@ -1200,7 +1200,7 @@ body.home .hero h1{
  line-height:.98!important;
  text-shadow:3px 4px 0 rgba(30,35,51,.9)!important;
 }
-body.home .hero h1 span{
+body.home .hero h1:not(.hero-title) span{
  display:block!important;
  font-size:.76em!important;
  line-height:1.05!important;
