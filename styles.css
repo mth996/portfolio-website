@@ -686,7 +686,7 @@ body.home .project-library .project-featured .scene-copy h3{
 
 
 /* 2026-10-16 — Increase clarity of key calls to action */
-.hero h1 span{-webkit-text-stroke:3px #a78bfa}
+.hero h1 span{-webkit-text-stroke:3.5px #b69cff}
 .scroll-cue{padding:8px 10px 8px 16px;border:1px solid rgba(141,216,255,.72);border-radius:999px;background:linear-gradient(110deg,rgba(57,166,225,.18),rgba(139,92,246,.22));color:#f4f7fb;font-weight:700;box-shadow:0 4px 24px rgba(74,120,220,.16);transition:background .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease}
 .scroll-cue:hover{background:linear-gradient(110deg,rgba(57,166,225,.3),rgba(139,92,246,.32));border-color:#b8a3ff;transform:translateY(-2px);box-shadow:0 8px 30px rgba(121,94,233,.24)}
 .scroll-cue b{border-color:rgba(188,166,255,.8);background:rgba(139,92,246,.18);color:#e8dfff;font-size:1.05rem}
