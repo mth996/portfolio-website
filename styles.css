@@ -1310,26 +1310,28 @@ body.home .hero h1.hero-title .hero-title-line--sub .hero-word{
  text-shadow:2px 3px 0 rgba(67,54,99,.96)!important;
 }
 body.home .hero h1.hero-title .hero-char{
- --glint-color:#fff;
+ --glint-color:rgba(255,255,255,.88);
+ --glint-base:rgba(255,255,255,.2);
  display:inline-block;
- -webkit-text-stroke:.25px rgba(255,255,255,.22);
+ -webkit-text-stroke:.25px var(--glint-base);
  animation:none;
 }
 body.home .hero h1.hero-title .hero-title-line--sub .hero-char{
- --glint-color:#e4d5ff;
- -webkit-text-stroke:.25px rgba(188,169,255,.24);
+ --glint-color:rgba(181,145,255,.88);
+ --glint-base:rgba(188,169,255,.22);
+ -webkit-text-stroke:.25px var(--glint-base);
 }
 @media(prefers-reduced-motion:no-preference){
  body.home .hero h1.hero-title .hero-char{
-  animation:hero-edge-glint 4.6s ease-in-out infinite;
-  animation-delay:calc(var(--letter-index)*.045s);
+  animation:hero-edge-glint 6.4s ease-in-out infinite;
+  animation-delay:calc(var(--line-delay,0s) + var(--letter-index)*.095s);
  }
 }
 @keyframes hero-edge-glint{
- 0%,4%,100%{-webkit-text-stroke:.25px rgba(255,255,255,.2);filter:drop-shadow(0 0 0 transparent)}
- 5%,9%{-webkit-text-stroke:1.8px var(--glint-color);filter:drop-shadow(0 0 5px var(--glint-color)) drop-shadow(0 0 1.8px var(--glint-color))}
- 12%{-webkit-text-stroke:.7px var(--glint-color);filter:drop-shadow(0 0 2px var(--glint-color))}
- 17%{-webkit-text-stroke:.25px rgba(255,255,255,.2);filter:drop-shadow(0 0 0 transparent)}
+ 0%,4%,100%{-webkit-text-stroke:.25px var(--glint-base);filter:drop-shadow(0 0 0 transparent)}
+ 5%,8%{-webkit-text-stroke:1.55px var(--glint-color);filter:drop-shadow(0 0 4px var(--glint-color)) drop-shadow(0 0 1.3px var(--glint-color))}
+ 11%{-webkit-text-stroke:.65px var(--glint-color);filter:drop-shadow(0 0 1.7px var(--glint-color))}
+ 15%{-webkit-text-stroke:.25px var(--glint-base);filter:drop-shadow(0 0 0 transparent)}
 }
 body.home .showcase-head .section-title,
 body.home .profile-section .section-title,
@@ -1391,13 +1393,23 @@ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
  -webkit-text-stroke:.25px rgba(255,255,255,.22);
  background:none!important;
  filter:none;
- text-shadow:2px 3px 0 rgba(57,64,83,.96)!important;
+ text-shadow:
+  -1px -1px 0 rgba(255,255,255,.58),
+   1px -1px 0 rgba(190,202,220,.28),
+  -1px  1px 0 rgba(190,202,220,.28),
+   1px  1px 0 rgba(57,64,83,.82),
+   2px  2px 0 rgba(34,40,57,.74)!important;
 }
 body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
  color:#bca9ff!important;
  -webkit-text-fill-color:#bca9ff!important;
  -webkit-text-stroke:.25px rgba(188,169,255,.24);
- text-shadow:2px 3px 0 rgba(67,54,99,.96)!important;
+ text-shadow:
+  -1px -1px 0 rgba(239,225,255,.56),
+   1px -1px 0 rgba(192,161,255,.3),
+  -1px  1px 0 rgba(177,151,235,.28),
+   1px  1px 0 rgba(62,49,91,.82),
+   2px  2px 0 rgba(44,34,70,.76)!important;
 }
 body.home .journey-head .section-title{
  font-family:Impact,'Arial Narrow',sans-serif!important;
@@ -1435,17 +1447,26 @@ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
  font-size:1em!important;
 }
 body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
- text-shadow:3px 4px 0 rgba(57,64,83,.96)!important;
+ text-shadow:
+  -1px -1px 0 rgba(255,255,255,.58),
+   1px -1px 0 rgba(190,202,220,.28),
+  -1px  1px 0 rgba(190,202,220,.28),
+   1px  1px 0 rgba(57,64,83,.82),
+   2px  2px 0 rgba(34,40,57,.74)!important;
 }
 body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
- text-shadow:3px 4px 0 rgba(67,54,99,.96)!important;
+ text-shadow:
+  -1px -1px 0 rgba(239,225,255,.56),
+   1px -1px 0 rgba(192,161,255,.3),
+  -1px  1px 0 rgba(177,151,235,.28),
+   1px  1px 0 rgba(62,49,91,.82),
+   2px  2px 0 rgba(44,34,70,.76)!important;
 }
 @media(prefers-reduced-motion:no-preference){
  body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
-  animation:hero-edge-glint 4.6s ease-in-out infinite!important;
-  animation-delay:calc(var(--letter-index)*.045s)!important;
- }
-}
+  animation:hero-edge-glint 6.4s ease-in-out infinite!important;
+  animation-delay:calc(var(--line-delay,0s) + var(--letter-index)*.095s)!important;
+ }}
 body.home .showcase-head .section-title,
 body.home .profile-section .section-title,
 body.home .journey-head .section-title,
