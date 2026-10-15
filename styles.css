@@ -1537,3 +1537,22 @@ body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
  11%{-webkit-text-stroke:.65px var(--glint-color);filter:var(--bevel-filter) drop-shadow(0 0 1.5px var(--glint-color))}
  15%{-webkit-text-stroke:.35px var(--glint-base);filter:var(--bevel-filter) drop-shadow(0 0 0 transparent)}
 }
+
+
+/* Original Chronocraft Rounded Edge display font for the hero title */
+@font-face{
+ font-family:"Chronocraft Rounded Edge";
+ src:url("fonts/Chronocraft_Rounded_Edge_Display.ttf?v=1") format("truetype");
+ font-style:normal;
+ font-weight:800;
+ font-display:swap;
+}
+body.home .hero h1.hero-title{
+ font-family:"Chronocraft Rounded Edge",Impact,"Arial Narrow",sans-serif!important;
+ letter-spacing:-.035em!important;
+}
+@media(max-width:760px){
+ body.home .hero h1.hero-title{
+  font-size:clamp(1.35rem,6.6vw,2.8rem)!important;
+ }
+}
