@@ -686,7 +686,7 @@ body.home .project-library .project-featured .scene-copy h3{
 
 
 /* 2026-10-16 — Increase clarity of key calls to action */
-.hero h1 span{-webkit-text-stroke:3.5px #b69cff}
+.hero h1 span{-webkit-text-stroke:6px #c4b5fd;text-shadow:0 0 14px rgba(196,181,253,.38)}
 .scroll-cue{padding:8px 10px 8px 16px;border:1px solid rgba(141,216,255,.72);border-radius:999px;background:linear-gradient(110deg,rgba(57,166,225,.18),rgba(139,92,246,.22));color:#f4f7fb;font-weight:700;box-shadow:0 4px 24px rgba(74,120,220,.16);transition:background .2s ease,border-color .2s ease,transform .2s ease,box-shadow .2s ease}
 .scroll-cue:hover{background:linear-gradient(110deg,rgba(57,166,225,.3),rgba(139,92,246,.32));border-color:#b8a3ff;transform:translateY(-2px);box-shadow:0 8px 30px rgba(121,94,233,.24)}
 .scroll-cue b{border-color:rgba(188,166,255,.8);background:rgba(139,92,246,.18);color:#e8dfff;font-size:1.05rem}
@@ -700,3 +700,18 @@ body.home .project-scene:hover .scene-link,body.home .project-scene:focus-visibl
 .topbar nav a:hover{color:#fff}
 .topbar a:focus-visible,.scroll-cue:focus-visible,.scene-link:focus-visible,.project-scene:focus-visible .scene-link,.project-actions a:focus-visible,.social-links a:focus-visible,.back:focus-visible{outline:2px solid #c4b5fd;outline-offset:4px}
 @media(max-width:760px){.scroll-cue{font-size:.68rem}.project-actions a,.social-links a{min-height:44px}}
+
+/* 2026-10-16 — Stronger hero outline on small screens */
+@media(max-width:760px){
+ body.home .hero h1 span{
+  color:#c4b5fd!important;
+  -webkit-text-fill-color:transparent!important;
+  -webkit-text-stroke:0!important;
+  text-shadow:
+   -2px -2px 0 #c4b5fd,
+    2px -2px 0 #c4b5fd,
+   -2px  2px 0 #c4b5fd,
+    2px  2px 0 #c4b5fd,
+    0 0 12px rgba(196,181,253,.35)!important;
+ }
+}
