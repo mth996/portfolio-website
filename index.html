@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="stylesheet" href="styles.css?v=20261016-edge-glint-headings-v13">
+<link rel="stylesheet" href="styles.css?v=20261016-sequential-bevel-v14">
 </head>
 <body class="home">
 <header class="topbar wrap">
@@ -73,6 +73,7 @@ if('IntersectionObserver' in window){
  scenes.forEach(s=>observer.observe(s));
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
 document.querySelectorAll("body.home .hero-title-line").forEach(line=>{
+ line.style.setProperty("--line-delay",line.classList.contains("hero-title-line--sub")?"2.35s":"0s");
  let letterIndex=0;
  line.querySelectorAll(".hero-word").forEach(word=>{
   const letters=Array.from(word.textContent);
