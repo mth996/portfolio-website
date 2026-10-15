@@ -1380,3 +1380,43 @@ body.home .footer h2{
   -webkit-text-stroke:.35px rgba(188,169,255,.42);
  }
 }
+
+
+/* 2026-10-16 — Keep animated glyphs inline and restore the complete display styles */
+body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+ display:inline!important;
+ color:#f3f5f8!important;
+ -webkit-text-fill-color:#f3f5f8!important;
+ -webkit-text-stroke:.25px rgba(255,255,255,.22)!important;
+ background:none!important;
+ filter:none!important;
+ text-shadow:2px 3px 0 rgba(57,64,83,.96)!important;
+}
+body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
+ color:#bca9ff!important;
+ -webkit-text-fill-color:#bca9ff!important;
+ -webkit-text-stroke:.25px rgba(188,169,255,.24)!important;
+ text-shadow:2px 3px 0 rgba(67,54,99,.96)!important;
+}
+body.home .journey-head .section-title{
+ font-family:Impact,'Arial Narrow',sans-serif!important;
+ font-size:clamp(1.3rem,6vw,4.6rem)!important;
+ line-height:1!important;
+ letter-spacing:-.012em!important;
+ white-space:nowrap!important;
+ text-shadow:2px 3px 0 rgba(43,47,65,.96)!important;
+}
+body.home .journey-head .section-title span{
+ display:inline!important;
+ white-space:nowrap!important;
+ filter:drop-shadow(2px 3px 0 rgba(43,47,65,.96))!important;
+}
+@media(max-width:760px){
+ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+  display:inline!important;
+ }
+ body.home .journey-head .section-title{
+  font-size:clamp(1.3rem,6.6vw,2.5rem)!important;
+  letter-spacing:-.035em!important;
+ }
+}
