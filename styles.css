@@ -715,3 +715,67 @@ body.home .project-scene:hover .scene-link,body.home .project-scene:focus-visibl
     0 0 12px rgba(196,181,253,.35)!important;
  }
 }
+
+
+/* 2026-10-16 — Center the hero and keep its headline to two lines */
+body.home .hero-content{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ text-align:center;
+}
+body.home .hero h1{
+ width:100%;
+ max-width:none;
+ margin:.18em 0 .24em;
+ font-size:clamp(3rem,6.5vw,6.5rem);
+ line-height:1;
+ letter-spacing:-.045em;
+ white-space:nowrap;
+}
+body.home .hero h1 span{
+ display:block;
+ font-size:.76em;
+ line-height:1.05;
+ white-space:nowrap;
+}
+body.home .hero .lead{
+ width:100%;
+ max-width:none;
+ margin:22px auto 0;
+ text-align:center;
+}
+@media(min-width:980px){
+ body.home .hero .lead{
+  white-space:nowrap;
+  font-size:clamp(.78rem,1.12vw,.98rem);
+ }
+}
+body.home .showcase-head p{
+ grid-column:1/-1;
+ width:100%;
+ max-width:none;
+ margin:0;
+ font-size:clamp(.9rem,1.15vw,1.05rem);
+ line-height:1.6;
+ text-align:center;
+ white-space:nowrap;
+}
+@media(max-width:760px){
+ body.home .hero h1{
+  font-size:clamp(1.8rem,8.5vw,3.2rem);
+  line-height:1.06;
+  letter-spacing:-.05em;
+ }
+ body.home .hero h1 span{font-size:.76em}
+ body.home .hero .lead{
+  margin-top:20px;
+  font-size:1rem;
+  white-space:normal;
+ }
+ body.home .showcase-head p{
+  grid-column:1;
+  font-size:1rem;
+  white-space:normal;
+ }
+}
