@@ -1257,3 +1257,8 @@ body.home .journey-column--education .journey-list{
  body.home .journey-column--experience .journey-list,
  body.home .journey-column--education .journey-list{grid-template-columns:1fr}
 }
+
+
+/* Keep the Experience & Education accent together on one line */
+body.home .journey-head{max-width:min(100%,1040px);width:100%}
+body.home .journey-head .section-title span{display:inline-block;white-space:nowrap}
