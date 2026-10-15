@@ -994,3 +994,31 @@ body.home .journey-head .section-title span{
  body.home .journey-card{transition:none}
  body.home .journey-card:hover{transform:none}
 }
+
+
+/* Match the new career headline to the shared 2.5D display style */
+body.home .journey-head .section-title{
+ text-shadow:
+  1px 1px 0 #1b2032,
+  2px 2px 0 #282746,
+  4px 4px 0 #36315c,
+  6px 6px 0 rgba(8,9,16,.7),
+  0 12px 28px rgba(93,124,255,.14);
+}
+body.home .journey-head .section-title span{
+ filter:
+  drop-shadow(2px 2px 0 #35305d)
+  drop-shadow(5px 5px 0 rgba(13,14,27,.82));
+}
+@media(max-width:760px){
+ body.home .journey-head .section-title{
+  text-shadow:
+   1px 1px 0 #1b2032,
+   2px 2px 0 #282746,
+   3px 3px 0 rgba(8,9,16,.72),
+   0 8px 18px rgba(93,124,255,.12);
+ }
+ body.home .journey-head .section-title span{
+  filter:drop-shadow(2px 2px 0 #35305d) drop-shadow(4px 4px 0 rgba(13,14,27,.76));
+ }
+}
