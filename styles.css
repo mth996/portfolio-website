@@ -1192,3 +1192,68 @@ body.home .hero h1.hero-title .hero-word{
    11px 13px 15px rgba(0,0,0,.55)!important;
  }
 }
+
+
+/* 2026-10-16 — Restore the original hero hierarchy and simplify heading depth */
+body.home .hero h1{
+ font-size:clamp(3.2rem,6.5vw,6.5rem)!important;
+ line-height:.98!important;
+ text-shadow:3px 4px 0 rgba(30,35,51,.9)!important;
+}
+body.home .hero h1 span{
+ display:block!important;
+ font-size:.76em!important;
+ line-height:1.05!important;
+ color:transparent!important;
+ background:linear-gradient(100deg,#8dd8ff 0%,#a8a0ff 55%,#d4a7ff 100%)!important;
+ -webkit-background-clip:text!important;
+ background-clip:text!important;
+ -webkit-text-fill-color:transparent!important;
+ -webkit-text-stroke:1px rgba(183,166,255,.78)!important;
+ text-shadow:2px 3px 0 rgba(38,34,57,.95)!important;
+ filter:none!important;
+ animation:none!important;
+}
+body.home .showcase-head .section-title,
+body.home .profile-section .section-title,
+body.home .journey-head .section-title,
+body.home .footer h2{
+ text-shadow:3px 4px 0 rgba(31,35,51,.92)!important;
+}
+body.home .showcase-head .section-title span,
+body.home .profile-section .section-title span,
+body.home .journey-head .section-title span,
+body.home .footer h2 span{
+ background:linear-gradient(100deg,#79e0ff 5%,#9f9bff 52%,#d4a7ff 96%)!important;
+ -webkit-background-clip:text!important;
+ background-clip:text!important;
+ -webkit-text-fill-color:transparent!important;
+ -webkit-text-stroke:.8px rgba(174,157,245,.58)!important;
+ filter:drop-shadow(3px 4px 0 rgba(37,38,57,.94))!important;
+ text-shadow:none!important;
+}
+body.home .showcase-head .section-title::after{
+ box-shadow:none!important;
+}
+body.home .journey-head .section-title{
+ font-size:clamp(3.8rem,8.6vw,7.2rem)!important;
+}
+body.home .footer h2{
+ font-size:clamp(2.4rem,5.2vw,4.6rem)!important;
+}
+body.home .journey-grid{display:block}
+body.home .journey-column--experience{margin-bottom:42px}
+body.home .journey-column--experience .journey-list,
+body.home .journey-column--education .journey-list{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+}
+@media(max-width:760px){
+ body.home .hero h1{font-size:clamp(1.7rem,8.3vw,3rem)!important}
+ body.home .showcase-head .section-title,
+ body.home .journey-head .section-title{
+  font-size:clamp(2.3rem,10vw,3.8rem)!important;
+ }
+ body.home .footer h2{font-size:clamp(2.2rem,9vw,3.2rem)!important}
+ body.home .journey-column--experience .journey-list,
+ body.home .journey-column--education .journey-list{grid-template-columns:1fr}
+}
