@@ -882,3 +882,115 @@ body.home .footer h2 span{
    0 8px 18px rgba(93,124,255,.12);
  }
 }
+
+
+/* 2026-10-16 — Career and education timeline */
+body.home .journey-section{
+ padding:110px 0 120px;
+ border-top:1px solid var(--line);
+ background:linear-gradient(180deg,#080a0d 0%,#090b12 100%);
+}
+body.home .journey-head{
+ max-width:760px;
+ margin:0 auto 52px;
+ text-align:center;
+}
+body.home .journey-head .section-title{
+ margin:18px 0 14px;
+ font-size:clamp(2.8rem,6vw,5rem);
+ line-height:.98;
+}
+body.home .journey-head p{
+ margin:0;
+ color:#9ca5b0;
+ font-size:1.02rem;
+ line-height:1.7;
+}
+body.home .journey-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:28px;
+}
+body.home .journey-column-title{
+ margin:0 0 16px;
+ color:#9eabc0;
+ font-size:.72rem;
+ text-transform:uppercase;
+ letter-spacing:.18em;
+}
+body.home .journey-list{display:grid;gap:14px}
+body.home .journey-card{
+ position:relative;
+ padding:24px;
+ overflow:hidden;
+ border:1px solid rgba(183,196,221,.12);
+ border-radius:16px;
+ background:linear-gradient(135deg,rgba(18,23,35,.92),rgba(9,11,18,.94));
+ box-shadow:0 12px 30px rgba(0,0,0,.16);
+ transition:border-color .25s ease,transform .25s ease,background .25s ease;
+}
+body.home .journey-card::before{
+ content:"";
+ position:absolute;
+ inset:0 auto 0 0;
+ width:2px;
+ background:linear-gradient(180deg,#79e0ff,#9f83ff,#d4a7ff);
+ opacity:.78;
+}
+body.home .journey-card:hover{
+ transform:translateY(-3px);
+ border-color:rgba(121,224,255,.34);
+ background:linear-gradient(135deg,rgba(21,28,43,.98),rgba(10,12,21,.98));
+}
+body.home .journey-meta{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+ flex-wrap:wrap;
+ color:#87dfff;
+ font-size:.68rem;
+ font-weight:700;
+ letter-spacing:.08em;
+ text-transform:uppercase;
+}
+body.home .journey-type{
+ color:#c3b2ff;
+}
+body.home .journey-role{
+ margin:17px 0 5px;
+ color:#f4f7fb;
+ font-size:clamp(1.25rem,2vw,1.65rem);
+ line-height:1.2;
+}
+body.home .journey-org{
+ color:#c1c9d4;
+ font-size:.9rem;
+ font-weight:700;
+ line-height:1.5;
+}
+body.home .journey-card p{
+ margin:12px 0 0;
+ color:#9fa8b3;
+ font-size:.96rem;
+ line-height:1.7;
+}
+body.home .journey-head .section-title span{
+ color:transparent;
+ background:linear-gradient(100deg,#79e0ff 5%,#9f9bff 52%,#d4a7ff 96%);
+ -webkit-background-clip:text;
+ background-clip:text;
+ -webkit-text-fill-color:transparent;
+}
+@media(max-width:760px){
+ body.home .journey-section{padding:78px 0 88px}
+ body.home .journey-head{margin:0 auto 34px}
+ body.home .journey-head .section-title{font-size:clamp(2.35rem,10.5vw,3.5rem)}
+ body.home .journey-head p{font-size:.98rem}
+ body.home .journey-grid{grid-template-columns:1fr;gap:30px}
+ body.home .journey-card{padding:20px}
+}
+@media(prefers-reduced-motion:reduce){
+ body.home .journey-card{transition:none}
+ body.home .journey-card:hover{transform:none}
+}
