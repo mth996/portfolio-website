@@ -658,3 +658,28 @@ body.home .project-library .project-featured .scene-copy h3{
   font-size:clamp(1.45rem,6.5vw,2.05rem);
  }
 }
+
+
+/* 2026-10-16 — Refined case-study headings and external profile links */
+.project-hero h1{
+ font-family:Arial,Helvetica,sans-serif!important;
+ font-size:clamp(2.2rem,4.4vw,4.1rem)!important;
+ font-weight:700;
+ line-height:1.08;
+ letter-spacing:-.035em;
+ text-transform:none;
+ white-space:normal!important;
+ max-width:900px;
+}
+.project-actions,.social-links{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0 12px}
+.project-actions a,.social-links a{
+ display:inline-flex;align-items:center;min-height:42px;padding:0 16px;
+ border:1px solid rgba(141,216,255,.35);border-radius:999px;
+ color:#e6f7ff;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+ transition:background .2s ease,border-color .2s ease,transform .2s ease;
+}
+.project-actions a:hover,.social-links a:hover{background:rgba(141,216,255,.1);border-color:rgba(141,216,255,.75);transform:translateY(-2px)}
+@media(max-width:760px){
+ .project-hero h1{font-size:clamp(2.05rem,8vw,3rem)!important;max-width:100%}
+ .project-actions,.social-links{gap:10px}
+}
