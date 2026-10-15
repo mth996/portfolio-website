@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="stylesheet" href="styles.css?v=20261016-sequential-bevel-v14">
+<link rel="stylesheet" href="styles.css?v=20261016-original-gloss-bevel-v15">
 </head>
 <body class="home">
 <header class="topbar wrap">
@@ -66,6 +66,28 @@
 </section>
 </main>
 <footer class="footer" id="contact"><div class="wrap footer-grid"><div><div class="kicker">Let's build something immersive</div><h2>Get in <span>touch.</span></h2></div><div><a href="mailto:tahmidul86@gmail.com">tahmidul86@gmail.com</a><p>Kuala Lumpur, Malaysia • Open to relocate</p><div class="social-links"><a href="https://www.linkedin.com/in/mohammad-tahmidul-hasan-245599b133/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a><a href="https://github.com/mth996" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div></div></div></footer>
+<svg aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<filter id="hero-bevel-white" x="-35%" y="-35%" width="170%" height="190%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="1.05" result="soft-alpha"/>
+<feSpecularLighting in="soft-alpha" surfaceScale="2.3" specularConstant=".72" specularExponent="18" lighting-color="#ffffff" result="bevel-light"><feDistantLight azimuth="225" elevation="55"/></feSpecularLighting>
+<feComposite in="bevel-light" in2="SourceAlpha" operator="in" result="light-inside"/>
+<feOffset in="SourceAlpha" dx="0" dy="2" result="depth-mask"/>
+<feFlood flood-color="#30374a" result="depth-color"/>
+<feComposite in="depth-color" in2="depth-mask" operator="in" result="depth"/>
+<feMerge><feMergeNode in="depth"/><feMergeNode in="SourceGraphic"/><feMergeNode in="light-inside"/></feMerge>
+</filter>
+<filter id="hero-bevel-violet" x="-35%" y="-35%" width="170%" height="190%" color-interpolation-filters="sRGB">
+<feGaussianBlur in="SourceAlpha" stdDeviation="1.05" result="soft-alpha"/>
+<feSpecularLighting in="soft-alpha" surfaceScale="2.3" specularConstant=".72" specularExponent="18" lighting-color="#e7d7ff" result="bevel-light"><feDistantLight azimuth="225" elevation="55"/></feSpecularLighting>
+<feComposite in="bevel-light" in2="SourceAlpha" operator="in" result="light-inside"/>
+<feOffset in="SourceAlpha" dx="0" dy="2" result="depth-mask"/>
+<feFlood flood-color="#443064" result="depth-color"/>
+<feComposite in="depth-color" in2="depth-mask" operator="in" result="depth"/>
+<feMerge><feMergeNode in="depth"/><feMergeNode in="SourceGraphic"/><feMergeNode in="light-inside"/></feMerge>
+</filter>
+</defs>
+</svg>
 <script>
 const scenes=[...document.querySelectorAll('.project-scene')];
 if('IntersectionObserver' in window){
