@@ -300,7 +300,7 @@ body.home .project-scene--museum .scene-copy h3{
     1px -1px 0 rgba(157,123,255,.82),
    -1px  1px 0 rgba(157,123,255,.82),
     1px  1px 0 rgba(157,123,255,.82)!important;
-  filter:none!important;
+ 
  }
 }
 
@@ -1326,10 +1326,10 @@ body.home .hero h1.hero-title .hero-title-line--sub .hero-char{
  }
 }
 @keyframes hero-edge-glint{
- 0%,4%,100%{-webkit-text-stroke:.25px rgba(255,255,255,.2)}
- 5%,9%{-webkit-text-stroke:1.8px var(--glint-color)}
- 12%{-webkit-text-stroke:.7px var(--glint-color)}
- 17%{-webkit-text-stroke:.25px rgba(255,255,255,.2)}
+ 0%,4%,100%{-webkit-text-stroke:.25px rgba(255,255,255,.2);filter:drop-shadow(0 0 0 transparent)}
+ 5%,9%{-webkit-text-stroke:1.8px var(--glint-color);filter:drop-shadow(0 0 5px var(--glint-color)) drop-shadow(0 0 1.8px var(--glint-color))}
+ 12%{-webkit-text-stroke:.7px var(--glint-color);filter:drop-shadow(0 0 2px var(--glint-color))}
+ 17%{-webkit-text-stroke:.25px rgba(255,255,255,.2);filter:drop-shadow(0 0 0 transparent)}
 }
 body.home .showcase-head .section-title,
 body.home .profile-section .section-title,
