@@ -779,3 +779,40 @@ body.home .showcase-head p{
   white-space:normal;
  }
 }
+
+
+/* 2026-10-16 — Project section headline accent */
+body.home .showcase-head{
+ align-items:center;
+}
+body.home .showcase-head .kicker{
+ grid-column:1/-1;
+ justify-self:center;
+ text-align:center;
+}
+body.home .showcase-head .section-title{
+ width:100%;
+ max-width:none;
+ margin:0 auto 8px;
+ text-align:center;
+ text-shadow:0 4px 26px rgba(75,190,255,.13),0 12px 34px rgba(0,0,0,.38);
+}
+body.home .showcase-head .section-title span{
+ display:inline-block;
+ color:transparent;
+ background:linear-gradient(100deg,#79e0ff 5%,#9f9bff 52%,#d4a7ff 96%);
+ -webkit-background-clip:text;
+ background-clip:text;
+ -webkit-text-fill-color:transparent;
+ text-shadow:none;
+}
+body.home .showcase-head .section-title::after{
+ content:"";
+ display:block;
+ width:clamp(76px,9vw,112px);
+ height:3px;
+ margin:22px auto 0;
+ border-radius:99px;
+ background:linear-gradient(90deg,#79e0ff,#9f83ff,#d4a7ff);
+ box-shadow:0 0 18px rgba(121,224,255,.3),0 0 24px rgba(159,131,255,.22);
+}
