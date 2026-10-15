@@ -1505,3 +1505,35 @@ body.home .journey-head .section-title span{
   -webkit-text-stroke:.35px rgba(188,169,255,.42)!important;
  }
 }
+
+
+/* 2026-10-16 — Original glossy bevel treatment for the hero lettering.
+   Uses the existing glyphs; the light and extrusion are generated from each
+   character's alpha mask rather than a second offset copy of the text. */
+body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+ --bevel-filter:url(#hero-bevel-white);
+ color:transparent!important;
+ -webkit-text-fill-color:transparent!important;
+ background:linear-gradient(180deg,#fff 0%,#f5f7fb 18%,#d9deea 44%,#f7f8fc 58%,#c4ccdb 100%)!important;
+ -webkit-background-clip:text!important;
+ background-clip:text!important;
+ -webkit-text-stroke:.35px rgba(255,255,255,.48);
+ filter:var(--bevel-filter);
+ text-shadow:0 1px 0 rgba(255,255,255,.34),0 8px 18px rgba(0,0,0,.22)!important;
+}
+body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
+ --bevel-filter:url(#hero-bevel-violet);
+ color:transparent!important;
+ -webkit-text-fill-color:transparent!important;
+ background:linear-gradient(180deg,#fffaff 0%,#e7d9ff 19%,#b795ff 47%,#d5c0ff 61%,#8061c8 100%)!important;
+ -webkit-background-clip:text!important;
+ background-clip:text!important;
+ -webkit-text-stroke:.35px rgba(223,207,255,.55);
+ text-shadow:0 1px 0 rgba(248,238,255,.32),0 8px 18px rgba(43,25,84,.3)!important;
+}
+@keyframes hero-edge-glint{
+ 0%,4%,100%{-webkit-text-stroke:.35px var(--glint-base);filter:var(--bevel-filter) drop-shadow(0 0 0 transparent)}
+ 5%,8%{-webkit-text-stroke:1.45px var(--glint-color);filter:var(--bevel-filter) drop-shadow(0 0 3.6px var(--glint-color)) drop-shadow(0 0 1px var(--glint-color))}
+ 11%{-webkit-text-stroke:.65px var(--glint-color);filter:var(--bevel-filter) drop-shadow(0 0 1.5px var(--glint-color))}
+ 15%{-webkit-text-stroke:.35px var(--glint-base);filter:var(--bevel-filter) drop-shadow(0 0 0 transparent)}
+}
