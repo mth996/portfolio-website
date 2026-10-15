@@ -1147,3 +1147,48 @@ body.home .footer h2 span{
 @media(prefers-reduced-motion:reduce){
  body.home .hero h1.hero-title .hero-word{animation:none!important}
 }
+
+
+/* 2026-10-16 — Smooth, word-by-word accent with cleaner extrusion */
+@property --hero-word-face{
+ syntax:"<color>";
+ inherits:false;
+ initial-value:#f3f5f8;
+}
+body.home .hero h1.hero-title .hero-word{
+ --hero-word-face:#f3f5f8;
+ color:var(--hero-word-face)!important;
+ -webkit-text-fill-color:var(--hero-word-face)!important;
+ text-shadow:
+  1px 1px 0 #c4cbd8,
+  3px 3px 0 #858fa4,
+  5px 5px 0 #596278,
+  8px 9px 0 #343b4e,
+  12px 15px 18px rgba(0,0,0,.58)!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ body.home .hero h1.hero-title .hero-word{
+  animation:hero-word-pass-v2 3.8s ease-in-out infinite;
+  animation-delay:calc(var(--word-index)*.38s);
+ }
+}
+@keyframes hero-word-pass-v2{
+ 0%,100%{
+  --hero-word-face:#f3f5f8;
+  transform:translateY(0);
+ }
+ 7%,18%{
+  --hero-word-face:#c8b8ed;
+  transform:translateY(-.035em);
+ }
+}
+@media(max-width:760px){
+ body.home .hero h1.hero-title .hero-word{
+  text-shadow:
+   1px 1px 0 #c4cbd8,
+   3px 3px 0 #858fa4,
+   5px 5px 0 #596278,
+   8px 9px 0 #343b4e,
+   11px 13px 15px rgba(0,0,0,.55)!important;
+ }
+}
