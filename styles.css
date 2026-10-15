@@ -1420,3 +1420,66 @@ body.home .journey-head .section-title span{
   letter-spacing:-.035em!important;
  }
 }
+
+
+/* 2026-10-16 — Restore hero scale and match the career heading font */
+body.home .hero h1.hero-title .hero-title-line{
+ font-size:1em!important;
+}
+body.home .hero h1.hero-title .hero-title-line--sub{
+ font-size:.76em!important;
+}
+body.home .hero h1.hero-title .hero-title-line .hero-word,
+body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+ font-size:1em!important;
+}
+body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+ text-shadow:3px 4px 0 rgba(57,64,83,.96)!important;
+}
+body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
+ text-shadow:3px 4px 0 rgba(67,54,99,.96)!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+  animation:hero-edge-glint 4.6s ease-in-out infinite!important;
+  animation-delay:calc(var(--letter-index)*.045s)!important;
+ }
+}
+body.home .showcase-head .section-title,
+body.home .profile-section .section-title,
+body.home .journey-head .section-title,
+body.home .footer h2{
+ text-shadow:3px 4px 0 rgba(43,47,65,.96)!important;
+}
+body.home .showcase-head .section-title span,
+body.home .profile-section .section-title span,
+body.home .journey-head .section-title span,
+body.home .footer h2 span{
+ filter:drop-shadow(3px 4px 0 rgba(43,47,65,.96))!important;
+}
+body.home .journey-head .section-title{
+ font-family:"Arial Black","Helvetica Neue",Arial,sans-serif!important;
+ font-weight:900!important;
+ font-size:clamp(1.2rem,4.6vw,3.8rem)!important;
+ letter-spacing:-.035em!important;
+ line-height:1!important;
+}
+body.home .journey-head .section-title span{
+ filter:drop-shadow(3px 4px 0 rgba(43,47,65,.96))!important;
+}
+@media(max-width:760px){
+ body.home .hero h1.hero-title .hero-title-line--sub{font-size:.76em!important}
+ body.home .journey-head .section-title{
+  font-size:clamp(1.2rem,6vw,2.2rem)!important;
+  letter-spacing:-.04em!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
+  animation:none!important;
+  -webkit-text-stroke:.35px rgba(255,255,255,.35)!important;
+ }
+ body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
+  -webkit-text-stroke:.35px rgba(188,169,255,.42)!important;
+ }
+}
