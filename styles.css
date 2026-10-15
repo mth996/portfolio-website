@@ -1388,7 +1388,7 @@ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
  display:inline!important;
  color:#f3f5f8!important;
  -webkit-text-fill-color:#f3f5f8!important;
- -webkit-text-stroke:.25px rgba(255,255,255,.22)!important;
+ -webkit-text-stroke:.25px rgba(255,255,255,.22);
  background:none!important;
  filter:none!important;
  text-shadow:2px 3px 0 rgba(57,64,83,.96)!important;
@@ -1396,7 +1396,7 @@ body.home .hero h1.hero-title .hero-title-line .hero-word .hero-char{
 body.home .hero h1.hero-title .hero-title-line--sub .hero-word .hero-char{
  color:#bca9ff!important;
  -webkit-text-fill-color:#bca9ff!important;
- -webkit-text-stroke:.25px rgba(188,169,255,.24)!important;
+ -webkit-text-stroke:.25px rgba(188,169,255,.24);
  text-shadow:2px 3px 0 rgba(67,54,99,.96)!important;
 }
 body.home .journey-head .section-title{
