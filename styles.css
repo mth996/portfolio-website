@@ -1620,7 +1620,7 @@ body.home .hero h1.hero-title--art .hero-title-line--sub::after{
  opacity:0;
  background:linear-gradient(108deg,transparent 36%,rgba(224,213,255,.08) 44%,rgba(255,255,255,.5) 50%,rgba(176,148,255,.2) 56%,transparent 64%);
  background-size:240% 100%;
- -webkit-mask-image:url("images/hero-you-can-step-into-outline-mask.png");
+ -webkit-mask-image:url("images/hero-you-can-step-into-outline-mask.png?v=2");
  mask-image:url("images/hero-you-can-step-into-outline-mask.png");
  -webkit-mask-size:100% 100%;
  mask-size:100% 100%;
