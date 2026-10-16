@@ -1556,3 +1556,106 @@ body.home .hero h1.hero-title{
   font-size:clamp(1.35rem,6.6vw,2.8rem)!important;
  }
 }
+
+
+/* Dual reference-art hero lettering: accessible text with matched-size display rows. */
+body.home .hero h1.hero-title--art{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ gap:0!important;
+ width:100%!important;
+ max-width:1180px!important;
+ margin:.22em auto .24em!important;
+ padding:0!important;
+ font-size:inherit!important;
+ line-height:1!important;
+ letter-spacing:0!important;
+ text-align:center!important;
+ color:transparent!important;
+ -webkit-text-fill-color:transparent!important;
+ text-shadow:none!important;
+}
+body.home .hero h1.hero-title--art .visually-hidden{
+ position:absolute!important;
+ width:1px!important;
+ height:1px!important;
+ padding:0!important;
+ margin:-1px!important;
+ overflow:hidden!important;
+ clip:rect(0,0,0,0)!important;
+ white-space:nowrap!important;
+ border:0!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line{
+ position:relative!important;
+ display:block!important;
+ width:100%!important;
+ max-width:100%!important;
+ height:auto!important;
+ margin:0!important;
+ padding:0!important;
+ line-height:0!important;
+ white-space:normal!important;
+ overflow:visible!important;
+ color:transparent!important;
+ -webkit-text-fill-color:transparent!important;
+ -webkit-text-stroke:0!important;
+ background:none!important;
+ filter:none!important;
+ text-shadow:none!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line img{
+ display:block!important;
+ width:100%!important;
+ height:auto!important;
+ margin:0!important;
+ object-fit:contain!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--sub::after{
+ content:"";
+ position:absolute;
+ inset:0;
+ pointer-events:none;
+ opacity:0;
+ background:linear-gradient(108deg,transparent 36%,rgba(224,213,255,.08) 44%,rgba(255,255,255,.5) 50%,rgba(176,148,255,.2) 56%,transparent 64%);
+ background-size:240% 100%;
+ -webkit-mask-image:url("images/hero-you-can-step-into-outline-mask.png");
+ mask-image:url("images/hero-you-can-step-into-outline-mask.png");
+ -webkit-mask-size:100% 100%;
+ mask-size:100% 100%;
+ -webkit-mask-repeat:no-repeat;
+ mask-repeat:no-repeat;
+}
+@media(prefers-reduced-motion:no-preference){
+ body.home .hero h1.hero-title--art .hero-title-line--main{
+  animation:hero-art-arrive .85s cubic-bezier(.2,.72,.25,1) .12s both;
+ }
+ body.home .hero h1.hero-title--art .hero-title-line--sub{
+  animation:hero-art-arrive .85s cubic-bezier(.2,.72,.25,1) 1.15s both;
+ }
+ body.home .hero h1.hero-title--art .hero-title-line--sub::after{
+  opacity:.72;
+  animation:hero-art-edge-sweep 7.8s ease-in-out 2.1s infinite;
+ }
+}
+@keyframes hero-art-arrive{
+ from{opacity:0;transform:translateY(12px) scale(.99)}
+ to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes hero-art-edge-sweep{
+ 0%,14%{background-position:130% 0}
+ 62%,100%{background-position:-130% 0}
+}
+@media(prefers-reduced-motion:reduce){
+ body.home .hero h1.hero-title--art .hero-title-line--sub::after{display:none}
+}
+@media(max-width:760px){
+ body.home .hero h1.hero-title--art{
+  width:100%!important;
+  margin:.22em auto .28em!important;
+ }
+ body.home .hero h1.hero-title--art .hero-title-line img{
+  width:100%!important;
+ }
+}
