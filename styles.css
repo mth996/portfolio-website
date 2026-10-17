@@ -1787,3 +1787,57 @@ body.home .hero h1.hero-title--art .hero-title-line--sub::after{
   animation:none!important;
  }
 }
+
+
+/* 2026-10-17 — Keep the individual block glyphs on two fixed, responsive rows. */
+body.home .hero h1.hero-title--art{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ width:100%!important;
+ max-width:1180px!important;
+ margin:.22em auto .24em!important;
+ padding:0!important;
+ line-height:1!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line{
+ display:block!important;
+ flex:0 0 auto!important;
+ width:100%!important;
+ max-width:1180px!important;
+ height:auto!important;
+ margin:0 auto!important;
+ padding:0!important;
+ line-height:0!important;
+ white-space:nowrap!important;
+ overflow:visible!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--sub{
+ margin-top:clamp(3px,.45vw,7px)!important;
+}
+body.home .hero h1.hero-title--art .hero-glyph-svg{
+ display:block!important;
+ width:100%!important;
+ height:auto!important;
+ max-width:none!important;
+ margin:0!important;
+ padding:0!important;
+ overflow:visible!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--main::after,
+body.home .hero h1.hero-title--art .hero-title-line--sub::after{
+ display:none!important;
+ content:none!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ body.home .hero h1.hero-title--art .hero-title-line--main{
+  animation:hero-art-arrive 1s cubic-bezier(.2,.72,.25,1) .12s both!important;
+ }
+ body.home .hero h1.hero-title--art .hero-title-line--sub{
+  animation:hero-art-arrive 1s cubic-bezier(.2,.72,.25,1) 1.28s both!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.home .hero h1.hero-title--art .hero-title-line--main,
+ body.home .hero h1.hero-title--art .hero-title-line--sub{animation:none!important}
+}
