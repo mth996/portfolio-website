@@ -1909,3 +1909,158 @@ body.home .hero h1.hero-title--art .hero-title-line--sub{
  aspect-ratio:4076 / 260!important;
  margin-top:clamp(8px,.8vw,12px)!important;
 }
+
+
+/* 2026-10-17 — Reuse the bold block glyph system for portfolio section headings. */
+body.home .art-heading-target{
+ position:relative;
+ letter-spacing:0!important;
+ text-shadow:none!important;
+ overflow:visible;
+}
+body.home .art-heading-target.art-ready{
+ display:flex;
+ align-items:stretch;
+}
+body.home .art-heading-target.art-ready .art-heading-fallback{
+ position:absolute!important;
+ width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
+ overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+}
+body.home .art-heading-visual{
+ display:flex;
+ width:100%;
+ flex-direction:column;
+ align-items:center;
+ gap:.12em;
+ line-height:1;
+ font-size:1em;
+ letter-spacing:0!important;
+ text-shadow:none!important;
+}
+body.home .profile-section .art-heading-visual,
+body.home .journey-column-title .art-heading-visual{
+ align-items:flex-start;
+}
+body.home .art-heading-line{
+ display:flex;
+ align-items:flex-end;
+ justify-content:center;
+ width:100%;
+ min-height:1em;
+ gap:.30em;
+ white-space:nowrap;
+ line-height:1;
+ transform-origin:center top;
+ letter-spacing:0!important;
+}
+body.home .profile-section .art-heading-line,
+body.home .journey-column-title .art-heading-line{
+ justify-content:flex-start;
+ transform-origin:left top;
+}
+body.home .art-heading-word{
+ display:inline-flex;
+ align-items:flex-end;
+ flex:0 0 auto;
+ gap:.025em;
+ height:1em;
+ white-space:nowrap;
+}
+body.home .art-heading-glyph{
+ display:inline-block;
+ flex:0 0 auto;
+ position:relative;
+ overflow:hidden;
+ height:1em;
+ vertical-align:bottom;
+}
+body.home .art-heading-glyph img{
+ position:absolute;
+ display:block;
+ max-width:none;
+ margin:0;
+ padding:0;
+ object-fit:fill;
+}
+body.home .art-heading-period{
+ display:inline-block;
+ flex:0 0 auto;
+ width:.20em;
+ height:.20em;
+ margin-left:.015em;
+ margin-bottom:.025em;
+ background:#f7faff;
+ border:.035em solid #16c7e4;
+ box-shadow:.045em .045em 0 #16c7e4,.075em .075em 0 rgba(22,199,228,.72);
+}
+body.home .art-heading-ampersand{
+ display:inline-block;
+ align-self:flex-end;
+ flex:0 0 auto;
+ margin:0 .08em .02em;
+ color:#f7faff;
+ font:900 .82em/.9 "Arial Black",Arial,sans-serif;
+ -webkit-text-stroke:.025em #16c7e4;
+ text-shadow:.035em .04em 0 #16c7e4,.07em .075em 0 rgba(22,199,228,.7);
+}
+body.home .art-heading-splitword{
+ display:inline-block;
+ position:relative;
+ flex:0 0 auto;
+ width:max-content;
+ height:1em;
+ vertical-align:bottom;
+}
+body.home .art-heading-split-layer{
+ position:absolute;
+ inset:0;
+ display:flex;
+ align-items:flex-end;
+ white-space:nowrap;
+}
+body.home .art-heading-split-layer--left{position:relative;inset:auto;clip-path:inset(0 50% 0 0)}
+body.home .art-heading-split-layer--right{clip-path:inset(0 0 0 50%)}
+body.home .showcase-head .section-title.art-ready::after{display:none!important;content:none!important}
+body.home .journey-column-title.art-ready{
+ font-size:1rem;
+ line-height:1;
+ color:inherit;
+}
+body.home .footer h2.art-ready{line-height:1!important}
+@media(max-width:760px){
+ body.home .art-heading-visual{gap:.10em}
+ body.home .art-heading-line{gap:.22em}
+ body.home .art-heading-word{gap:.018em}
+}
+
+/* Shield image glyphs from older gradient and text-shadow heading rules. */
+body.home .art-heading-target.art-ready .art-heading-visual{
+ display:flex!important;
+ background:none!important;
+ background-clip:border-box!important;
+ -webkit-background-clip:border-box!important;
+ -webkit-text-fill-color:currentColor!important;
+ -webkit-text-stroke:0!important;
+ filter:none!important;
+ text-shadow:none!important;
+}
+body.home .art-heading-target.art-ready .art-heading-visual span{
+ background:none!important;
+ background-clip:border-box!important;
+ -webkit-background-clip:border-box!important;
+ -webkit-text-fill-color:currentColor!important;
+ -webkit-text-stroke:0!important;
+ filter:none!important;
+ text-shadow:none!important;
+}
+body.home .art-heading-target.art-ready .art-heading-line{display:flex!important}
+body.home .art-heading-target.art-ready .art-heading-word{display:inline-flex!important}
+body.home .art-heading-target.art-ready .art-heading-glyph,
+body.home .art-heading-target.art-ready .art-heading-period,
+body.home .art-heading-target.art-ready .art-heading-ampersand,
+body.home .art-heading-target.art-ready .art-heading-splitword{display:inline-block!important}
+body.home .art-heading-target.art-ready .art-heading-glyph img{display:block!important}
+body.home .art-heading-target.art-ready .art-heading-split-layer{display:flex!important}
+body.home .art-heading-target.art-ready .art-heading-period{background:#f7faff!important}
+body.home .art-heading-target.art-ready .art-heading-ampersand{color:#f7faff!important}
