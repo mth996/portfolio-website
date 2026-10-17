@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="stylesheet" href="styles.css?v=20261017-block-glyph-outline-v21">
+<link rel="stylesheet" href="styles.css?v=20261017-individual-glyphs-v22">
 </head>
 <body class="home">
 <header class="topbar wrap">
@@ -16,7 +16,7 @@
 <div class="hero-grid"></div><div class="hero-glow"></div>
 <div class="wrap hero-content">
 <div class="kicker">XR • VR • AR • Games • Unity</div>
-<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" aria-hidden="true"><img src="images/hero-building-worlds.png?v=20261017-block-glyph-outline-v21" alt=""></span><span class="hero-title-line hero-title-line--sub" aria-hidden="true"><img src="images/hero-you-can-step-into.png?v=20261017-block-glyph-outline-v21" alt=""></span></h1>
+<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" aria-hidden="true"><span class="hero-word">BUILDING</span><span class="hero-word">WORLDS</span></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" aria-hidden="true"><span class="hero-word">YOU</span><span class="hero-word">CAN</span><span class="hero-word">STEP</span><span class="hero-word">INTO</span></span></h1>
 <p class="lead">I'm Mohammad Tahmidul Hasan — a game and immersive-technology developer creating interactive experiences across VR, games and real-time 3D.</p>
 <a class="scroll-cue" href="#projects"><span>Explore work</span><b>↓</b></a>
 </div>
@@ -94,19 +94,22 @@ if('IntersectionObserver' in window){
  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{threshold:.2});
  scenes.forEach(s=>observer.observe(s));
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
-document.querySelectorAll("body.home .hero-title-line").forEach(line=>{
- line.style.setProperty("--line-delay",line.classList.contains("hero-title-line--sub")?"2.35s":"0s");
+document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(line=>{
+ const words=[...line.querySelectorAll(".hero-word")];
  let letterIndex=0;
- line.querySelectorAll(".hero-word").forEach(word=>{
-  const letters=Array.from(word.textContent);
-  word.replaceChildren(...letters.map(character=>{
-   const letter=document.createElement("span");
-   letter.className="hero-char";
-   letter.style.setProperty("--letter-index",letterIndex++);
-   letter.textContent=character;
-   return letter;
+ for(const word of words){
+  const label=word.textContent.trim();
+  word.replaceChildren(...Array.from(label,character=>{
+   const glyph=document.createElement("img");
+   glyph.className="hero-glyph";
+   glyph.src=`images/hero-glyphs/${line.dataset.glyphSet}/${character}.png?v=20261017-glyph-set-1`;
+   glyph.alt="";
+   glyph.setAttribute("aria-hidden","true");
+   glyph.decoding="async";
+   glyph.style.setProperty("--letter-index",letterIndex++);
+   return glyph;
   }));
- });
+ }
 });
 </script>
 </body>

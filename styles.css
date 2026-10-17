@@ -1721,3 +1721,69 @@ body.home .hero h1.hero-title--art .hero-title-line--sub::after{
   width:100%!important;
  }
 }
+
+
+/* 2026-10-17 — Compose the hero from the approved transparent block glyphs. */
+body.home .hero h1.hero-title--art .hero-title-line{
+ display:flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ gap:clamp(3px,.55vw,8px)!important;
+ width:100%!important;
+ max-width:1180px!important;
+ height:auto!important;
+ margin:0 auto!important;
+ padding:0!important;
+ overflow:visible!important;
+ line-height:1!important;
+ white-space:nowrap!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--sub{
+ margin-top:clamp(3px,.45vw,7px)!important;
+}
+body.home .hero h1.hero-title--art .hero-word{
+ display:inline-flex!important;
+ flex:0 0 auto!important;
+ align-items:center!important;
+ gap:0!important;
+ width:auto!important;
+ max-width:none!important;
+ height:auto!important;
+ margin:0!important;
+ padding:0!important;
+ color:transparent!important;
+ -webkit-text-fill-color:transparent!important;
+ background:none!important;
+ filter:none!important;
+ text-shadow:none!important;
+ white-space:nowrap!important;
+}
+body.home .hero h1.hero-title--art .hero-glyph{
+ display:block!important;
+ flex:0 0 auto!important;
+ width:clamp(18px,5.75vw,82px)!important;
+ max-width:none!important;
+ height:auto!important;
+ margin:0!important;
+ padding:0!important;
+ object-fit:contain!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--main::after,
+body.home .hero h1.hero-title--art .hero-title-line--sub::after{
+ display:none!important;
+ content:none!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ body.home .hero h1.hero-title--art .hero-title-line--main{
+  animation:hero-art-arrive 1s cubic-bezier(.2,.72,.25,1) .12s both!important;
+ }
+ body.home .hero h1.hero-title--art .hero-title-line--sub{
+  animation:hero-art-arrive 1s cubic-bezier(.2,.72,.25,1) 1.28s both!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.home .hero h1.hero-title--art .hero-title-line--main,
+ body.home .hero h1.hero-title--art .hero-title-line--sub{
+  animation:none!important;
+ }
+}
