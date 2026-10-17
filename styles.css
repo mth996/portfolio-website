@@ -1902,4 +1902,10 @@ body.home .hero h1.hero-title--art .hero-title-line--sub::after{
  body.home .hero h1.hero-title--art .hero-title-line--main,
  body.home .hero h1.hero-title--art .hero-title-line--sub{animation:none!important}
 }
-\n\n/* 2026-10-17 — Tighten transparent glyph padding and reduce the second line by one step. */\nbody.home .hero h1.hero-title--art .hero-title-line--sub{\n aspect-ratio:4076 / 260!important;\n margin-top:clamp(8px,.8vw,12px)!important;\n}\n
+
+
+/* 2026-10-17 — Tighten transparent glyph padding and reduce the second line by one step. */
+body.home .hero h1.hero-title--art .hero-title-line--sub{
+ aspect-ratio:4076 / 260!important;
+ margin-top:clamp(8px,.8vw,12px)!important;
+}
