@@ -16,7 +16,7 @@
 <div class="hero-grid"></div><div class="hero-glow"></div>
 <div class="wrap hero-content">
 <div class="kicker">XR • VR • AR • Games • Unity</div>
-<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
+<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-slate-depth="true" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="building-worlds" data-slate-depth="true" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
 <p class="lead">I'm Mohammad Tahmidul Hasan — a game and immersive-technology developer creating interactive experiences across VR, games and real-time 3D.</p>
 <a class="scroll-cue" href="#projects"><span>Explore work</span><b>↓</b></a>
 </div>
@@ -115,7 +115,26 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
   groups.push(group);
  }
  const glyphs=groups.flat();
- await Promise.all(glyphs.map(glyph=>glyph.decode().catch(()=>{})));
+ await Promise.all(glyphs.map(async glyph=>{
+  await glyph.decode().catch(()=>{});
+  if(line.dataset.slateDepth!=="true"||!glyph.naturalWidth||!glyph.naturalHeight)return;
+  const recolorCanvas=document.createElement("canvas");
+  recolorCanvas.width=glyph.naturalWidth;recolorCanvas.height=glyph.naturalHeight;
+  const recolorContext=recolorCanvas.getContext("2d",{willReadFrequently:true});
+  if(!recolorContext)return;
+  recolorContext.drawImage(glyph,0,0);
+  const imageData=recolorContext.getImageData(0,0,recolorCanvas.width,recolorCanvas.height);
+  const pixels=imageData.data;
+  for(let i=0;i<pixels.length;i+=4){
+   const r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
+   if(a>8&&g>r*1.15&&b>r*1.15&&b>g*.9){
+    pixels[i]=43;pixels[i+1]=45;pixels[i+2]=60;
+   }
+  }
+  recolorContext.putImageData(imageData,0,0);
+  glyph.src=recolorCanvas.toDataURL("image/png");
+  await glyph.decode().catch(()=>{});
+ }));
  const canvas=document.createElement("canvas");
  const context=canvas.getContext("2d",{willReadFrequently:true});
  const metrics=glyphs.map(glyph=>{
