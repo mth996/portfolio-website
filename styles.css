@@ -2067,7 +2067,7 @@ body.home .art-heading-target.art-ready .art-heading-ampersand{color:#f7faff!imp
 
 
 /* 2026-10-17 — Apply the cyan / violet / pink palette to final title words. */
-body.home .art-heading-period--gradient{
+body.home .art-heading-target.art-ready .art-heading-period--gradient{
  background:var(--period-color,#e269b5)!important;
  border:0!important;
  box-shadow:.045em .045em 0 #2b2d3c,.075em .075em 0 rgba(43,45,60,.82)!important;
