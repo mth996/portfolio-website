@@ -16,13 +16,13 @@
 <div class="hero-grid"></div><div class="hero-glow"></div>
 <div class="wrap hero-content">
 <div class="kicker">XR • VR • AR • Games • Unity</div>
-<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-slate-depth="true" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="building-worlds" data-slate-depth="true" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
+<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-slate-depth="true" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" data-color-mode="touch-gradient" data-slate-depth="true" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
 <p class="lead">I'm Mohammad Tahmidul Hasan — a game and immersive-technology developer creating interactive experiences across VR, games and real-time 3D.</p>
 <a class="scroll-cue" href="#projects"><span>Explore work</span><b>↓</b></a>
 </div>
 </section>
 <section class="showcase" id="projects">
-<div class="wrap showcase-head"><div class="kicker">Selected work / 01—11</div><h2 class="section-title art-heading-target" data-art-lines="ENTER THE|WORLDS" data-slate-depth="true" aria-label="Enter the Worlds"><span >Enter the<br><span>Worlds</span></span></h2><p>A collection of VR, game, simulation and interactive projects spanning research, education, training and entertainment.</p></div>
+<div class="wrap showcase-head"><div class="kicker">Selected work / 01—11</div><h2 class="section-title art-heading-target" data-art-lines="ENTER THE|WORLDS" data-gradient-word="WORLDS" data-slate-depth="true" aria-label="Enter the Worlds"><span >Enter the<br><span>Worlds</span></span></h2><p>A collection of VR, game, simulation and interactive projects spanning research, education, training and entertainment.</p></div>
 <div class="project-stack project-library">
 <a class="project-scene featured project-featured" href="quest-for-everyday-heroes.html"><div class="scene-inner wrap"><span class="scene-num">01</span><div class="scene-copy"><div class="scene-tags">VR / Research / Meta Quest</div><h3>Quest for<br>Everyday Heroes</h3><p>An immersive VR role-playing experience where children with ASD practise everyday routines and communication through guided, interactive tasks in familiar settings such as home, school and a farm. Developed in Unity for Meta Quest as my MSc research project, it explores how these experiences can support daily-life skills and how learning might transfer to real-world situations.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Quest for everyday heroes poster.png" alt="Quest for Everyday Heroes"><span>Featured Immersive Experience</span><i></i></div></div></a>
 <a class="project-scene" href="scilab-vr.html"><div class="scene-inner wrap"><span class="scene-num">02</span><div class="scene-copy"><div class="scene-tags">VR / Education</div><h3>SciLab VR</h3><p>Immersive VR learning for secondary-school science and physics education.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/ScilabVR.png" alt="SciLab VR"><span>Educational XR</span><i></i></div></div></a>
@@ -115,7 +115,15 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
   groups.push(group);
  }
  const glyphs=groups.flat();
- await Promise.all(glyphs.map(async glyph=>{
+ const touchStops=[{at:0,color:[84,218,220]},{at:.5,color:[157,133,232]},{at:1,color:[226,105,181]}];
+ const touchColor=progress=>{
+  const t=Math.max(0,Math.min(1,progress));
+  const right=touchStops.findIndex(stop=>stop.at>=t);
+  const a=touchStops[Math.max(0,right-1)],b=touchStops[right<0?touchStops.length-1:right];
+  const amount=b.at===a.at?0:(t-a.at)/(b.at-a.at);
+  return a.color.map((channel,index)=>Math.round(channel+(b.color[index]-channel)*amount));
+ };
+ await Promise.all(glyphs.map(async (glyph,glyphIndex)=>{
   await glyph.decode().catch(()=>{});
   if(line.dataset.slateDepth!=="true"||!glyph.naturalWidth||!glyph.naturalHeight)return;
   const recolorCanvas=document.createElement("canvas");
@@ -125,9 +133,25 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
   recolorContext.drawImage(glyph,0,0);
   const imageData=recolorContext.getImageData(0,0,recolorCanvas.width,recolorCanvas.height);
   const pixels=imageData.data;
-  for(let i=0;i<pixels.length;i+=4){
-   const r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
-   if(a>8&&g>r*1.15&&b>r*1.15&&b>g*.9){
+  for(let y=0;y<recolorCanvas.height;y++)for(let x=0;x<recolorCanvas.width;x++){
+   const i=(y*recolorCanvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
+   if(a<=8)continue;
+   if(line.dataset.colorMode==="touch-gradient"){
+    const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
+    if(isExtrusion){
+     const lum=(.2126*r+.7152*g+.0722*b)/255;
+     const shade=Math.max(.66,Math.min(1.08,.68+lum*.58));
+     pixels[i]=Math.round(43*shade);pixels[i+1]=Math.round(45*shade);pixels[i+2]=Math.round(60*shade);
+    }else{
+     const progress=(glyphIndex+(x+.5)/recolorCanvas.width)/Math.max(1,glyphs.length);
+     const target=touchColor(progress);
+     const lum=(.2126*r+.7152*g+.0722*b)/255;
+     const shade=Math.max(.72,Math.min(1.16,.73+lum*.38));
+     pixels[i]=Math.min(255,Math.round(target[0]*shade));
+     pixels[i+1]=Math.min(255,Math.round(target[1]*shade));
+     pixels[i+2]=Math.min(255,Math.round(target[2]*shade));
+    }
+   }else if(g>r*1.15&&b>r*1.15&&b>g*.9){
     pixels[i]=43;pixels[i+1]=45;pixels[i+2]=60;
    }
   }
