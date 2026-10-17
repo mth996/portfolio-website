@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="stylesheet" href="styles.css?v=20261017-tight-glyph-spacing-v25">
+<link rel="stylesheet" href="styles.css?v=20261017-alpha-cropped-glyphs-v26">
 </head>
 <body class="home">
 <header class="topbar wrap">
@@ -94,13 +94,14 @@ if('IntersectionObserver' in window){
  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{threshold:.2});
  scenes.forEach(s=>observer.observe(s));
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
-document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(line=>{
+document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(async line=>{
  const words=line.dataset.words.split(" ");
  const isSub=line.classList.contains("hero-title-line--sub");
- const glyphWidth=isSub?220:244, glyphHeight=isSub?260:290, viewWidth=4076, wordGap=isSub?140:150;
- line.style.aspectRatio=`${viewWidth} / ${glyphHeight}`;
- let x=(viewWidth-(words.reduce((n,w)=>n+w.length,0)*glyphWidth+(words.length-1)*wordGap))/2;
- for(const [wordIndex,word] of words.entries()){
+ const rowHeight=isSub?260:290, viewWidth=4076, letterGap=6, wordGap=90;
+ line.style.aspectRatio=`${viewWidth} / ${rowHeight}`;
+ const groups=[];
+ for(const word of words){
+  const group=[];
   for(const character of word){
    const glyph=document.createElement("img");
    glyph.className="hero-glyph";
@@ -108,13 +109,55 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
    glyph.alt="";
    glyph.setAttribute("aria-hidden","true");
    glyph.decoding="async";
-   glyph.style.left=`${x/viewWidth*100}%`;
    line.appendChild(glyph);
-   x+=glyphWidth;
+   group.push(glyph);
   }
-  if(wordIndex<words.length-1)x+=wordGap;
+  groups.push(group);
  }
-});
+ const glyphs=groups.flat();
+ await Promise.all(glyphs.map(glyph=>glyph.decode().catch(()=>{})));
+ const canvas=document.createElement("canvas");
+ const context=canvas.getContext("2d",{willReadFrequently:true});
+ const metrics=glyphs.map(glyph=>{
+  const width=glyph.naturalWidth, height=glyph.naturalHeight;
+  if(!width||!height||!context) return {glyph,width:274,height:290,left:0,top:0,right:273,bottom:289};
+  canvas.width=width; canvas.height=height;
+  context.clearRect(0,0,width,height);
+  context.drawImage(glyph,0,0);
+  const pixels=context.getImageData(0,0,width,height).data;
+  let left=width, top=height, right=-1, bottom=-1;
+  for(let y=0;y<height;y++){
+   for(let x=0;x<width;x++){
+    if(pixels[(y*width+x)*4+3]>8){
+     if(x<left)left=x;
+     if(x>right)right=x;
+     if(y<top)top=y;
+     if(y>bottom)bottom=y;
+    }
+   }
+  }
+  if(right<left||bottom<top)return {glyph,width,height,left:0,top:0,right:width-1,bottom:height-1};
+  return {glyph,width,height,left,top,right,bottom};
+ });
+ const byGlyph=new Map(metrics.map(metric=>[metric.glyph,metric]));
+ const scaleFor=metric=>rowHeight/metric.height;
+ const totalWidth=groups.reduce((sum,group,groupIndex)=>
+  sum+group.reduce((width,glyph)=>{const m=byGlyph.get(glyph);return width+(m.right-m.left+1)*scaleFor(m)},0)
+  +Math.max(0,group.length-1)*letterGap
+  +(groupIndex<groups.length-1?wordGap:0),0);
+ let cursor=(viewWidth-totalWidth)/2;
+ for(const [groupIndex,group] of groups.entries()){
+  for(const glyph of group){
+   const m=byGlyph.get(glyph), scale=scaleFor(m), visibleWidth=m.right-m.left+1;
+   glyph.style.setProperty("left",`${(cursor-m.left*scale)/viewWidth*100}%`,"important");
+   glyph.style.setProperty("width",`${m.width*scale/viewWidth*100}%`,"important");
+   glyph.style.setProperty("height","100%","important");
+   glyph.style.clipPath=`inset(${m.top/m.height*100}% ${(m.width-1-m.right)/m.width*100}% ${(m.height-1-m.bottom)/m.height*100}% ${m.left/m.width*100}%)`;
+   cursor+=visibleWidth*scale+letterGap;
+  }
+  if(groupIndex<groups.length-1)cursor+=wordGap;
+ }
+});;
 </script>
 </body>
 </html>
