@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="stylesheet" href="styles.css?v=20261017-fixed-glyph-rows-v24">
+<link rel="stylesheet" href="styles.css?v=20261017-tight-glyph-spacing-v25">
 </head>
 <body class="home">
 <header class="topbar wrap">
@@ -96,7 +96,7 @@ if('IntersectionObserver' in window){
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
 document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(line=>{
  const words=line.dataset.words.split(" ");
- const glyphWidth=274, glyphHeight=290, viewWidth=4076, wordGap=words.length===2?112:80;
+ const isSub=line.classList.contains("hero-title-line--sub");\n const glyphWidth=isSub?220:244, glyphHeight=isSub?260:290, viewWidth=4076, wordGap=isSub?140:150;
  line.style.aspectRatio=`${viewWidth} / ${glyphHeight}`;
  let x=(viewWidth-(words.reduce((n,w)=>n+w.length,0)*glyphWidth+(words.length-1)*wordGap))/2;
  for(const [wordIndex,word] of words.entries()){
