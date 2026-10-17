@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="stylesheet" href="styles.css?v=20261017-svg-glyph-compose-v23">
+<link rel="stylesheet" href="styles.css?v=20261017-fixed-glyph-rows-v24">
 </head>
 <body class="home">
 <header class="topbar wrap">
@@ -16,7 +16,7 @@
 <div class="hero-grid"></div><div class="hero-glow"></div>
 <div class="wrap hero-content">
 <div class="kicker">XR • VR • AR • Games • Unity</div>
-<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-words="BUILDING WORLDS" aria-hidden="true"><svg class="hero-glyph-svg"></svg></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" data-words="YOU CAN STEP INTO" aria-hidden="true"><svg class="hero-glyph-svg"></svg></span></h1>
+<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
 <p class="lead">I'm Mohammad Tahmidul Hasan — a game and immersive-technology developer creating interactive experiences across VR, games and real-time 3D.</p>
 <a class="scroll-cue" href="#projects"><span>Explore work</span><b>↓</b></a>
 </div>
@@ -95,23 +95,20 @@ if('IntersectionObserver' in window){
  scenes.forEach(s=>observer.observe(s));
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
 document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(line=>{
- const svg=line.querySelector(".hero-glyph-svg");
  const words=line.dataset.words.split(" ");
- const glyphWidth=274, glyphHeight=290, wordGap=words.length===2?112:80, viewWidth=4076;
- svg.setAttribute("viewBox",`0 0 ${viewWidth} ${glyphHeight}`);
- svg.setAttribute("width",viewWidth);
- svg.setAttribute("height",glyphHeight);
+ const glyphWidth=274, glyphHeight=290, viewWidth=4076, wordGap=words.length===2?112:80;
+ line.style.aspectRatio=`${viewWidth} / ${glyphHeight}`;
  let x=(viewWidth-(words.reduce((n,w)=>n+w.length,0)*glyphWidth+(words.length-1)*wordGap))/2;
  for(const [wordIndex,word] of words.entries()){
   for(const character of word){
-   const glyph=document.createElementNS("http://www.w3.org/2000/svg","image");
-   glyph.setAttribute("href",`images/hero-glyphs/${line.dataset.glyphSet}/${character}.png?v=20261017-glyph-set-1`);
-   glyph.setAttribute("x",x);
-   glyph.setAttribute("y",0);
-   glyph.setAttribute("width",glyphWidth);
-   glyph.setAttribute("height",glyphHeight);
-   glyph.setAttribute("preserveAspectRatio","none");
-   svg.appendChild(glyph);
+   const glyph=document.createElement("img");
+   glyph.className="hero-glyph";
+   glyph.src=`images/hero-glyphs/${line.dataset.glyphSet}/${character}.png?v=20261017-glyph-set-1`;
+   glyph.alt="";
+   glyph.setAttribute("aria-hidden","true");
+   glyph.decoding="async";
+   glyph.style.left=`${x/viewWidth*100}%`;
+   line.appendChild(glyph);
    x+=glyphWidth;
   }
   if(wordIndex<words.length-1)x+=wordGap;

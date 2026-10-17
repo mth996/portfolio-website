@@ -1841,3 +1841,64 @@ body.home .hero h1.hero-title--art .hero-title-line--sub::after{
  body.home .hero h1.hero-title--art .hero-title-line--main,
  body.home .hero h1.hero-title--art .hero-title-line--sub{animation:none!important}
 }
+
+
+/* 2026-10-17 — Pin every individual glyph inside two unbreakable responsive rows. */
+body.home .hero h1.hero-title--art{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ width:100%!important;
+ max-width:1180px!important;
+ margin:.22em auto .24em!important;
+ padding:0!important;
+ line-height:1!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line{
+ position:relative!important;
+ display:block!important;
+ flex:0 0 auto!important;
+ width:100%!important;
+ max-width:1180px!important;
+ height:auto!important;
+ aspect-ratio:4076 / 290!important;
+ margin:0 auto!important;
+ padding:0!important;
+ line-height:0!important;
+ white-space:nowrap!important;
+ overflow:visible!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--sub{
+ margin-top:clamp(3px,.45vw,7px)!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line .hero-glyph{
+ position:absolute!important;
+ top:0!important;
+ left:auto;
+ display:block!important;
+ width:auto!important;
+ height:100%!important;
+ max-width:none!important;
+ margin:0!important;
+ padding:0!important;
+ object-fit:fill!important;
+ transform:none!important;
+ animation:none!important;
+}
+body.home .hero h1.hero-title--art .hero-title-line--main::after,
+body.home .hero h1.hero-title--art .hero-title-line--sub::after{
+ display:none!important;
+ content:none!important;
+}
+@media(prefers-reduced-motion:no-preference){
+ body.home .hero h1.hero-title--art .hero-title-line--main{
+  animation:hero-art-arrive 1s cubic-bezier(.2,.72,.25,1) .12s both!important;
+ }
+ body.home .hero h1.hero-title--art .hero-title-line--sub{
+  animation:hero-art-arrive 1s cubic-bezier(.2,.72,.25,1) 1.28s both!important;
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ body.home .hero h1.hero-title--art .hero-title-line--main,
+ body.home .hero h1.hero-title--art .hero-title-line--sub{animation:none!important}
+}
