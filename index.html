@@ -5,6 +5,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
 <link rel="stylesheet" href="styles.css?v=20261018-papers-section">
+<style id="papers-section-styles">
+body.home .papers-section{padding:110px 0 100px;border-top:1px solid var(--line);background:linear-gradient(180deg,#080a0d 0%,#06070a 100%)}
+body.home .papers-head{display:flex;flex-direction:column;align-items:center;gap:22px;padding:0 0 48px;text-align:center}
+body.home .papers-head .section-title{width:100%;max-width:920px;margin:0;font-size:clamp(2.8rem,6vw,5rem);line-height:.98}
+body.home .papers-head p{max-width:720px;margin:0;color:#aeb5be;line-height:1.7;font-size:1.05rem}
+body.home .papers-list{display:grid;gap:14px}
+body.home .paper-card{display:grid;grid-template-columns:78px minmax(0,1fr);gap:24px;padding:28px 30px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:linear-gradient(110deg,rgba(255,255,255,.035),rgba(255,255,255,.012));transition:border-color .25s ease,transform .25s ease,background .25s ease}
+body.home .paper-card:hover{transform:translateY(-2px);border-color:rgba(114,221,255,.35);background:linear-gradient(110deg,rgba(114,221,255,.055),rgba(157,123,255,.035))}
+body.home .paper-year{padding-top:2px;color:#8e9bab;font-size:1.1rem;font-weight:800;letter-spacing:.08em}
+body.home .paper-venue{margin-bottom:10px;color:#8e9bab;font-size:.7rem;line-height:1.55;letter-spacing:.12em;text-transform:uppercase}
+body.home .paper-content h3{margin:0;font-size:clamp(1.12rem,2vw,1.48rem);line-height:1.38;font-weight:800}
+body.home .paper-title{color:#f4f7fb;text-decoration:none;border:0!important;padding:0!important;transition:color .2s ease}
+body.home .paper-title:hover{color:#8dd8ff}
+body.home .paper-content p{margin:10px 0 0;color:#9da7b2;font-size:.92rem;line-height:1.65}
+body.home .paper-links{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+body.home .paper-links a{display:inline-flex;align-items:center;padding:9px 13px;border:1px solid rgba(114,221,255,.25)!important;border-radius:999px;color:#e8edf3;font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;transition:color .2s ease,border-color .2s ease,background .2s ease}
+body.home .paper-links a:hover{color:#fff;border-color:rgba(157,123,255,.7)!important;background:linear-gradient(110deg,rgba(114,221,255,.12),rgba(157,123,255,.14))}
+@media(max-width:760px){body.home .papers-section{padding:78px 0 72px}body.home .papers-head{gap:17px;padding-bottom:32px}body.home .papers-head .section-title{font-size:clamp(2.5rem,12vw,4rem)}body.home .paper-card{grid-template-columns:1fr;gap:10px;padding:22px 20px}body.home .paper-year{font-size:.8rem;color:#72ddff}body.home .paper-content p{font-size:.86rem}}
+</style>
 </head>
 <body class="home">
 <header class="topbar wrap">
