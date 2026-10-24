@@ -84,7 +84,7 @@
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.15;
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x0b2140, 0.0065);
+      scene.fog = new THREE.FogExp2(0x050914, 0.0065);
       const camera = new THREE.PerspectiveCamera(49, window.innerWidth / window.innerHeight, 0.1, 260);
       scene.add(new THREE.HemisphereLight(0x9cd8ff, 0x111426, 1.9));
       const keyLight = new THREE.DirectionalLight(0xc8e9ff, 2.4);
