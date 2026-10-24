@@ -360,7 +360,7 @@
         }
         const destination = item.kind === "hub" ? 0 : item.scrollTop;
         exit();
-        window.scrollTo({ top: destination, behavior: reducedMotion.matches ? "instant" : "smooth" });
+        window.scrollTo({ top: destination, behavior: reducedMotion.matches ? "auto" : "smooth" });
       }
       function onCanvasClick(event) {
         const item = findClickedLandmark(event);
