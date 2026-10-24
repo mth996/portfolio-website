@@ -1,0 +1,15 @@
+/* Shared styling for expanded project case studies */
+.project-hero .case-study-details{
+  width:min(100%,780px);display:grid;gap:20px;margin:28px 0 0;
+}
+.project-hero .case-study-details h2{
+  margin:0 0 8px;color:#8dd8ff;font-size:.76rem;font-weight:800;
+  letter-spacing:.16em;line-height:1.35;text-transform:uppercase;
+}
+.project-hero .case-study-details p{
+  margin:0;color:#b9c2cc;font-size:.98rem;line-height:1.75;
+}
+@media(max-width:760px){
+  .project-hero .case-study-details{gap:17px;margin-top:22px}
+  .project-hero .case-study-details p{font-size:.91rem}
+}
