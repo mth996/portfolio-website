@@ -375,7 +375,7 @@
       body.classList.remove("is-archipelago");
       active = false;
       updateControls();
-      announce("The 3D view could not start here. The regular portfolio is still available.");
+      announce("3D startup detail: " + (error && error.message ? error.message : "unknown error"));
       if (renderer) { renderer.dispose(); renderer = null; }
     } finally {
       booting = false;
