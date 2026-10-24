@@ -82,17 +82,17 @@
       renderer.setSize(window.innerWidth, window.innerHeight, false);
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.15;
+      renderer.toneMappingExposure = 1.22;
       const scene = new THREE.Scene();
       scene.fog = new THREE.FogExp2(0x050914, 0.0065);
       const camera = new THREE.PerspectiveCamera(49, window.innerWidth / window.innerHeight, 0.1, 260);
-      scene.add(new THREE.HemisphereLight(0x9cd8ff, 0x111426, 1.9));
-      const keyLight = new THREE.DirectionalLight(0xc8e9ff, 2.4);
+      scene.add(new THREE.HemisphereLight(0xc4ebff, 0x1a2234, 2.45));
+      const keyLight = new THREE.DirectionalLight(0xe1f5ff, 3.1);
       keyLight.position.set(-9, 17, 8);
       scene.add(keyLight);
-      const rimLight = new THREE.PointLight(0x28c7f1, 17, 44, 2);
+      const rimLight = new THREE.PointLight(0x46e4ff, 25, 48, 2);
       scene.add(rimLight);
-      const violetLight = new THREE.PointLight(0x9e71ff, 18, 48, 2);
+      const violetLight = new THREE.PointLight(0xb18bff, 24, 52, 2);
       scene.add(violetLight);
 
       const projectEls = [...document.querySelectorAll(".project-scene")];
@@ -123,22 +123,22 @@
         return { ...item, point: new THREE.Vector3(x, y, z), scrollTop };
       });
       const route = new THREE.CatmullRomCurve3(points.map(p => p.point), false, "centripetal", 0.45);
-      const routeMaterial = new THREE.MeshBasicMaterial({ color: 0x39d5f4, transparent: true, opacity: 0.6 });
+      const routeMaterial = new THREE.MeshBasicMaterial({ color: 0x39d5f4, transparent: true, opacity: 0.78 });
       const routeLine = new THREE.Mesh(new THREE.TubeGeometry(route, Math.max(180, points.length * 18), 0.075, 6, false), routeMaterial);
       routeLine.position.y = 0.14;
       scene.add(routeLine);
-      const routeCore = new THREE.Mesh(new THREE.TubeGeometry(route, Math.max(180, points.length * 18), 0.022, 5, false), new THREE.MeshBasicMaterial({ color: 0xc8fbff, transparent: true, opacity: 0.8 }));
+      const routeCore = new THREE.Mesh(new THREE.TubeGeometry(route, Math.max(180, points.length * 18), 0.022, 5, false), new THREE.MeshBasicMaterial({ color: 0xc8fbff, transparent: true, opacity: 0.96 }));
       routeCore.position.y = 0.16;
       scene.add(routeCore);
 
-      const islandTop = new THREE.MeshStandardMaterial({ color: 0x214449, roughness: 0.94, metalness: 0.02 });
-      const rockMat = new THREE.MeshStandardMaterial({ color: 0x182536, roughness: 0.96, metalness: 0.05, flatShading: true });
-      const treeTrunk = new THREE.MeshStandardMaterial({ color: 0x453b3d, roughness: 1 });
-      const treeLeaf = new THREE.MeshStandardMaterial({ color: 0x327b72, roughness: 0.9, flatShading: true });
+      const islandTop = new THREE.MeshStandardMaterial({ color: 0x37676b, roughness: 0.88, metalness: 0.02 });
+      const rockMat = new THREE.MeshStandardMaterial({ color: 0x29384e, roughness: 0.92, metalness: 0.05, flatShading: true });
+      const treeTrunk = new THREE.MeshStandardMaterial({ color: 0x65504a, roughness: 1 });
+      const treeLeaf = new THREE.MeshStandardMaterial({ color: 0x48a18b, roughness: 0.84, flatShading: true });
       const accentMats = [
-        new THREE.MeshStandardMaterial({ color: 0x5cdaf1, emissive: 0x0d5363, emissiveIntensity: 0.5, metalness: 0.22, roughness: 0.35 }),
-        new THREE.MeshStandardMaterial({ color: 0xb393ff, emissive: 0x452574, emissiveIntensity: 0.45, metalness: 0.2, roughness: 0.38 }),
-        new THREE.MeshStandardMaterial({ color: 0xffd28a, emissive: 0x754214, emissiveIntensity: 0.35, metalness: 0.16, roughness: 0.4 })
+        new THREE.MeshStandardMaterial({ color: 0x73eaff, emissive: 0x1a8fa6, emissiveIntensity: 0.85, metalness: 0.22, roughness: 0.35 }),
+        new THREE.MeshStandardMaterial({ color: 0xc6adff, emissive: 0x6847ae, emissiveIntensity: 0.78, metalness: 0.2, roughness: 0.38 }),
+        new THREE.MeshStandardMaterial({ color: 0xffd995, emissive: 0x9d6021, emissiveIntensity: 0.65, metalness: 0.16, roughness: 0.4 })
       ];
       const shared = {
         rock: new THREE.CylinderGeometry(3.15, 2.25, 1.42, 9, 1, false),
@@ -315,11 +315,11 @@
         starPositions.push((seed(i + 500) - .5) * 92, (seed(i + 1200) - .42) * 35, -seed(i + 2400) * points.length * 14 - 12);
       }
       starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starPositions, 3));
-      scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xb7e8ff, size: .07, transparent: true, opacity: .75, sizeAttenuation: true })));
+      scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xe1f7ff, size: .085, transparent: true, opacity: .9, sizeAttenuation: true })));
 
       const avatar = new THREE.Group();
-      const suit = new THREE.MeshStandardMaterial({ color: 0x20394a, roughness: .7, metalness: .1 });
-      const suitLight = new THREE.MeshStandardMaterial({ color: 0x42cbe8, emissive: 0x0d5269, emissiveIntensity: .55, roughness: .38 });
+      const suit = new THREE.MeshStandardMaterial({ color: 0x34566d, roughness: .68, metalness: .12 });
+      const suitLight = new THREE.MeshStandardMaterial({ color: 0x72eaff, emissive: 0x1786a1, emissiveIntensity: .82, roughness: .34 });
       const skin = new THREE.MeshStandardMaterial({ color: 0xdda77e, roughness: .78 });
       const dark = new THREE.MeshStandardMaterial({ color: 0x101923, roughness: .88 });
       const torso = new THREE.Mesh(new THREE.CylinderGeometry(.26, .34, .78, 7), suit);
