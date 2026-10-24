@@ -2191,3 +2191,10 @@ body.home .paper-links a:hover{
  body.home .paper-year{font-size:.8rem;color:#72ddff}
  body.home .paper-content p{font-size:.86rem}
 }
+
+
+/* A restrained silver offset creates a side face without outlining the letter face. */
+body.home .hero h1.hero-title--art .hero-glyph,
+body.home .art-heading-target.art-ready .art-heading-glyph img{
+ filter:drop-shadow(2px 3px 0 #a5b1c2)!important;
+}
