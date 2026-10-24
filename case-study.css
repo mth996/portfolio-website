@@ -13,3 +13,7 @@
   .project-hero .case-study-details{gap:17px;margin-top:22px}
   .project-hero .case-study-details p{font-size:.91rem}
 }
+.project-hero .case-study-visual{width:min(100%,780px);margin:28px 0 18px}
+.project-hero .case-study-visual img{display:block;width:100%;height:auto;border:1px solid rgba(141,216,255,.24);border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.28)}
+.project-hero .case-study-visual figcaption{margin-top:8px;color:#8f9ba9;font-size:.78rem;line-height:1.5}
+@media(max-width:760px){.project-hero .case-study-visual{margin:22px 0 14px}}
