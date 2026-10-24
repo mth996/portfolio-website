@@ -150,7 +150,7 @@
     if (!reducedMotion && !document.hidden) animationFrame = window.requestAnimationFrame(animateAtmosphere);
   }
 
-  if (canvas && context) {
+  if (canvas && context && !body.classList.contains('scroll-exploration')) {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, { passive: true });
     if (!reducedMotion) {
