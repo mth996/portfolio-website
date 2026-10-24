@@ -118,7 +118,7 @@ body.home .paper-links a:hover{color:#fff;border-color:rgba(157,123,255,.7)!impo
 <feSpecularLighting in="soft-alpha" surfaceScale="4.2" specularConstant=".96" specularExponent="13" lighting-color="#ffffff" result="bevel-light"><feDistantLight azimuth="225" elevation="55"/></feSpecularLighting>
 <feComposite in="bevel-light" in2="SourceAlpha" operator="in" result="light-inside"/>
 <feOffset in="SourceAlpha" dx="2.1" dy="3.4" result="depth-mask"/>
-<feFlood flood-color="#000000" result="depth-color"/>
+<feFlood flood-color="#a5b1c2" result="depth-color"/>
 <feComposite in="depth-color" in2="depth-mask" operator="in" result="depth"/>
 <feMerge><feMergeNode in="depth"/><feMergeNode in="SourceGraphic"/><feMergeNode in="light-inside"/></feMerge>
 </filter>
@@ -127,7 +127,7 @@ body.home .paper-links a:hover{color:#fff;border-color:rgba(157,123,255,.7)!impo
 <feSpecularLighting in="soft-alpha" surfaceScale="4.2" specularConstant=".96" specularExponent="13" lighting-color="#e7d7ff" result="bevel-light"><feDistantLight azimuth="225" elevation="55"/></feSpecularLighting>
 <feComposite in="bevel-light" in2="SourceAlpha" operator="in" result="light-inside"/>
 <feOffset in="SourceAlpha" dx="2.1" dy="3.4" result="depth-mask"/>
-<feFlood flood-color="#000000" result="depth-color"/>
+<feFlood flood-color="#a5b1c2" result="depth-color"/>
 <feComposite in="depth-color" in2="depth-mask" operator="in" result="depth"/>
 <feMerge><feMergeNode in="depth"/><feMergeNode in="SourceGraphic"/><feMergeNode in="light-inside"/></feMerge>
 </filter>
@@ -184,7 +184,7 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
    if(line.dataset.colorMode==="touch-gradient"){
     const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
     if(isExtrusion){
-     pixels[i]=0;pixels[i+1]=0;pixels[i+2]=0;
+     pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
     }else{
      const progress=(glyphIndex+(x+.5)/recolorCanvas.width)/Math.max(1,glyphs.length);
      const target=touchColor(progress);
@@ -195,7 +195,7 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
      pixels[i+2]=Math.min(255,Math.round(target[2]*shade));
     }
    }else if(g>r*1.15&&b>r*1.15&&b>g*.9){
-    pixels[i]=0;pixels[i+1]=0;pixels[i+2]=0;
+    pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
    }
   }
   recolorContext.putImageData(imageData,0,0);
@@ -264,7 +264,7 @@ function artMixColor(progress){
 function artGradientPixel(r,g,b,progress){
  const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
  if(isExtrusion){
-  return [0,0,0];
+  return [165,177,194];
  }
  const target=artMixColor(progress);
  const lum=(.2126*r+.7152*g+.0722*b)/255;
@@ -290,7 +290,7 @@ async function artGlyphData(letter,set,recolor="normal",gradientStart=0,gradient
     const i=(y*canvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
     if(a<=8)continue;
     if(recolor==="slate"&&g>r*1.15&&b>r*1.15&&b>g*.9){
-     pixels[i]=0;pixels[i+1]=0;pixels[i+2]=0;
+     pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
     }else if(recolor==="purple"&&r>68&&r>g*.76&&r>b*.62){
      const lum=(.2126*r+.7152*g+.0722*b)/255;
      const shade=Math.min(1,.48+lum*.56);
