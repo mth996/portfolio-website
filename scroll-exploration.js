@@ -115,29 +115,39 @@
       };
       const seed = n => { const x = Math.sin(n * 127.1 + 18.7) * 43758.5453; return x - Math.floor(x); };
 
-      function makeLabel(text, color, position) {
+      const clickableSprites = [];
+      let routeNav = null;
+      const raycaster = new THREE.Raycaster();
+      const pointerNdc = new THREE.Vector2();
+
+      function makeLabel(text, color, position, item) {
         const c = document.createElement("canvas");
-        c.width = 768; c.height = 160;
+        c.width = 768; c.height = 190;
         const ctx = c.getContext("2d");
         ctx.clearRect(0, 0, c.width, c.height);
-        ctx.fillStyle = "rgba(5,12,23,.72)";
-        ctx.strokeStyle = "rgba(137,225,255,.4)";
+        ctx.fillStyle = "rgba(5,12,23,.86)";
+        ctx.strokeStyle = "rgba(137,225,255,.58)";
         ctx.lineWidth = 3;
-        const x = 8, y = 22, w = 752, h = 116, r = 30;
+        const x = 8, y = 13, w = 752, h = 164, r = 30;
         ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
         ctx.fill(); ctx.stroke();
-        ctx.font = "700 35px Arial, sans-serif";
-        ctx.fillStyle = color;
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
         let title = text.toUpperCase();
         if (title.length > 27) title = title.slice(0, 26) + "…";
-        ctx.fillText(title, c.width / 2, c.height / 2, 690);
+        ctx.font = "700 34px Arial, sans-serif";
+        ctx.fillStyle = color;
+        ctx.fillText(title, c.width / 2, 72, 690);
+        ctx.font = "700 18px Arial, sans-serif";
+        ctx.fillStyle = "#d6eaf5";
+        ctx.fillText(item.kind === "project" ? "CLICK TO OPEN PROJECT" : "CLICK TO OPEN SECTION", c.width / 2, 134, 680);
         const texture = new THREE.CanvasTexture(c);
         texture.colorSpace = THREE.SRGBColorSpace;
         const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }));
         sprite.position.copy(position);
-        sprite.scale.set(6.6, 1.38, 1);
+        sprite.scale.set(6.6, 1.64, 1);
+        sprite.userData.landmark = item;
         scene.add(sprite);
+        clickableSprites.push(sprite);
       }
 
       function addTree(x, z, scale) {
@@ -237,7 +247,7 @@
         }
         scene.add(structure);
         const signPos = p.clone().add(new THREE.Vector3(0, 3.35, 0));
-        makeLabel(item.label, index % 3 === 0 ? "#b5f3ff" : index % 3 === 1 ? "#d9c8ff" : "#ffe0aa", signPos);
+        makeLabel(item.label, index % 3 === 0 ? "#b5f3ff" : index % 3 === 1 ? "#d9c8ff" : "#ffe0aa", signPos, item);
         for (let j = 0; j < 5; j++) {
           const shard = new THREE.Mesh(shared.smallShard, accentMats[(j + index) % accentMats.length]);
           const a = seed(index * 13 + j) * Math.PI * 2;
@@ -249,6 +259,20 @@
         }
       }
       points.forEach(addLandmark);
+
+      routeNav = document.createElement("nav");
+      routeNav.className = "archipelago-a11y";
+      routeNav.setAttribute("aria-label", "XR Archipelago destinations");
+      const routeHeading = document.createElement("h2");
+      routeHeading.textContent = "Archipelago destinations";
+      routeNav.appendChild(routeHeading);
+      points.forEach(item => {
+        const link = document.createElement("button");
+        link.type = "button";
+        link.textContent = item.kind === "project" ? "Open project: " + item.label : "Open section: " + item.label;
+        link.addEventListener("click", () => activateLandmark(item));
+        routeNav.appendChild(link);
+      });
 
       const starGeo = new THREE.BufferGeometry();
       const starPositions = [];
@@ -318,6 +342,30 @@
         camera.updateProjectionMatrix();
       }
       function onScroll() { targetU = progressForScroll(window.scrollY); }
+      function findClickedLandmark(event) {
+        const rect = canvas.getBoundingClientRect();
+        pointerNdc.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
+        raycaster.setFromCamera(pointerNdc, camera);
+        const hit = raycaster.intersectObjects(clickableSprites, false)[0];
+        return hit ? hit.object.userData.landmark : null;
+      }
+      function onPointerMove(event) {
+        canvas.style.cursor = findClickedLandmark(event) ? "pointer" : "grab";
+      }
+      function activateLandmark(item) {
+        if (!item) return;
+        if (item.kind === "project") {
+          window.location.assign(item.el.href);
+          return;
+        }
+        const destination = item.kind === "hub" ? 0 : item.scrollTop;
+        exit();
+        window.scrollTo({ top: destination, behavior: reducedMotion.matches ? "instant" : "smooth" });
+      }
+      function onCanvasClick(event) {
+        const item = findClickedLandmark(event);
+        if (item) activateLandmark(item);
+      }
       function draw(time) {
         if (dead) return;
         frame = requestAnimationFrame(draw);
@@ -348,18 +396,24 @@
       }
       window.addEventListener("resize", resize, { passive: true });
       window.addEventListener("scroll", onScroll, { passive: true });
+      canvas.addEventListener("pointermove", onPointerMove, { passive: true });
+      canvas.addEventListener("click", onCanvasClick);
       resize();
       active = true;
       body.classList.add("is-archipelago");
       body.appendChild(button);
+      if (routeNav) body.appendChild(routeNav);
       updateControls();
-      announce("Scroll to travel the XR Archipelago. Your project pages remain one click away.");
       draw(0);
       destroyScene = () => {
         dead = true;
         cancelAnimationFrame(frame);
         window.removeEventListener("resize", resize);
         window.removeEventListener("scroll", onScroll);
+        canvas.removeEventListener("pointermove", onPointerMove);
+        canvas.removeEventListener("click", onCanvasClick);
+        canvas.style.cursor = "";
+        if (routeNav) { routeNav.remove(); routeNav = null; }
         scene.traverse(o => {
           if (o.geometry) o.geometry.dispose();
           if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) {
