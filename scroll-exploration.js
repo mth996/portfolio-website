@@ -326,7 +326,7 @@
         const bob = reducedMotion.matches ? 0 : Math.sin(time * .009) * .045;
         avatar.position.copy(pos);
         avatar.position.y += bob;
-        avatar.rotation.y = Math.atan2(tangent.x, tangent.z);
+        avatar.rotation.y = Math.atan2(-tangent.x, -tangent.z);
         const movement = Math.min(1, Math.abs(targetU - currentU) * 55);
         const walk = reducedMotion.matches ? 0 : time * .012;
         legs[0].rotation.x = Math.sin(walk) * (.14 + movement * .46);
