@@ -6,6 +6,9 @@
   const cueLabel = document.querySelector(".scroll-cue__label");
   const status = document.getElementById("archipelago-status");
   if (!body || !button || !canvas) return;
+  const buttonParent = button.parentNode;
+  const buttonNext = button.nextSibling;
+  function restoreButton() { if (buttonParent) buttonParent.insertBefore(button, buttonNext); }
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const coarsePointer = window.matchMedia("(hover:none), (pointer:coarse)");
@@ -348,6 +351,7 @@
       resize();
       active = true;
       body.classList.add("is-archipelago");
+      body.appendChild(button);
       updateControls();
       announce("Scroll to travel the XR Archipelago. Your project pages remain one click away.");
       draw(0);
@@ -382,6 +386,7 @@
 
   function exit() {
     active = false;
+    restoreButton();
     body.classList.remove("is-archipelago");
     if (destroyScene) { destroyScene(); destroyScene = null; }
     else if (renderer) { renderer.dispose(); renderer = null; }
