@@ -150,3 +150,29 @@ body.home.is-archipelago #archipelago-toggle{
 @media(max-width:760px){
   body.home.is-archipelago #archipelago-toggle{top:12px;right:4vw}
 }
+/* In the 3D journey, keep the world clear and preserve the scrollable route. */
+body.home.is-archipelago>header.topbar,
+body.home.is-archipelago>main,
+body.home.is-archipelago>footer,
+body.home.is-archipelago .world-progress-track,
+body.home.is-archipelago .world-atmosphere{visibility:hidden}
+body.home.is-archipelago #archipelago-canvas{pointer-events:auto;touch-action:pan-y pinch-zoom;cursor:grab}
+body.home.is-archipelago #archipelago-canvas:active{cursor:grabbing}
+.archipelago-a11y{
+  position:fixed!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;
+  overflow:hidden!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;
+  white-space:nowrap!important;border:0!important;
+}
+.archipelago-a11y:focus-within{
+  z-index:150;left:12px;top:68px;width:min(340px,calc(100vw - 24px))!important;
+  height:auto!important;max-height:70vh;padding:14px!important;margin:0!important;
+  overflow:auto!important;clip:auto!important;clip-path:none!important;white-space:normal!important;
+  border:1px solid rgba(137,225,255,.42)!important;border-radius:14px;
+  background:rgba(5,12,23,.96);box-shadow:0 16px 44px rgba(0,0,0,.5);
+}
+.archipelago-a11y h2{margin:0 0 8px;color:#dff8ff;font-size:1rem}
+.archipelago-a11y button{
+  display:block;width:100%;padding:8px 6px;border:0;border-bottom:1px solid rgba(255,255,255,.1);
+  background:transparent;color:#eaf4fb;text-align:left;font:600 .8rem/1.45 Arial,sans-serif;cursor:pointer;
+}
+.archipelago-a11y button:focus-visible{outline:2px solid #8de8ff;outline-offset:2px}
