@@ -6,12 +6,47 @@
   const cueLabel = document.querySelector(".scroll-cue__label");
   const status = document.getElementById("archipelago-status");
   if (!body || !button || !canvas) return;
+  const returnStopParam = new URLSearchParams(window.location.search).get("returnIsland");
   const buttonParent = button.parentNode;
   const buttonNext = button.nextSibling;
   function restoreButton() { if (buttonParent) buttonParent.insertBefore(button, buttonNext); }
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const coarsePointer = window.matchMedia("(hover:none), (pointer:coarse)");
+  function clearReturnParam() {
+    if (returnStopParam === null) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("returnIsland");
+    history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+  }
+  function jumpScrollTo(top) {
+    const previous = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo(0, top);
+    document.documentElement.style.scrollBehavior = previous;
+  }
+  function fallbackToReturnSection() {
+    if (returnStopParam === null) return;
+    const index = /^\d+$/.test(returnStopParam) ? Number(returnStopParam) : NaN;
+    const project = Number.isFinite(index) ? document.querySelectorAll(".project-scene")[index] : null;
+    const sectionSelector = {hub:"#top",profile:"#profile",career:"#experience",research:"#papers",contact:"#contact"}[returnStopParam];
+    const target = project || (sectionSelector ? document.querySelector(sectionSelector) : null);
+    if (target) jumpScrollTo(window.scrollY + target.getBoundingClientRect().top + 24);
+  }
+  function showHomeReturnControl(token) {
+    let link = document.getElementById("archipelago-home-return");
+    if (!link) {
+      link = document.createElement("a");
+      link.id = "archipelago-home-return";
+      link.className = "archipelago-return-home";
+      link.textContent = "RETURN TO ISLAND";
+      link.setAttribute("aria-label", "Return to this point in the XR Archipelago");
+      document.body.appendChild(link);
+    }
+    const target = new URL("index.html", window.location.href);
+    target.searchParams.set("returnIsland", token);
+    link.href = target.toString();
+  }
   let renderer = null;
   let active = false;
   let booting = false;
@@ -49,7 +84,7 @@
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.toneMappingExposure = 1.15;
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x07101b, 0.008);
+      scene.fog = new THREE.FogExp2(0x0b2140, 0.0065);
       const camera = new THREE.PerspectiveCamera(49, window.innerWidth / window.innerHeight, 0.1, 260);
       scene.add(new THREE.HemisphereLight(0x9cd8ff, 0x111426, 1.9));
       const keyLight = new THREE.DirectionalLight(0xc8e9ff, 2.4);
@@ -329,10 +364,34 @@
         }
         return 1;
       }
+      function updateStopOffsets() {
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        points.forEach(item => {
+          const rect = item.el.getBoundingClientRect();
+          item.scrollTop = window.scrollY + rect.top + (item.kind === "hub" ? 0 : rect.height * 0.48);
+        });
+        const terminalGap = Math.min(190, Math.max(96, window.innerHeight * 0.15));
+        points[0].scrollTop = 0;
+        points[points.length - 1].scrollTop = maxScroll;
+        for (let i = points.length - 2; i > 0; i--) {
+          points[i].scrollTop = Math.max(0, Math.min(points[i].scrollTop, points[i + 1].scrollTop - terminalGap));
+        }
+      }
+      updateStopOffsets();
 
       let targetU = progressForScroll(window.scrollY);
       let currentU = targetU;
       let frame = 0, dead = false;
+      let scrollDirection = 1;
+      if (returnStopParam !== null) {
+        const requestedIndex = /^\d+$/.test(returnStopParam) ? Number(returnStopParam) : NaN;
+        const returnPoint = Number.isFinite(requestedIndex)
+          ? points.find(p => p.kind === "project" && p.index === requestedIndex)
+          : points.find(p => p.kind === returnStopParam);
+        if (returnPoint) jumpScrollTo(returnPoint.scrollTop);
+        targetU = progressForScroll(window.scrollY);
+        currentU = targetU;
+      }
       function resize() {
         if (dead) return;
         const w = window.innerWidth, h = window.innerHeight;
@@ -340,8 +399,15 @@
         camera.aspect = w / h;
         camera.fov = w < 700 ? 55 : 49;
         camera.updateProjectionMatrix();
+        updateStopOffsets();
+        targetU = progressForScroll(window.scrollY);
+        currentU = targetU;
       }
-      function onScroll() { targetU = progressForScroll(window.scrollY); }
+      function onScroll() {
+        const next = progressForScroll(window.scrollY);
+        if (Math.abs(next - targetU) > 0.0001) scrollDirection = Math.sign(next - targetU);
+        targetU = next;
+      }
       function findClickedLandmark(event) {
         const rect = canvas.getBoundingClientRect();
         pointerNdc.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
@@ -355,9 +421,16 @@
       function activateLandmark(item) {
         if (!item) return;
         if (item.kind === "project") {
-          window.location.assign(item.el.href);
+          const destination = new URL(item.el.href, window.location.href);
+          destination.searchParams.set("returnIsland", String(item.index));
+          window.location.assign(destination.toString());
           return;
         }
+        const token = item.kind === "hub" ? "hub" : item.kind;
+        const returnUrl = new URL(window.location.href);
+        returnUrl.searchParams.set("returnIsland", token);
+        history.replaceState(history.state, "", returnUrl.pathname + returnUrl.search + returnUrl.hash);
+        showHomeReturnControl(token);
         const destination = item.kind === "hub" ? 0 : item.scrollTop;
         exit();
         window.scrollTo({ top: destination, behavior: reducedMotion.matches ? "auto" : "smooth" });
@@ -380,7 +453,7 @@
         avatar.rotation.y = Math.atan2(-tangent.x, -tangent.z);
         const movement = Math.min(1, Math.abs(targetU - currentU) * 55);
         const walk = reducedMotion.matches ? 0 : time * .012;
-        legs[0].rotation.x = Math.sin(walk) * (.14 + movement * .46);
+        legs[0].rotation.x = Math.sin(walk) * (.14 + movement * .46) * scrollDirection;
         legs[1].rotation.x = -legs[0].rotation.x;
         arms[0].rotation.x = -legs[0].rotation.x * .62;
         arms[1].rotation.x = -legs[1].rotation.x * .62;
@@ -403,6 +476,7 @@
       body.classList.add("is-archipelago");
       body.appendChild(button);
       if (routeNav) body.appendChild(routeNav);
+      clearReturnParam();
       updateControls();
       draw(0);
       destroyScene = () => {
@@ -431,6 +505,8 @@
       active = false;
       updateControls();
       announce("3D mode isn’t available in this browser. The standard portfolio remains fully usable.");
+      fallbackToReturnSection();
+      clearReturnParam();
       if (renderer) { renderer.dispose(); renderer = null; }
     } finally {
       booting = false;
@@ -453,4 +529,9 @@
   window.addEventListener("keydown", event => { if (event.key === "Escape" && active) exit(); });
   coarsePointer.addEventListener?.("change", updateControls);
   updateControls();
+  if (returnStopParam !== null) {
+    const autoEnter = () => enter();
+    if (document.readyState === "complete") window.setTimeout(autoEnter, 0);
+    else window.addEventListener("load", autoEnter, { once: true });
+  }
 })();

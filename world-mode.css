@@ -3,8 +3,8 @@
 :root{--world-hue:194;--route-progress:0}
 html{scroll-behavior:smooth}
 body.home{
-  --bg:#070914;
-  background:#070914;
+  --bg:#071a32;
+  background:#071a32;
   isolation:isolate;
 }
 body.home::before{
@@ -14,9 +14,9 @@ body.home::before{
   z-index:0;
   pointer-events:none;
   background:
-    radial-gradient(ellipse at 14% 18%,hsla(var(--world-hue),92%,58%,.16),transparent 36%),
-    radial-gradient(ellipse at 83% 68%,hsla(calc(var(--world-hue) + 74),86%,58%,.12),transparent 34%),
-    linear-gradient(145deg,#090c18 0%,#070914 52%,#0a0915 100%);
+    radial-gradient(ellipse at 15% 17%,hsla(var(--world-hue),96%,62%,.23),transparent 39%),
+    radial-gradient(ellipse at 85% 72%,hsla(calc(var(--world-hue) + 70),92%,62%,.19),transparent 38%),
+    linear-gradient(145deg,#0d2b4d 0%,#081d37 48%,#111f43 100%);
   transition:background 1.1s ease;
 }
 body.home>header.topbar{position:absolute;z-index:30}
@@ -36,13 +36,13 @@ body.home>main,body.home>footer{position:relative;z-index:2}
   box-shadow:0 0 16px rgba(92,211,255,.62);
 }
 body.home .hero{
-  background:linear-gradient(115deg,rgba(7,10,21,.48),rgba(7,9,18,.08) 62%,rgba(15,9,28,.2));
+  background:linear-gradient(115deg,rgba(7,21,40,.44),rgba(8,28,53,.10) 62%,rgba(20,20,54,.18));
 }
-body.home .showcase{background:linear-gradient(180deg,rgba(7,9,18,.62),rgba(8,10,19,.7))}
+body.home .showcase{background:linear-gradient(180deg,rgba(7,22,42,.66),rgba(8,25,48,.72))}
 body.home .project-scene{
   background:
     radial-gradient(ellipse at 88% 50%,hsla(var(--portal-hue,194),92%,58%,.075),transparent 38%),
-    linear-gradient(110deg,rgba(12,16,29,.94),rgba(7,9,17,.94) 68%);
+    linear-gradient(110deg,rgba(10,28,52,.90),rgba(7,20,39,.91) 68%);
   transition:background .45s ease,border-color .4s ease;
 }
 body.home .project-scene:nth-child(6n+1){--portal-hue:190}
@@ -58,22 +58,22 @@ body.home .project-scene:hover{
   border-color:hsla(var(--portal-hue,194),90%,68%,.25);
   background:
     radial-gradient(ellipse at 88% 50%,hsla(var(--portal-hue,194),92%,58%,.13),transparent 42%),
-    linear-gradient(110deg,rgba(15,20,36,.96),rgba(8,10,20,.96) 68%);
+    linear-gradient(110deg,rgba(16,39,68,.96),rgba(9,25,49,.96) 68%);
 }
 body.home .profile-section{
   background:
     radial-gradient(ellipse at 16% 48%,rgba(73,222,228,.085),transparent 42%),
-    linear-gradient(135deg,rgba(7,13,21,.92),rgba(9,10,21,.94));
+    linear-gradient(135deg,rgba(8,27,50,.91),rgba(10,24,48,.93));
 }
 body.home .journey-section{
   background:
     radial-gradient(ellipse at 90% 15%,rgba(151,111,255,.09),transparent 38%),
-    linear-gradient(180deg,rgba(8,10,21,.94),rgba(11,10,22,.94));
+    linear-gradient(180deg,rgba(8,25,48,.93),rgba(12,22,47,.95));
 }
 body.home .papers-section{
   background:
     radial-gradient(ellipse at 10% 14%,rgba(78,180,255,.075),transparent 38%),
-    linear-gradient(180deg,rgba(8,11,21,.94),rgba(7,9,18,.96));
+    linear-gradient(180deg,rgba(9,26,49,.94),rgba(7,21,40,.96));
 }
 body.home .scene-art{
   transform-style:preserve-3d;
@@ -188,3 +188,20 @@ body.home .project-scene.world-entered{border-color:rgba(119,195,246,.17)}
   .world-motion-ready body.home .world-reveal{opacity:1;transform:none;filter:none;transition:none}
   body.home .project-library .project-scene:hover .scene-art{transform:none}
 }
+
+/* Scroll focus puts a soft moving VFX glow on the current portfolio stop. */
+body.home .project-scene:before{
+  opacity:var(--scroll-focus,0);
+  background:
+    radial-gradient(ellipse at 82% 52%,hsla(var(--portal-hue,194),100%,68%,.24),transparent 54%),
+    linear-gradient(115deg,transparent 34%,rgba(129,219,255,.11) 49%,transparent 64%);
+  transition:opacity .18s linear;
+}
+body.home .project-scene.world-entered .scene-art{
+  box-shadow:0 26px 76px rgba(15,57,101,.34),0 0 38px hsla(var(--portal-hue,194),92%,60%,.08);
+}
+body.home .hero-glow{background:radial-gradient(circle,rgba(59,167,255,.22),rgba(73,94,201,.08) 38%,rgba(0,0,0,0) 70%)}
+@media(prefers-reduced-motion:reduce){body.home .project-scene:before{transition:none}}
+
+.world-motion-ready body.home[data-scroll-direction="up"] .world-reveal:not(.world-entered){transform:translateY(-24px)}
+.world-motion-ready body.home[data-scroll-direction="down"] .world-reveal:not(.world-entered){transform:translateY(24px)}

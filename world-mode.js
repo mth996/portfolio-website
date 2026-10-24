@@ -19,6 +19,8 @@
   const progressFill = document.querySelector('.world-progress-fill');
   let activeRoute = -1;
   let scrollFrame = 0;
+  let lastScrollY = window.scrollY;
+  const focusTargets = [...document.querySelectorAll(".project-scene,.profile-section,.journey-section,.papers-section,.footer")];
 
   function setRoute(index) {
     if (!routes.length) return;
@@ -41,8 +43,22 @@
   function updateScroll() {
     scrollFrame = 0;
     const maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    const progress = Math.max(0, Math.min(1, window.scrollY / maxScroll));
+    const currentScrollY = window.scrollY;
+    const delta = currentScrollY - lastScrollY;
+    const progress = Math.max(0, Math.min(1, currentScrollY / maxScroll));
+    root.style.setProperty('--scroll-progress', progress.toFixed(4));
+    root.style.setProperty('--scroll-direction', delta >= 0 ? '1' : '-1');
+    root.style.setProperty('--scroll-energy', Math.min(1, Math.abs(delta) / 80).toFixed(2));
+    body.dataset.scrollDirection = delta >= 0 ? 'down' : 'up';
+    lastScrollY = currentScrollY;
     if (progressFill) progressFill.style.transform = 'scaleX(' + progress.toFixed(4) + ')';
+    const focusLine = window.innerHeight * 0.52;
+    focusTargets.forEach(target => {
+      const rect = target.getBoundingClientRect();
+      const center = rect.top + Math.min(rect.height * 0.5, window.innerHeight * 0.62);
+      const focus = Math.max(0, Math.min(1, 1 - Math.abs(center - focusLine) / (window.innerHeight * 0.82)));
+      target.style.setProperty('--scroll-focus', focus.toFixed(3));
+    });
 
     const probe = window.scrollY + window.innerHeight * 0.43;
     let current = 0;
@@ -65,15 +81,12 @@
     if (Number.isFinite(index)) setRoute(index);
   }));
 
-  const revealItems = document.querySelectorAll('.hero-content,.showcase-head,.profile-grid,.journey-head,.journey-card,.papers-head,.paper-card,.footer-grid');
+  const revealItems = document.querySelectorAll('.hero-content,.showcase-head,.project-scene,.profile-grid,.journey-head,.journey-card,.papers-head,.paper-card,.footer-grid');
   if ('IntersectionObserver' in window && !reducedMotion) {
     root.classList.add('world-motion-ready');
     const revealObserver = new IntersectionObserver(entries => {
       entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('world-entered');
-          revealObserver.unobserve(entry.target);
-        }
+        entry.target.classList.toggle('world-entered', entry.isIntersecting);
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -5% 0px' });
     revealItems.forEach(item => {
@@ -150,7 +163,7 @@
     if (!reducedMotion && !document.hidden) animationFrame = window.requestAnimationFrame(animateAtmosphere);
   }
 
-  if (canvas && context && !body.classList.contains('scroll-exploration')) {
+  if (canvas && context) {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas, { passive: true });
     if (!reducedMotion) {

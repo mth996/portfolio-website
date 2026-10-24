@@ -6,14 +6,14 @@
 body.home.is-archipelago #archipelago-canvas{opacity:1;visibility:visible}
 body.home.is-archipelago:before{
   background:
-    radial-gradient(ellipse at 50% 12%,rgba(44,112,153,.2),transparent 42%),
-    radial-gradient(ellipse at 82% 72%,rgba(106,75,180,.16),transparent 38%),
-    linear-gradient(180deg,#06101b 0%,#070914 75%,#080913 100%);
+    radial-gradient(ellipse at 50% 12%,rgba(55,145,215,.29),transparent 45%),
+    radial-gradient(ellipse at 82% 72%,rgba(113,92,214,.2),transparent 40%),
+    linear-gradient(180deg,#0b2442 0%,#081a33 75%,#111c3e 100%);
 }
 body.home.is-archipelago .world-atmosphere{opacity:.12}
 body.home.is-archipelago>main,body.home.is-archipelago>footer{position:relative;z-index:2}
 body.home.is-archipelago .hero{
-  background:linear-gradient(90deg,rgba(5,10,18,.62),rgba(5,10,18,.16) 78%);
+  background:linear-gradient(90deg,rgba(6,20,39,.50),rgba(7,24,46,.10) 78%);
 }
 body.home.is-archipelago .hero-grid{opacity:.06}
 body.home.is-archipelago .hero-glow{opacity:.25}
@@ -176,3 +176,15 @@ body.home.is-archipelago #archipelago-canvas:active{cursor:grabbing}
   background:transparent;color:#eaf4fb;text-align:left;font:600 .8rem/1.45 Arial,sans-serif;cursor:pointer;
 }
 .archipelago-a11y button:focus-visible{outline:2px solid #8de8ff;outline-offset:2px}
+
+.archipelago-return-home{
+  position:fixed;z-index:130;top:15px;right:max(4vw,calc((100vw - 1180px)/2));
+  display:inline-flex;align-items:center;gap:9px;min-height:40px;padding:0 15px;
+  border:1px solid rgba(120,222,255,.5);border-radius:999px;background:rgba(7,24,46,.92);
+  color:#e9f7ff;text-decoration:none;font:700 .64rem/1 Arial,sans-serif;letter-spacing:.11em;
+  box-shadow:0 0 28px rgba(44,190,239,.16);backdrop-filter:blur(12px);
+}
+.archipelago-return-home:before{content:"↶";font-size:1.2rem;color:#8de9ff}
+.archipelago-return-home:hover{border-color:#a8efff;box-shadow:0 0 34px rgba(44,190,239,.3)}
+.archipelago-return-home:focus-visible{outline:2px solid #b7f1ff;outline-offset:4px}
+@media(max-width:760px){.archipelago-return-home{top:12px;right:4vw;min-height:36px;padding:0 10px;font-size:.56rem}}
