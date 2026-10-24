@@ -182,20 +182,15 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
    const i=(y*recolorCanvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
    if(a<=8)continue;
    if(line.dataset.colorMode==="touch-gradient"){
-    const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
-    if(isExtrusion){
-     pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
-    }else{
-     const progress=(glyphIndex+(x+.5)/recolorCanvas.width)/Math.max(1,glyphs.length);
-     const target=touchColor(progress);
-     const lum=(.2126*r+.7152*g+.0722*b)/255;
-     const shade=Math.max(.72,Math.min(1.16,.73+lum*.38));
-     pixels[i]=Math.min(255,Math.round(target[0]*shade));
-     pixels[i+1]=Math.min(255,Math.round(target[1]*shade));
-     pixels[i+2]=Math.min(255,Math.round(target[2]*shade));
-    }
+    const progress=(glyphIndex+(x+.5)/recolorCanvas.width)/Math.max(1,glyphs.length);
+    const target=touchColor(progress);
+    const lum=(.2126*r+.7152*g+.0722*b)/255;
+    const shade=Math.max(.88,Math.min(1.08,.90+lum*.18));
+    pixels[i]=Math.min(255,Math.round(target[0]*shade));
+    pixels[i+1]=Math.min(255,Math.round(target[1]*shade));
+    pixels[i+2]=Math.min(255,Math.round(target[2]*shade));
    }else if(g>r*1.15&&b>r*1.15&&b>g*.9){
-    pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
+    pixels[i]=243;pixels[i+1]=245;pixels[i+2]=248;
    }
   }
   recolorContext.putImageData(imageData,0,0);
@@ -262,13 +257,9 @@ function artMixColor(progress){
  return a.color.map((channel,index)=>Math.round(channel+(b.color[index]-channel)*amount));
 }
 function artGradientPixel(r,g,b,progress){
- const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
- if(isExtrusion){
-  return [165,177,194];
- }
  const target=artMixColor(progress);
  const lum=(.2126*r+.7152*g+.0722*b)/255;
- const shade=Math.max(.72,Math.min(1.16,.73+lum*.38));
+ const shade=Math.max(.88,Math.min(1.08,.90+lum*.18));
  return target.map(channel=>Math.min(255,Math.round(channel*shade)));
 }
 async function artGlyphData(letter,set,recolor="normal",gradientStart=0,gradientEnd=1){
@@ -290,7 +281,7 @@ async function artGlyphData(letter,set,recolor="normal",gradientStart=0,gradient
     const i=(y*canvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
     if(a<=8)continue;
     if(recolor==="slate"&&g>r*1.15&&b>r*1.15&&b>g*.9){
-     pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
+     pixels[i]=243;pixels[i+1]=245;pixels[i+2]=248;
     }else if(recolor==="purple"&&r>68&&r>g*.76&&r>b*.62){
      const lum=(.2126*r+.7152*g+.0722*b)/255;
      const shade=Math.min(1,.48+lum*.56);
