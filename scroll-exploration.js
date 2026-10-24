@@ -373,9 +373,10 @@
     } catch (error) {
       console.error("XR Archipelago could not start:", error);
       body.classList.remove("is-archipelago");
+      restoreButton();
       active = false;
       updateControls();
-      announce("3D startup detail: " + (error && error.message ? error.message : "unknown error"));
+      announce("3D mode isn’t available in this browser. The standard portfolio remains fully usable.");
       if (renderer) { renderer.dispose(); renderer = null; }
     } finally {
       booting = false;
