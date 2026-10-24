@@ -173,9 +173,9 @@ body.home .project-scene.world-entered{border-color:rgba(119,195,246,.17)}
 @media(max-width:760px){
   body.home::before{
     background:
-      radial-gradient(ellipse at 10% 16%,hsla(var(--world-hue),92%,58%,.13),transparent 42%),
-      radial-gradient(ellipse at 90% 70%,hsla(calc(var(--world-hue) + 74),86%,58%,.1),transparent 38%),
-      linear-gradient(145deg,#090c18 0%,#070914 52%,#0a0915 100%);
+      radial-gradient(ellipse at 10% 16%,hsla(var(--world-hue),100%,63%,.20),transparent 42%),
+      radial-gradient(ellipse at 90% 70%,hsla(calc(var(--world-hue) + 74),100%,64%,.18),transparent 38%),
+      linear-gradient(145deg,#060a13 0%,#030610 52%,#080817 100%);
   }
   .world-atmosphere{opacity:.42}
   body.home .world-hud{bottom:max(10px,env(safe-area-inset-bottom))}
