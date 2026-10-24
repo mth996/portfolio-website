@@ -123,3 +123,23 @@ body.home .project-scene:focus-visible{outline:2px solid #86e5ff;outline-offset:
   body.home .scroll-cue__mouse i,body.home .scroll-cue__finger i{animation:none}
   body.home .scroll-cue__finger i{top:12px}
 }
+
+@media(max-width:900px){
+  body.home .topbar nav{gap:13px}
+  #archipelago-toggle{padding:0 11px;letter-spacing:.09em}
+}
+@media(max-width:760px){
+  body.home .topbar{
+    height:auto;min-height:82px;flex-wrap:wrap;align-content:center;row-gap:10px;
+    padding-top:8px;padding-bottom:8px;
+  }
+  body.home .topbar .brand{font-size:.59rem;letter-spacing:.08em}
+  body.home .topbar nav{order:3;width:100%;justify-content:space-between;gap:8px}
+  body.home .topbar nav a{font-size:.58rem;letter-spacing:.08em}
+  #archipelago-toggle{order:2}
+}
+@media(max-width:380px){
+  body.home .topbar .brand{font-size:.52rem}
+  body.home .topbar nav a{font-size:.53rem}
+  #archipelago-toggle{min-height:34px;padding:0 8px;font-size:.51rem}
+}
