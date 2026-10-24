@@ -25,26 +25,15 @@ body.home .paper-links a:hover{color:#fff;border-color:rgba(157,123,255,.7)!impo
 @media(max-width:760px){body.home .papers-section{padding:78px 0 72px}body.home .papers-head{gap:17px;padding-bottom:32px}body.home .papers-head .section-title{font-size:clamp(2.5rem,12vw,4rem)}body.home .paper-card{grid-template-columns:1fr;gap:10px;padding:22px 20px}body.home .paper-year{font-size:.8rem;color:#72ddff}body.home .paper-content p{font-size:.86rem}}
 </style>
 <link rel="stylesheet" href="world-mode.css?v=20261025">
+<link rel="stylesheet" href="scroll-exploration.css?v=20261026">
 </head>
-<body class="home">
+<body class="home scroll-exploration">
 <header class="topbar wrap">
 <a class="brand" href="#top">MOHAMMAD TAHMIDUL HASAN</a>
 <nav><a href="#projects">Projects</a><a href="#profile">Profile</a><a href="#experience">Experience</a><a href="#papers">Publications</a><a href="#contact">Contact</a></nav>
 </header>
 <div class="world-progress-track" aria-hidden="true"><span class="world-progress-fill"></span></div>
 <canvas id="world-atmosphere" class="world-atmosphere" aria-hidden="true"></canvas>
-<aside class="world-hud" aria-label="Portfolio section map">
-  <div class="world-hud__title"><span class="world-hud__pulse" aria-hidden="true"></span> PORTFOLIO MAP</div>
-  <nav class="world-hud__stops" aria-label="Jump to a portfolio section">
-    <a class="world-hud__step is-active" href="#top" data-world-stop="0" aria-label="Section 1 of 6: Introduction" aria-current="location"><span class="world-hud__node" aria-hidden="true"></span><span class="world-hud__stop-label">ENTRY</span></a>
-    <a class="world-hud__step" href="#projects" data-world-stop="1" aria-label="Section 2 of 6: Projects"><span class="world-hud__node" aria-hidden="true"></span><span class="world-hud__stop-label">WORLDS</span></a>
-    <a class="world-hud__step" href="#profile" data-world-stop="2" aria-label="Section 3 of 6: Profile"><span class="world-hud__node" aria-hidden="true"></span><span class="world-hud__stop-label">PROFILE</span></a>
-    <a class="world-hud__step" href="#experience" data-world-stop="3" aria-label="Section 4 of 6: Experience"><span class="world-hud__node" aria-hidden="true"></span><span class="world-hud__stop-label">CAREER</span></a>
-    <a class="world-hud__step" href="#papers" data-world-stop="4" aria-label="Section 5 of 6: Publications"><span class="world-hud__node" aria-hidden="true"></span><span class="world-hud__stop-label">RESEARCH</span></a>
-    <a class="world-hud__step" href="#contact" data-world-stop="5" aria-label="Section 6 of 6: Contact"><span class="world-hud__node" aria-hidden="true"></span><span class="world-hud__stop-label">CONTACT</span></a>
-  </nav>
-  <div class="world-hud__readout"><span class="world-hud__counter" id="world-route-count">01 <em>/ 06</em></span><span class="world-hud__label" id="world-route-name">ENTRY</span></div>
-</aside>
 <main id="top">
 <section class="hero immersive-hero">
 <div class="hero-grid"></div><div class="hero-glow"></div>
@@ -52,7 +41,7 @@ body.home .paper-links a:hover{color:#fff;border-color:rgba(157,123,255,.7)!impo
 <div class="kicker">XR • VR • AR • Games • Unity</div>
 <h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-slate-depth="true" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" data-color-mode="touch-gradient" data-slate-depth="true" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
 <p class="lead">I'm Mohammad Tahmidul Hasan — a game and immersive-technology developer creating interactive experiences across VR, games and real-time 3D.</p>
-<a class="scroll-cue" href="#projects"><span>Explore work</span><b>↓</b></a>
+<div class="scroll-cue scroll-instruction" aria-label="Scroll to explore"><span class="scroll-cue__label">SCROLL TO EXPLORE</span><span class="scroll-cue__mouse" aria-hidden="true"><i></i></span><span class="scroll-cue__finger" aria-hidden="true"><i></i></span></div>
 </div>
 </section>
 <section class="showcase" id="projects">
@@ -441,5 +430,6 @@ document.querySelectorAll(".art-heading-target").forEach(target=>{
 });
 </script>
 <script src="world-mode.js?v=20261025" defer></script>
+<script src="scroll-exploration.js?v=20261026" defer></script>
 </body>
 </html>
