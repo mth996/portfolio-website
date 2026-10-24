@@ -3,8 +3,8 @@
 :root{--world-hue:194;--route-progress:0}
 html{scroll-behavior:smooth}
 body.home{
-  --bg:#040711;
-  background:#040711;
+  --bg:#0a1425;
+  background:#0a1425;
   isolation:isolate;
 }
 body.home::before{
@@ -14,10 +14,10 @@ body.home::before{
   z-index:0;
   pointer-events:none;
   background:
-    radial-gradient(ellipse at 14% 17%,hsla(var(--world-hue),100%,64%,.28),transparent 38%),
-    radial-gradient(ellipse at 86% 72%,hsla(calc(var(--world-hue) + 70),100%,66%,.25),transparent 38%),
-    radial-gradient(ellipse at 52% 48%,rgba(16,53,103,.20),transparent 58%),
-    linear-gradient(145deg,#07101e 0%,#040711 48%,#080a18 100%);
+    radial-gradient(ellipse at 14% 17%,hsla(var(--world-hue),100%,66%,.30),transparent 38%),
+    radial-gradient(ellipse at 86% 72%,hsla(calc(var(--world-hue) + 70),100%,68%,.27),transparent 38%),
+    radial-gradient(ellipse at 52% 48%,rgba(35,80,143,.25),transparent 58%),
+    linear-gradient(145deg,#142842 0%,#0a1425 48%,#15152d 100%);
   transition:background 1.1s ease;
 }
 body.home>header.topbar{position:absolute;z-index:30}
