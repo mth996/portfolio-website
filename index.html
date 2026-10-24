@@ -139,71 +139,6 @@ if('IntersectionObserver' in window){
  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{threshold:.2});
  scenes.forEach(s=>observer.observe(s));
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
-function portfolioOuterOutlineMask(imageData,width,height){
- const pixels=imageData.data,total=width*height;
- const outside=new Uint8Array(total),queue=new Int32Array(total);
- let head=0,tail=0;
- const addOutside=index=>{
-  if(!outside[index]&&pixels[index*4+3]<=8){outside[index]=1;queue[tail++]=index}
- };
- for(let x=0;x<width;x++){addOutside(x);addOutside((height-1)*width+x)}
- for(let y=0;y<height;y++){addOutside(y*width);addOutside(y*width+width-1)}
- while(head<tail){
-  const index=queue[head++],x=index%width,y=(index/width)|0;
-  if(x>0)addOutside(index-1);if(x+1<width)addOutside(index+1);
-  if(y>0)addOutside(index-width);if(y+1<height)addOutside(index+width);
- }
- const outerDepth=new Uint8Array(total);outerDepth.fill(255);head=0;tail=0;
- const faceDepth=new Uint8Array(total);faceDepth.fill(255);
- for(let index=0;index<total;index++){
-  const i=index*4,a=pixels[i+3],x=index%width,y=(index/width)|0;
-  if(a>8){
-   let edge=false;
-   for(let dy=-1;dy<=1&&!edge;dy++)for(let dx=-1;dx<=1;dx++){
-    if(!dx&&!dy)continue;
-    const xx=x+dx,yy=y+dy;
-    if(xx>=0&&xx<width&&yy>=0&&yy<height&&outside[yy*width+xx]){edge=true;break}
-   }
-   if(edge){outerDepth[index]=1;queue[tail++]=index}
-  }
-  if(a>16&&pixels[i]>220&&pixels[i+1]>220&&pixels[i+2]>220){
-   faceDepth[index]=0;
-  }
- }
- head=0;
- while(head<tail){
-  const index=queue[head++],depth=outerDepth[index];
-  if(depth>=6)continue;
-  const x=index%width,y=(index/width)|0;
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-   if(!dx&&!dy)continue;
-   const xx=x+dx,yy=y+dy;if(xx<0||xx>=width||yy<0||yy>=height)continue;
-   const next=yy*width+xx;
-   if(pixels[next*4+3]>8&&outerDepth[next]===255){outerDepth[next]=depth+1;queue[tail++]=next}
-  }
- }
- let faceCount=0;
- for(let index=0;index<total;index++)if(faceDepth[index]===0){queue[faceCount++]=index}
- head=0;tail=faceCount;
- while(head<tail){
-  const index=queue[head++],depth=faceDepth[index];
-  if(depth>=8)continue;
-  const x=index%width,y=(index/width)|0;
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-   if(!dx&&!dy)continue;
-   const xx=x+dx,yy=y+dy;if(xx<0||xx>=width||yy<0||yy>=height)continue;
-   const next=yy*width+xx;
-   if(faceDepth[next]===255){faceDepth[next]=depth+1;queue[tail++]=next}
-  }
- }
- const ring=new Uint8Array(total);
- if(!faceCount)return ring;
- for(let index=0;index<total;index++){
-  const i=index*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2];
-  if(pixels[i+3]>8&&outerDepth[index]<=6&&faceDepth[index]>=7&&g>r*1.15&&b>r*1.15&&b>g*.9)ring[index]=1;
- }
- return ring;
-}
 document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(async line=>{
  const words=line.dataset.words.split(" ");
  const isSub=line.classList.contains("hero-title-line--sub");
@@ -242,12 +177,10 @@ document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(
   if(!recolorContext)return;
   recolorContext.drawImage(glyph,0,0);
   const imageData=recolorContext.getImageData(0,0,recolorCanvas.width,recolorCanvas.height);
-  const outerOutlineMask=portfolioOuterOutlineMask(imageData,recolorCanvas.width,recolorCanvas.height);
   const pixels=imageData.data;
   for(let y=0;y<recolorCanvas.height;y++)for(let x=0;x<recolorCanvas.width;x++){
    const i=(y*recolorCanvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
    if(a<=8)continue;
-   if(outerOutlineMask[y*recolorCanvas.width+x]){pixels[i+3]=0;continue;}
    if(line.dataset.colorMode==="touch-gradient"){
     const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
     if(isExtrusion){
@@ -352,12 +285,10 @@ async function artGlyphData(letter,set,recolor="normal",gradientStart=0,gradient
    const context=canvas.getContext("2d",{willReadFrequently:true});
    context.drawImage(source,0,0);
    const image=context.getImageData(0,0,canvas.width,canvas.height);
-   const outerOutlineMask=(recolor==="slate"||recolor==="gradient")?portfolioOuterOutlineMask(image,canvas.width,canvas.height):null;
    const pixels=image.data;
    for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
     const i=(y*canvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
     if(a<=8)continue;
-    if(outerOutlineMask&&outerOutlineMask[y*canvas.width+x]){pixels[i+3]=0;continue;}
     if(recolor==="slate"&&g>r*1.15&&b>r*1.15&&b>g*.9){
      pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
     }else if(recolor==="purple"&&r>68&&r>g*.76&&r>b*.62){
