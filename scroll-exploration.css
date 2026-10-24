@@ -6,9 +6,10 @@
 body.home.is-archipelago #archipelago-canvas{opacity:1;visibility:visible}
 body.home.is-archipelago:before{
   background:
-    radial-gradient(ellipse at 50% 12%,rgba(55,145,215,.29),transparent 45%),
-    radial-gradient(ellipse at 82% 72%,rgba(113,92,214,.2),transparent 40%),
-    linear-gradient(180deg,#0b2442 0%,#081a33 75%,#111c3e 100%);
+    radial-gradient(ellipse at 50% 12%,rgba(35,156,236,.34),transparent 44%),
+    radial-gradient(ellipse at 84% 74%,rgba(126,82,255,.30),transparent 40%),
+    radial-gradient(ellipse at 12% 78%,rgba(35,204,205,.13),transparent 34%),
+    linear-gradient(180deg,#060b16 0%,#030610 72%,#080918 100%);
 }
 body.home.is-archipelago .world-atmosphere{opacity:.12}
 body.home.is-archipelago>main,body.home.is-archipelago>footer{position:relative;z-index:2}
