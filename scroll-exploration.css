@@ -1,70 +1,77 @@
-/* Scroll-driven 3D-style journey for the portfolio */
-body.home.scroll-exploration{--bg:#070914}
-body.home .world-hud{display:none!important}
-body.home .world-atmosphere{opacity:.84}
-body.home .hero-grid{opacity:.2}
-body.home .hero-glow{opacity:.42}
-body.home .showcase{background:linear-gradient(180deg,rgba(7,9,18,.22),rgba(8,10,19,.28))}
-body.home .project-scene{
+/* Optional XR Archipelago presentation layer. The regular portfolio stays the default. */
+#archipelago-canvas{
+  position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;
+  opacity:0;visibility:hidden;transition:opacity .8s ease,visibility .8s ease;
+}
+body.home.is-archipelago #archipelago-canvas{opacity:1;visibility:visible}
+body.home.is-archipelago:before{
   background:
-    radial-gradient(ellipse at 50% 50%,hsla(var(--portal-hue,194),92%,58%,.055),transparent 48%),
-    linear-gradient(110deg,rgba(12,16,29,.72),rgba(7,9,17,.82) 68%);
+    radial-gradient(ellipse at 50% 12%,rgba(44,112,153,.2),transparent 42%),
+    radial-gradient(ellipse at 82% 72%,rgba(106,75,180,.16),transparent 38%),
+    linear-gradient(180deg,#06101b 0%,#070914 75%,#080913 100%);
 }
-body.home .project-scene.featured{background:linear-gradient(110deg,rgba(8,16,23,.76),rgba(6,7,9,.84) 65%)}
-body.home .profile-section,body.home .journey-section,body.home .papers-section,body.home .footer{
-  background-color:rgba(7,9,18,.74);
+body.home.is-archipelago .world-atmosphere{opacity:.12}
+body.home.is-archipelago>main,body.home.is-archipelago>footer{position:relative;z-index:2}
+body.home.is-archipelago .hero{
+  background:linear-gradient(90deg,rgba(5,10,18,.62),rgba(5,10,18,.16) 78%);
 }
-body.home .scroll-instruction{
-  display:flex;align-items:center;gap:15px;width:max-content;margin-top:42px;
-  color:#d7e6f6;font:700 .65rem/1 Arial,sans-serif;letter-spacing:.18em;
-  transition:opacity .55s ease,transform .55s ease;
+body.home.is-archipelago .hero-grid{opacity:.06}
+body.home.is-archipelago .hero-glow{opacity:.25}
+body.home.is-archipelago .showcase{
+  background:linear-gradient(180deg,rgba(5,9,17,.22),rgba(5,9,17,.36));
 }
-body.home .scroll-instruction__label{white-space:nowrap}
-body.home .scroll-instruction .scroll-cue__mouse,
-body.home .scroll-instruction .scroll-cue__finger{
-  width:25px;height:39px;display:grid;place-items:start center;
-  border:1px solid rgba(190,224,255,.72);border-radius:14px;
-  box-shadow:0 0 22px rgba(100,207,255,.22),inset 0 0 12px rgba(95,191,255,.09);
-  position:relative;
+body.home.is-archipelago .project-scene,
+body.home.is-archipelago .project-scene.featured{
+  background:linear-gradient(100deg,rgba(5,10,18,.68),rgba(5,9,17,.38) 70%,rgba(5,9,17,.55));
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);
+  border-color:rgba(157,215,255,.13);
 }
-body.home .scroll-cue__mouse i{
-  display:block;width:3px;height:8px;margin-top:8px;border-radius:4px;
-  background:#8ceaff;box-shadow:0 0 8px #8ceaff;
-  animation:scroll-wheel 1.2s ease-in-out infinite;
+body.home.is-archipelago .project-scene:hover{
+  background:linear-gradient(100deg,rgba(5,12,23,.78),rgba(7,11,22,.5) 70%,rgba(8,10,22,.64));
+  border-color:rgba(106,218,255,.38);
 }
-body.home .scroll-cue__finger{display:none}
-body.home .scroll-cue__finger i{
-  position:absolute;left:10px;top:19px;width:4px;height:9px;border-radius:4px;
-  background:#a9f1ff;box-shadow:0 0 9px #74eaff;
-  animation:scroll-swipe 1.25s cubic-bezier(.35,0,.4,1) infinite;
+body.home.is-archipelago .scene-num{color:#67c9ed;text-shadow:0 0 24px rgba(68,192,242,.3)}
+body.home.is-archipelago .scene-tags{color:#9adff1}
+body.home.is-archipelago .scene-copy p{color:#d0d8e1}
+body.home.is-archipelago .scene-art{box-shadow:0 22px 70px rgba(0,0,0,.36)}
+body.home.is-archipelago .profile-section,
+body.home.is-archipelago .journey-section,
+body.home.is-archipelago .papers-section,
+body.home.is-archipelago .footer{
+  background:rgba(5,9,17,.58);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
-body.home .scroll-cue__finger:after{
-  content:"";position:absolute;left:8px;top:8px;width:8px;height:15px;
-  border:1px solid rgba(162,236,255,.48);border-radius:6px;
+body.home.is-archipelago .topbar{pointer-events:none}
+body.home.is-archipelago .topbar>*{pointer-events:auto}
+#archipelago-toggle{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:40px;padding:0 15px;border:1px solid rgba(120,222,255,.45);
+  border-radius:999px;background:rgba(6,17,30,.76);color:#e9f7ff;
+  font:700 .64rem/1 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase;
+  cursor:pointer;box-shadow:0 0 24px rgba(44,190,239,.12);
+  transition:background .25s ease,border-color .25s ease,transform .25s ease,box-shadow .25s ease;
 }
-body.home.is-exploring .scroll-instruction{opacity:0;transform:translateY(-10px);pointer-events:none}
-body.home .world-progress-track{height:2px}
-body.home .scene-inner,body.home .showcase-head,body.home .profile-grid,
-body.home .journey-head,body.home .papers-head,body.home .footer-grid{position:relative;z-index:2}
-body.home .project-scene{isolation:isolate}
-body.home .project-scene:focus-visible{outline:2px solid #86e5ff;outline-offset:-4px}
-@keyframes scroll-wheel{0%{transform:translateY(0);opacity:1}72%{transform:translateY(12px);opacity:.12}100%{transform:translateY(0);opacity:1}}
-@keyframes scroll-swipe{0%,15%{transform:translateY(9px);opacity:.2}45%{opacity:1}85%,100%{transform:translateY(-11px);opacity:.25}}
-@media(hover:none),(pointer:coarse){
-  body.home .scroll-cue__mouse{display:none!important}
-  body.home .scroll-cue__finger{display:block!important}
-  body.home .scroll-instruction{letter-spacing:.14em}
+#archipelago-toggle:hover{transform:translateY(-2px);border-color:#8de8ff;background:rgba(12,36,54,.92);box-shadow:0 0 28px rgba(44,190,239,.24)}
+#archipelago-toggle:focus-visible{outline:2px solid #b7f1ff;outline-offset:4px}
+#archipelago-toggle:before{content:"";width:6px;height:6px;border-radius:50%;background:#6ae4ff;box-shadow:0 0 10px #6ae4ff}
+#archipelago-status{
+  position:fixed;z-index:140;left:50%;bottom:24px;transform:translate(-50%,12px);
+  width:max-content;max-width:calc(100vw - 32px);padding:11px 15px;border:1px solid rgba(150,221,255,.24);
+  border-radius:999px;background:rgba(5,12,22,.9);color:#e6f7ff;font-size:.72rem;letter-spacing:.06em;
+  opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;
 }
-@media(hover:hover) and (pointer:fine){body.home .scroll-cue__finger{display:none!important}}
+#archipelago-status.is-visible{opacity:1;transform:translate(-50%,0)}
+body.home.is-archipelago .scroll-instruction{color:#e4f6ff}
+body.home.is-archipelago .scroll-cue__mouse,
+body.home.is-archipelago .scroll-cue__finger{box-shadow:0 0 27px rgba(73,209,255,.32),inset 0 0 12px rgba(95,191,255,.14)}
 @media(max-width:760px){
-  body.home .world-atmosphere{opacity:.58}
-  body.home .showcase{background:rgba(7,9,18,.42)}
-  body.home .project-scene{background:linear-gradient(110deg,rgba(12,16,29,.84),rgba(7,9,17,.91) 68%)}
-  body.home .scene-inner{min-height:0;padding-top:54px;padding-bottom:54px;gap:22px}
-  body.home .scroll-instruction{margin-top:32px;font-size:.58rem}
+  body.home.is-archipelago .hero{background:linear-gradient(90deg,rgba(5,10,18,.68),rgba(5,10,18,.32))}
+  body.home.is-archipelago .project-scene,
+  body.home.is-archipelago .project-scene.featured{background:linear-gradient(100deg,rgba(5,10,18,.78),rgba(5,9,17,.62))}
+  body.home.is-archipelago .scene-art{box-shadow:0 16px 50px rgba(0,0,0,.36)}
+  #archipelago-toggle{min-height:36px;padding:0 10px;font-size:.56rem;letter-spacing:.08em}
+  #archipelago-status{bottom:14px;font-size:.65rem}
 }
 @media(prefers-reduced-motion:reduce){
-  body.home .scroll-cue__mouse i,body.home .scroll-cue__finger i{animation:none}
-  body.home .scroll-cue__finger i{top:12px}
-  body.home.is-exploring .scroll-instruction{transition:none}
+  #archipelago-canvas,#archipelago-toggle,#archipelago-status{transition:none}
 }
