@@ -25,15 +25,15 @@ body.home .paper-links a:hover{color:#fff;border-color:rgba(157,123,255,.7)!impo
 @media(max-width:760px){body.home .papers-section{padding:78px 0 72px}body.home .papers-head{gap:17px;padding-bottom:32px}body.home .papers-head .section-title{font-size:clamp(2.5rem,12vw,4rem)}body.home .paper-card{grid-template-columns:1fr;gap:10px;padding:22px 20px}body.home .paper-year{font-size:.8rem;color:#72ddff}body.home .paper-content p{font-size:.86rem}}
 </style>
 <link rel="stylesheet" href="world-mode.css?v=20261025">
-<link rel="stylesheet" href="scroll-exploration.css?v=20261026">
+<link rel="stylesheet" href="scroll-exploration.css?v=xr-archipelago-1">
 </head>
 <body class="home scroll-exploration">
 <header class="topbar wrap">
 <a class="brand" href="#top">MOHAMMAD TAHMIDUL HASAN</a>
-<nav><a href="#projects">Projects</a><a href="#profile">Profile</a><a href="#experience">Experience</a><a href="#papers">Publications</a><a href="#contact">Contact</a></nav>
+<nav><a href="#projects">Projects</a><a href="#profile">Profile</a><a href="#experience">Experience</a><a href="#papers">Publications</a><a href="#contact">Contact</a></nav>\n<button id="archipelago-toggle" type="button" aria-pressed="false">ENTER 3D JOURNEY</button>
 </header>
 <div class="world-progress-track" aria-hidden="true"><span class="world-progress-fill"></span></div>
-<canvas id="world-atmosphere" class="world-atmosphere" aria-hidden="true"></canvas>
+<canvas id="world-atmosphere" class="world-atmosphere" aria-hidden="true"></canvas>\n<canvas id="archipelago-canvas" aria-hidden="true"></canvas>\n<div id="archipelago-status" role="status" aria-live="polite"></div>
 <main id="top">
 <section class="hero immersive-hero">
 <div class="hero-grid"></div><div class="hero-glow"></div>
@@ -430,6 +430,6 @@ document.querySelectorAll(".art-heading-target").forEach(target=>{
 });
 </script>
 <script src="world-mode.js?v=20261025" defer></script>
-<script src="scroll-exploration.js?v=20261026" defer></script>
+<script src="scroll-exploration.js?v=xr-archipelago-1" defer></script>
 </body>
 </html>
