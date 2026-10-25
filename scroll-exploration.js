@@ -305,23 +305,24 @@
     const screens = [];
     const beamMaterials = [];
     const maxTextureWidth = lite ? 960 : 1600;
-    function captionTexture(stop) {
-      const c = document.createElement("canvas");
-      c.width = 1024; c.height = 160;
-      const g = c.getContext("2d");
-      g.fillStyle = `#${stop.color.getHexString(THREE.SRGBColorSpace)}`;
-      g.font = `500 30px ${fontMono}`;
-      g.textBaseline = "middle";
-      g.fillText(stop.num.padStart(2, "0"), 6, 40);
-      g.fillStyle = "#f2f4ff";
-      g.font = `800 44px ${fontDisplay}`;
-      let title = stop.title.toUpperCase();
-      while (g.measureText(title).width > 1000 && title.length > 4) title = title.slice(0, -2);
-      if (title !== stop.title.toUpperCase()) title = title.trim() + "…";
-      g.fillText(title, 6, 110);
-      const tex = keep(new THREE.CanvasTexture(c));
-      tex.colorSpace = THREE.SRGBColorSpace;
-      return tex;
+    // Card edge: a thin accent border, dimmed below the bloom threshold so it reads as a border rather than a glow
+    const CARD_BORDER = 0.035;
+    const CARD_EDGE = 0.5;
+    const unitPlane = keep(new THREE.PlaneGeometry(1, 1));
+    // Soft dark plate behind each card: separates it from the scene with a shadow instead of a coloured halo
+    const shadowTexture = canvasTexture(256, 256, g => {
+      g.shadowColor = "#000";
+      g.shadowBlur = 36;
+      g.fillStyle = "#000";
+      g.fillRect(64, 64, 128, 128);
+    });
+    // Sizes a card's layers around artwork drawn at w × h (the plate's dark core is the middle half of its texture)
+    function sizeCard(entry, w, h) {
+      entry.screen.scale.set(w, h, 1);
+      entry.frame.scale.set(w + CARD_BORDER * 2, h + CARD_BORDER * 2, 1);
+      entry.back.scale.copy(entry.frame.scale);
+      entry.shadow.scale.set((w + CARD_BORDER * 2) * 2, (h + CARD_BORDER * 2) * 2, 1);
+      if (entry.reflection) entry.reflection.scale.set(w, -h, 1);
     }
     stops.forEach((stop, i) => {
       if (stop.kind !== "project") return;
@@ -331,26 +332,23 @@
       group.position.copy(stop.center);
       group.rotation.y = stop.rotY;
 
-      const frame = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.14, h + 0.14), new THREE.MeshBasicMaterial({ color: hdr(stop.color, 1.4) }));
+      const frame = new THREE.Mesh(unitPlane, new THREE.MeshBasicMaterial({ color: hdr(stop.color, CARD_EDGE) }));
       frame.position.z = -0.02;
-      const back = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.14, h + 0.14), new THREE.MeshBasicMaterial({ color: ink }));
+      const back = new THREE.Mesh(unitPlane, new THREE.MeshBasicMaterial({ color: ink }));
       back.position.z = -0.04;
       back.rotation.y = Math.PI;
       const screenMaterial = new THREE.MeshBasicMaterial({ color: ink.clone().multiplyScalar(2) });
-      const screen = new THREE.Mesh(new THREE.PlaneGeometry(w, h), screenMaterial);
+      const screen = new THREE.Mesh(unitPlane, screenMaterial);
       screen.userData.stop = i;
-      const halo = new THREE.Mesh(new THREE.PlaneGeometry(w * 2.1, h * 2.4), new THREE.MeshBasicMaterial({ map: haloTexture, color: stop.color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
-      halo.position.z = -0.3;
-      const caption = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.66), new THREE.MeshBasicMaterial({ map: captionTexture(stop), transparent: true, depthWrite: false }));
-      caption.position.set(-w / 2 + 2.1, -h / 2 - 0.62, 0.02);
-      group.add(halo, back, frame, screen, caption);
+      const shadow = new THREE.Mesh(unitPlane, new THREE.MeshBasicMaterial({ map: shadowTexture, color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false }));
+      shadow.position.z = -0.3;
+      group.add(shadow, back, frame, screen);
 
       let reflection = null;
       if (!lite) {
-        reflection = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: ink.clone().multiplyScalar(2), transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
+        reflection = new THREE.Mesh(unitPlane, new THREE.MeshBasicMaterial({ color: ink.clone().multiplyScalar(2), transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
         // Mirror image below the see-through floor
         reflection.rotation.y = stop.rotY;
-        reflection.scale.y = -1;
         reflection.renderOrder = 0;
         scene.add(reflection);
       }
@@ -359,7 +357,7 @@
       const beamHeight = 10;
       const beamMaterial = new THREE.ShaderMaterial({
         transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
-        uniforms: { uColor: { value: stop.color }, uStrength: { value: 0.06 } },
+        uniforms: { uColor: { value: stop.color }, uStrength: { value: 0.012 } },
         vertexShader: `varying float vY; varying vec3 vNormal; varying vec3 vView;
           void main(){ vY = position.y / ${beamHeight.toFixed(1)} + 0.5; vNormal = normalize(normalMatrix * normal);
             vec4 mv = modelViewMatrix * vec4(position,1.0); vView = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
@@ -371,7 +369,9 @@
       const beam = new THREE.Mesh(new THREE.ConeGeometry(w * 0.55, beamHeight, 40, 1, true), beamMaterial);
       beam.position.set(stop.center.x, stop.center.y + beamHeight / 2 - 1.2, stop.center.z - 0.4);
       scene.add(group, beam);
-      screens.push({ stop: i, group, screen, frame, halo, reflection, beamMaterial, baseY: stop.center.y, w, h, material: screenMaterial });
+      const entry = { stop: i, group, screen, frame, back, shadow, reflection, beamMaterial, baseY: stop.center.y, w, h, material: screenMaterial };
+      sizeCard(entry, w, h);
+      screens.push(entry);
     });
 
     // Load artwork nearest to the starting stop first, downscaled so uploads stay light.
@@ -392,10 +392,10 @@
           const tex = keep(new THREE.CanvasTexture(c));
           tex.colorSpace = THREE.SRGBColorSpace;
           tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-          // Fit the artwork inside the screen without stretching (posters keep their whole image)
+          // Show the whole artwork: the card shrinks to the image's proportions inside its w × h slot
           const screenAspect = entry.w / entry.h, imageAspect = c.width / c.height;
-          if (imageAspect > screenAspect) { tex.repeat.set(screenAspect / imageAspect, 1); tex.offset.set((1 - tex.repeat.x) / 2, 0); }
-          else { tex.repeat.set(1, imageAspect / screenAspect); tex.offset.set(0, (1 - tex.repeat.y) / 2); }
+          if (imageAspect > screenAspect) sizeCard(entry, entry.w, entry.w / imageAspect);
+          else sizeCard(entry, entry.h * imageAspect, entry.h);
           entry.material.map = tex;
           entry.material.color.setScalar(1);
           entry.material.needsUpdate = true;
@@ -631,7 +631,8 @@
     composer.setPixelRatio(pixelRatio);
     composer.setSize(window.innerWidth, window.innerHeight);
     composer.addPass(new RenderPass(scene, camera));
-    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), lite ? 0.55 : 0.7, 0.42, 0.92);
+    // Threshold 1.0: only HDR lights (portals, route, particles) bloom; project artwork tops out at 1.0 and stays crisp
+    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), lite ? 0.55 : 0.7, 0.42, 1.0);
     composer.addPass(bloom);
     composer.addPass(new OutputPass());
     // Film finish: soft focus toward the edges (cheap depth-of-field look), slight colour fringing, vignette and grain
@@ -1021,9 +1022,9 @@
       screens.forEach((s, n) => {
         const focus = Math.max(0, 1 - Math.abs(k - s.stop));
         s.group.position.y = s.baseY + (still ? 0 : Math.sin(t * 0.7 + n) * 0.08);
-        s.frame.material.color.copy(stops[s.stop].color).multiplyScalar(1.1 + focus * 1.6 + (hovered === s ? 0.8 : 0));
-        s.halo.material.opacity = 0.25 + focus * 0.45;
-        s.beamMaterial.uniforms.uStrength.value = 0.02 + focus * 0.05;
+        // Focus and hover only lift the border slightly; it stays below the bloom threshold
+        s.frame.material.color.copy(stops[s.stop].color).multiplyScalar(CARD_EDGE + focus * 0.25 + (hovered === s ? 0.2 : 0));
+        s.beamMaterial.uniforms.uStrength.value = 0.004 + focus * 0.01;
         if (s.reflection) s.reflection.position.set(s.group.position.x, -s.group.position.y, s.group.position.z);
       });
       finish.uniforms.uTime.value = t;
