@@ -204,8 +204,14 @@
     const haloTexture = radialTexture([[0, 0.55], [0.45, 0.18], [1, 0]]);
 
     // ---------- World layout ----------
-    const SPACING = 16;
+    // A straight walking path runs down x = 0; project cards alternate left and right of it
+    const SPACING = 22;          // metres between project stops
     const SECTION_GAP = 26;
+    const PATH_CLEARANCE = 2.3;  // metres from the path's centre line to a card's inner edge
+    const CARD_TURN = 0.44;      // cards turn ~25° toward the path
+    const CARD_LIFT = 2.2;       // card bottom edge: always above the guide's head (1.9 m)
+    const GUIDE_OFFSET = 0.8;    // the guide stands this far across the path from the active card
+    const cardSize = stop => stop.poster ? [3.5, 4.66] : [6.4, 3.6];
     const stops = [
       { kind: "intro" },
       ...projects.map(p => ({ kind: "project", ...p })),
@@ -214,16 +220,17 @@
       ...(sections.papers.length ? [{ kind: "research", label: "Publications" }] : []),
       { kind: "outro", label: "Contact" }
     ];
-    const projectZ = j => -14 - (j - 1) * SPACING;
+    const projectZ = j => -16 - (j - 1) * SPACING;
     let sectionZ = projectZ(projects.length) - 6;
     stops.forEach((stop, i) => {
       if (stop.kind === "intro") { stop.center = new THREE.Vector3(0, 3.3, 0); stop.rotY = 0; }
       else if (stop.kind !== "project") { sectionZ -= SECTION_GAP; stop.center = new THREE.Vector3(0, 3.4, sectionZ); stop.rotY = 0; }
       else {
         const side = i % 2 ? -1 : 1;
+        const [w, h] = cardSize(stop);
         stop.side = side;
-        stop.rotY = -side * 0.3;
-        stop.center = new THREE.Vector3(side * 3.2, 3.4, projectZ(i));
+        stop.rotY = -side * CARD_TURN;
+        stop.center = new THREE.Vector3(side * (PATH_CLEARANCE + w / 2 * Math.cos(CARD_TURN)), CARD_LIFT + h / 2, projectZ(i));
       }
       stop.normal = new THREE.Vector3(Math.sin(stop.rotY), 0, Math.cos(stop.rotY));
       stop.color = neon[i % 3];
@@ -270,9 +277,9 @@
     floor.renderOrder = 1;
     scene.add(floor);
 
-    // Route: a thin light line on the floor linking every stop
-    const routeCurve = new THREE.CatmullRomCurve3(stops.map(s => new THREE.Vector3(s.center.x * 0.45, 0.03, s.center.z + (s.kind === "intro" || s.kind === "outro" ? 0 : 4.5))), false, "centripetal");
-    scene.add(new THREE.Mesh(new THREE.TubeGeometry(routeCurve, stops.length * 24, 0.025, 5, false), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 1.6), fog: true })));
+    // Route: a thin light line down the centre of the walking path
+    const routeCurve = new THREE.LineCurve3(new THREE.Vector3(0, 0.03, stops[0].center.z), new THREE.Vector3(0, 0.03, endZ));
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(routeCurve, 1, 0.025, 5, false), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 1.6), fog: true })));
 
     // ---------- Portals at the start and the end ----------
     const portalMaterials = [];
@@ -326,8 +333,7 @@
     }
     stops.forEach((stop, i) => {
       if (stop.kind !== "project") return;
-      const w = stop.poster ? 3.5 : 6.4;
-      const h = stop.poster ? 4.66 : 3.6;
+      const [w, h] = cardSize(stop);
       const group = new THREE.Group();
       group.position.copy(stop.center);
       group.rotation.y = stop.rotY;
@@ -522,17 +528,11 @@
     lightRig.add(hemi, key, key.target, rim);
     scene.add(lightRig);
     const guide = { model: null, mixer: null, actions: {}, current: null, pos: new THREE.Vector3(), yaw: 0, k: 0, idleFor: 0, arrived: -1, gestures: 0 };
-    const sideVec = new THREE.Vector3();
     function standPoint(i, out) {
       const stop = stops[i];
       const c = stop.center;
-      if (stop.kind === "project") {
-        const entry = screens.find(sc => sc.stop === i);
-        const halfW = entry ? entry.w / 2 : 3;
-        sideVec.set(Math.cos(stop.rotY), 0, -Math.sin(stop.rotY));
-        // In front of the screen's lower-right corner, like a host presenting it
-        return out.set(c.x, 0, c.z).addScaledVector(stop.normal, 1.9).addScaledVector(sideVec, halfW * 0.5);
-      }
+      // On the path, a step across from the card and level with its near edge, so the card never sits behind the guide
+      if (stop.kind === "project") return out.set(-stop.side * GUIDE_OFFSET, 0, c.z + 1.6);
       if (stop.kind === "career") return out.set(c.x + 1.8, 0, c.z + 1.6);
       if (stop.kind === "research") return out.set(c.x + 1.95, 0, c.z + 2.6);
       if (stop.kind === "profile") return out.set(c.x + 2.4, 0, c.z + 2.4);
@@ -660,7 +660,10 @@
 
     // ---------- Camera shots ----------
     // Each project gets a different framing, cycling like shots in an edit: dolly, low angle, crane, side angle.
-    const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3(), shotAim = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    const SHOT_DISTANCE = 10.5;   // metres back from the aim point at a project stop
+    const SHOT_AIM_BLEND = 0.45; // 0 aims at the card, 1 at the guide
+    const SHOT_LIFT = -0.55;       // raises (+) or lowers (-) the aim point on desktop
     function shotFor(i, drift, outPos, outTarget) {
       const stop = stops[i];
       const c = stop.center;
@@ -678,14 +681,16 @@
       }
       const n = stop.normal;
       const type = (i - 1) % 4;
-      const dist = (lite ? 11.5 : 9.4) - drift * 1.4;
-      if (type === 0) { outPos.copy(c).addScaledVector(n, dist).add(tmpA.set(0, 0.15, 0)); outTarget.copy(c); }
-      else if (type === 1) { outPos.copy(c).addScaledVector(n, dist * 0.95).add(tmpA.set(0, -1.6, 0)); outTarget.copy(c).add(tmpA.set(0, 0.5, 0)); }
-      else if (type === 2) { outPos.copy(c).addScaledVector(n, dist * 1.1).add(tmpA.set(0, 3.1, 0)); outTarget.copy(c).add(tmpA.set(0, -0.3, 0)); }
-      else { tmpB.copy(n).applyAxisAngle(up, stop.side * 0.62); outPos.copy(c).addScaledVector(tmpB, dist * 1.04).add(tmpA.set(0, 0.6, 0)); outTarget.copy(c); }
-      // Push the screen up and to the right of frame so the title panel (bottom-left) never covers it
-      const right = tmpA.crossVectors(tmpB.subVectors(outTarget, outPos).normalize(), up).normalize();
-      outTarget.addScaledVector(right, lite ? 0 : -1.0).add(tmpB.set(0, lite ? -1.9 : -1.45, 0));
+      const dist = ((lite ? 11.5 : SHOT_DISTANCE) - drift * 1.4) * (stop.poster ? 1.12 : 1); // posters are taller
+      // Aim between the card and the guide (who stands across the path from it) so both share the frame
+      const aim = shotAim.copy(c).lerp(standPoint(i, tmpC).setY(1), SHOT_AIM_BLEND);
+      if (type === 0) { outPos.copy(aim).addScaledVector(n, dist).add(tmpA.set(0, 0.15, 0)); outTarget.copy(aim); }
+      else if (type === 1) { outPos.copy(aim).addScaledVector(n, dist * 0.95).add(tmpA.set(0, -1.2, 0)); outTarget.copy(aim).add(tmpA.set(0, 0.5, 0)); }
+      else if (type === 2) { outPos.copy(aim).addScaledVector(n, dist * 1.1).add(tmpA.set(0, 2.2, 0)); outTarget.copy(aim).add(tmpA.set(0, -0.15, 0)); }
+      else { tmpB.copy(n).applyAxisAngle(up, -stop.side * 0.45); outPos.copy(aim).addScaledVector(tmpB, dist * 1.04).add(tmpA.set(0, 0.6, 0)); outTarget.copy(aim); }
+      // Phones: the panel spans the bottom of the screen, so lift the scene above it
+      if (lite) outTarget.y -= 1.9;
+      else outTarget.y += SHOT_LIFT;
     }
 
     // ---------- Overlay UI ----------
@@ -770,6 +775,8 @@
       panel.classList.add("is-changing");
       clearTimeout(panelTimer);
       panelTimer = setTimeout(() => {
+        // The panel sits on the active card's side of the screen; the guide has the other side
+        panel.classList.toggle("journey-ui__panel--right", stop.kind === "project" && stop.side > 0);
         panel.innerHTML = panelHtml(stop);
         panel.querySelector("[data-exit]")?.addEventListener("click", () => exit());
         panel.querySelector("[data-goto]")?.addEventListener("click", event => exit(event.currentTarget.dataset.goto));

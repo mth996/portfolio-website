@@ -87,6 +87,8 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
   transition:opacity .35s ease,translate .5s var(--ease-out);
 }
 .journey-ui__panel.is-changing{opacity:0;translate:0 12px}
+/* Card on the right: the panel moves under it, clear of the progress bar and hint */
+.journey-ui__panel--right{left:auto;right:max(4vw,calc((100vw - 1180px)/2));bottom:118px}
 .journey-ui__kicker{
   display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:0 0 14px;
   color:var(--text-3);font-family:var(--font-mono);font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;
