@@ -41,10 +41,7 @@ body.home .project-scene:nth-child(6n+4){--portal-hue:207}
 body.home .project-scene:nth-child(6n+5){--portal-hue:324}
 body.home .project-scene:nth-child(6n){--portal-hue:154}
 body.home .project-scene:hover{
-  border-color:hsla(var(--portal-hue,194),90%,68%,.25);
-  background:
-    radial-gradient(ellipse at 88% 50%,hsla(var(--portal-hue,194),92%,58%,.13),transparent 42%),
-    linear-gradient(110deg,rgba(16,39,68,.96),rgba(9,25,49,.96) 68%);
+  background:radial-gradient(ellipse at 88% 50%,hsla(var(--portal-hue,194),92%,58%,.1),transparent 45%),var(--surface);
 }
 body.home .scene-art{
   transform-style:preserve-3d;
@@ -63,14 +60,14 @@ body.home .project-library .scene-art:has(img)::after{
 }
 body.home .project-library .project-scene:hover .scene-art:has(img)::after{opacity:1}
 .world-motion-ready body.home .world-reveal{
-  opacity:0;transform:translateY(24px);filter:blur(3px);
-  transition:opacity .75s ease,transform .75s cubic-bezier(.2,.7,.2,1),filter .75s ease;
+  opacity:0;transform:translateY(32px);
+  /* Reveal uses opacity/transform; the rest keeps the cards' own hover transitions working */
+  transition:opacity .8s ease,transform .9s var(--ease-out),translate .45s var(--ease-out),box-shadow .45s var(--ease-out),border-color .35s ease,background .45s ease;
 }
 .world-motion-ready body.home .world-reveal.world-entered{
-  opacity:1;transform:none;filter:none;
+  opacity:1;transform:none;
 }
 body.home .world-reveal{position:relative}
-body.home .project-scene.world-entered{border-color:rgba(119,195,246,.17)}
 @media(max-width:760px){
   body.home::before{
     background:
@@ -85,7 +82,7 @@ body.home .project-scene.world-entered{border-color:rgba(119,195,246,.17)}
   html{scroll-behavior:auto}
   body.home::before{transition:none}
   .world-progress-fill{transition:none}
-  .world-motion-ready body.home .world-reveal{opacity:1;transform:none;filter:none;transition:none}
+  .world-motion-ready body.home .world-reveal{opacity:1;transform:none;transition:none}
   body.home .project-library .project-scene:hover .scene-art{transform:none}
 }
 
@@ -98,7 +95,7 @@ body.home .project-scene:before{
   transition:opacity .18s linear;
 }
 body.home .project-scene.world-entered .scene-art{
-  box-shadow:0 26px 76px rgba(15,57,101,.34),0 0 38px hsla(var(--portal-hue,194),92%,60%,.08);
+  box-shadow:0 0 38px hsla(var(--portal-hue,194),92%,60%,.08);
 }
 @media(prefers-reduced-motion:reduce){body.home .project-scene:before{transition:none}}
 

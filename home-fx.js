@@ -1,28 +1,34 @@
-// Homepage pointer effects: hero spotlight that follows the cursor, and magnetic [data-magnetic] controls.
-// Skipped entirely for touch-only devices and prefers-reduced-motion.
+// Homepage pointer effects: a soft light that follows the cursor, a neon edge that tracks the cursor
+// around cards, and magnetic [data-magnetic] controls. Skipped for touch-only devices and reduced motion.
 (() => {
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (!finePointer.matches || reducedMotion.matches) return;
 
-  const hero = document.querySelector('.hero');
-  if (hero) {
-    let frame = 0;
-    let x = 0;
-    let y = 0;
-    const paint = () => {
-      frame = 0;
-      const rect = hero.getBoundingClientRect();
-      if (rect.bottom < 0) return;
-      hero.style.setProperty('--mx', ((x - rect.left) / rect.width * 100).toFixed(2) + '%');
-      hero.style.setProperty('--my', ((y - rect.top) / rect.height * 100).toFixed(2) + '%');
-    };
-    window.addEventListener('pointermove', event => {
-      x = event.clientX;
-      y = event.clientY;
-      if (!frame) frame = requestAnimationFrame(paint);
+  const root = document.documentElement;
+  let frame = 0;
+  let x = 0;
+  let y = 0;
+  const paint = () => {
+    frame = 0;
+    root.style.setProperty('--cx', x + 'px');
+    root.style.setProperty('--cy', y + 'px');
+  };
+  window.addEventListener('pointermove', event => {
+    x = event.clientX;
+    y = event.clientY;
+    root.classList.add('has-cursor-glow');
+    if (!frame) frame = requestAnimationFrame(paint);
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => root.classList.remove('has-cursor-glow'));
+
+  document.querySelectorAll('.project-scene, .journey-card, .paper-card').forEach(card => {
+    card.addEventListener('pointermove', event => {
+      const rect = card.getBoundingClientRect();
+      card.style.setProperty('--card-x', (event.clientX - rect.left).toFixed(0) + 'px');
+      card.style.setProperty('--card-y', (event.clientY - rect.top).toFixed(0) + 'px');
     }, { passive: true });
-  }
+  });
 
   const STRENGTH = 0.28;
   const MAX_SHIFT = 14;

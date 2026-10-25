@@ -81,11 +81,15 @@ Neon is the accent, not the background: most of every screen stays ink-black, an
 
 Weights loaded: Unbounded 500/700/800, Manrope 400/500/600/700, JetBrains Mono 400/500. Don't use a weight that isn't loaded; add it to the Google Fonts URL in every page first if you really need it.
 
-Display type is uppercase, tight (`letter-spacing:-.02em` to `-.025em`, `line-height` about `.98`) and big. The hero headline is real text with a CSS gradient (`--grad-neon`, `background-clip:text`) and a `drop-shadow` glow — no images.
+Display type is uppercase, tight (`letter-spacing:-.02em` to `-.025em`, `line-height` about `.98`) and big. Every heading is real text — no letter images. Markup for a section title:
 
-Exceptions:
-- Section headings (not the hero) are still block-letter **images** (`images/hero-glyphs/`) placed by the script in `index.html` until they're converted. Their `font-size` sets the glyph height, and the `&` deliberately uses Arial Black to match the glyphs.
-- The 3D journey canvas (`scroll-exploration.js`) draws its labels with canvas fonts.
+```html
+<h2 class="section-title"><span class="title-line"><span>Enter the</span></span> <span class="title-line"><span><span class="grad">Worlds</span></span></span></h2>
+```
+
+Each `.title-line` rises on scroll-in; wrap the one or two words that should glow in `.grad` (neon gradient + glow). Use `.grad` once per heading.
+
+Exception: the 3D journey canvas (`scroll-exploration.js`) draws its labels with canvas fonts.
 
 ## Label style (uppercase small text)
 
@@ -99,9 +103,7 @@ letter-spacing: var(--tracking-label); /* .14em; the hero kicker uses .24em */
 text-transform: uppercase;
 ```
 
-Kickers are cyan (`--accent`) and may be flanked by short hairlines (`::before`/`::after`). Keep labels short; the big display type does the shouting.
-
-(Sections below the hero still use the previous Manrope label style until they're restyled. Move them to this one when you touch them.)
+Kickers are cyan (`--accent`) with a short leading hairline (the hero kicker has one on each side). Keep labels short; the big display type does the shouting.
 
 ## Motion
 
@@ -109,7 +111,9 @@ Cinematic, not bouncy. Use the easing tokens: `--ease-out` for entrances and hov
 
 - **Entrances**: text lines rise out of a clip mask (`translate`, never `transform`, so it doesn't fight magnetic offsets), then a highlight sweeps once across gradient text.
 - **Magnetic controls**: add `data-magnetic` to a button or pill. `home-fx.js` sets `--mag-x/--mag-y` and the shared `[data-magnetic]` rule turns them into `transform`. Don't put other `transform` hovers on magnetic elements.
-- **Cursor spotlight**: `home-fx.js` writes `--mx/--my` on `.hero`; backgrounds read them in `radial-gradient(… at var(--mx) var(--my), …)`.
+- **Cursor glow**: `home-fx.js` writes `--cx/--cy` on `<html>` and adds `.has-cursor-glow`; the fixed `.cursor-glow` layer lights the background under the pointer.
+- **Card edge light**: `.project-scene`, `.journey-card` and `.paper-card` get a neon border that follows the cursor (`::after` with a masked radial gradient at `--card-x/--card-y`, set by `home-fx.js`). New card types: add them to both the CSS selector and the `home-fx.js` list. Hover lift uses `translate`, not `transform`.
+- **Scroll reveal**: `world-mode.js` adds `.world-reveal` to section heads and cards and toggles `.world-entered`; blocks fade/slide in and `.title-line`s rise. To reveal a new block, add its selector to `revealItems` in `world-mode.js`.
 - **Reduced motion**: every animation lives inside `@media(prefers-reduced-motion:no-preference)`, so content is fully visible with no motion by default. `home-fx.js` does nothing for reduced motion or touch-only devices.
 
 ## Shape and spacing

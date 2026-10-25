@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap">
-<link rel="stylesheet" href="tokens.css?v=noir-1">
-<link rel="stylesheet" href="styles.css?v=noir-1">
-<link rel="stylesheet" href="world-mode.css?v=noir-1">
+<link rel="stylesheet" href="tokens.css?v=noir-2">
+<link rel="stylesheet" href="styles.css?v=noir-2">
+<link rel="stylesheet" href="world-mode.css?v=noir-2">
 <link rel="stylesheet" href="scroll-exploration.css?v=noir-1">
 </head>
 <body class="home scroll-exploration">
@@ -18,11 +18,12 @@
 </header>
 <div class="world-progress-track" aria-hidden="true"><span class="world-progress-fill"></span></div>
 <canvas id="world-atmosphere" class="world-atmosphere" aria-hidden="true"></canvas>
+<div class="cursor-glow" aria-hidden="true"></div>
 <canvas id="archipelago-canvas" aria-hidden="true"></canvas>
 <div id="archipelago-status" role="status" aria-live="polite"></div>
 <main id="top">
 <section class="hero immersive-hero">
-<div class="hero-backdrop" aria-hidden="true"><div class="hero-floor"></div><div class="hero-horizon"></div><div class="hero-spotlight"></div></div>
+<div class="hero-backdrop" aria-hidden="true"><div class="hero-floor"></div><div class="hero-horizon"></div></div>
 <div class="hero-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <div class="wrap hero-content">
 <div class="kicker hero-kicker">XR • VR • AR • Games • Unity</div>
@@ -32,28 +33,28 @@
 </div>
 </section>
 <section class="showcase" id="projects">
-<div class="wrap showcase-head"><div class="kicker">Selected work / 01—11</div><h2 class="section-title art-heading-target" data-art-lines="ENTER THE|WORLDS" data-gradient-word="WORLDS" data-slate-depth="true" aria-label="Enter the Worlds"><span >Enter the<br><span>Worlds</span></span></h2><p>A collection of VR, game, simulation and interactive projects spanning research, education, training and entertainment.</p></div>
+<div class="wrap showcase-head"><div class="kicker">Selected work / 01—11</div><h2 class="section-title"><span class="title-line"><span>Enter the</span></span> <span class="title-line"><span><span class="grad">Worlds</span></span></span></h2><p>A collection of VR, game, simulation and interactive projects spanning research, education, training and entertainment.</p></div>
 <div class="project-stack project-library">
 <a class="project-scene featured project-featured" href="quest-for-everyday-heroes.html"><div class="scene-inner wrap"><span class="scene-num">01</span><div class="scene-copy"><div class="scene-tags">VR / Research / Meta Quest</div><h3>Quest for<br>Everyday Heroes</h3><p>A research-focused VR role-playing game designed around everyday routines and communication practice in familiar home, school and farm settings.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Quest for everyday heroes poster.png" alt="Quest for Everyday Heroes"><span>Featured Immersive Experience</span><i></i></div></div></a>
-<a class="project-scene" href="scilab-vr.html"><div class="scene-inner wrap"><span class="scene-num">02</span><div class="scene-copy"><div class="scene-tags">VR / Education</div><h3>SciLab VR</h3><p>A bilingual VR science lab with 13 guided Form 4 experiments across five curriculum chapters.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/ScilabVR.png" alt="SciLab VR"><span>Educational XR</span><i></i></div></div></a>
-<a class="project-scene project-scene--museum" href="museum-conservation.html"><div class="scene-inner wrap"><span class="scene-num">03</span><div class="scene-copy"><div class="scene-tags">VR / Museum / Training</div><h3>Museum /<br>Conservation Lab VR</h3><p>VR museum experience for artifact inspection, conservation and preservation training.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Museum Conservation.jpeg" alt="Museum Conservation Lab VR"><span>Cultural Heritage XR</span><i></i></div></div></a>
-<a class="project-scene" href="vr-offshore.html"><div class="scene-inner wrap"><span class="scene-num">04</span><div class="scene-copy"><div class="scene-tags">VR / Simulation / Training</div><h3>VR Offshore<br>Simulator</h3><p>Immersive offshore VR training focused on interactive scenarios and hazard awareness.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/VRoffShore Simulator.jpeg" alt="VR Offshore Simulator"><span>Industrial Simulation</span><i></i></div></div></a>
-<a class="project-scene" href="tune-protect.html"><div class="scene-inner wrap"><span class="scene-num">05</span><div class="scene-copy"><div class="scene-tags">Unity / Gamification</div><h3>Tune Protect<br>Onboarding</h3><p>Gamified employee onboarding designed to make orientation more interactive and engaging.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Tune Protect onboarding.png?v=20261010" alt="Tune Protect Onboarding"><span>Interactive Onboarding</span><i></i></div></div></a>
-<a class="project-scene" href="velocity-rush.html"><div class="scene-inner wrap"><span class="scene-num">06</span><div class="scene-copy"><div class="scene-tags">Game / Multiplayer / Unity</div><h3>Velocity Rush</h3><p>Fast-paced online multiplayer game built around competitive player interaction.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Velocity Rush.png" alt="Velocity Rush"><span>Multiplayer Gameplay</span><i></i></div></div></a>
-<a class="project-scene" href="biomedical-park.html"><div class="scene-inner wrap"><span class="scene-num">07</span><div class="scene-copy"><div class="scene-tags">Unity / 3D / Visualization</div><h3>Bio-Medical<br>Park Malaysia</h3><p>A first-person 3D walkthrough where visitors explore the biomedical park and activate videos at key locations.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Bio medical Park malaysia.png" alt="Bio-Medical Park Malaysia"><span>Real-time Visualization</span><i></i></div></div></a>
-<a class="project-scene project-scene--poster" href="traces-white-soul.html"><div class="scene-inner wrap"><span class="scene-num">08</span><div class="scene-copy"><div class="scene-tags">Game / 2D / Unity</div><h3>Traces of the<br>White Soul</h3><p>A 2D action platformer with three levels, enemies and boss encounters, set in a fantasy kingdom.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art scene-art--traces"><img src="images/projects/Traces of teh white soul.jpg" alt="Traces of the White Soul"><span>2D Platformer</span><i></i></div></div></a>
-<a class="project-scene project-scene--poster" href="in-the-dark.html"><div class="scene-inner wrap"><span class="scene-num">09</span><div class="scene-copy"><div class="scene-tags">Game / Environment / 3D</div><h3>In the Dark</h3><p>Atmospheric horror environment built around tension and environmental storytelling.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art scene-art--in-the-dark"><img src="images/projects/In the Dark.png" alt="In the Dark" style="object-fit:contain;object-position:center;background:#050608"><span>Horror Environment</span><i></i></div></div></a>
-<a class="project-scene" href="hybrid-classroom.html"><div class="scene-inner wrap"><span class="scene-num">10</span><div class="scene-copy"><div class="scene-tags">Unity / Education / 3D</div><h3>Hybrid<br>Classroom</h3><p>Interactive 3D classroom environments themed around different subjects.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/Hybrid classroom.jpeg" alt="Hybrid Classroom"><span>Interactive Learning</span><i></i></div></div></a>
-<a class="project-scene" href="paper-weather.html"><div class="scene-inner wrap"><span class="scene-num">11</span><div class="scene-copy"><div class="scene-tags">Game / Education / Unity</div><h3>Paper Weather</h3><p>Educational action game using weather powers to fight pollution and restore the environment.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img src="images/projects/PaperWeather.jpeg" alt="Paper Weather"><span>Educational Game</span><i></i></div></div></a>
+<a class="project-scene" href="scilab-vr.html"><div class="scene-inner wrap"><span class="scene-num">02</span><div class="scene-copy"><div class="scene-tags">VR / Education</div><h3>SciLab VR</h3><p>A bilingual VR science lab with 13 guided Form 4 experiments across five curriculum chapters.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/ScilabVR.png" alt="SciLab VR"><span>Educational XR</span><i></i></div></div></a>
+<a class="project-scene project-scene--museum" href="museum-conservation.html"><div class="scene-inner wrap"><span class="scene-num">03</span><div class="scene-copy"><div class="scene-tags">VR / Museum / Training</div><h3>Museum /<br>Conservation Lab VR</h3><p>VR museum experience for artifact inspection, conservation and preservation training.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/Museum Conservation.jpeg" alt="Museum Conservation Lab VR"><span>Cultural Heritage XR</span><i></i></div></div></a>
+<a class="project-scene" href="vr-offshore.html"><div class="scene-inner wrap"><span class="scene-num">04</span><div class="scene-copy"><div class="scene-tags">VR / Simulation / Training</div><h3>VR Offshore<br>Simulator</h3><p>Immersive offshore VR training focused on interactive scenarios and hazard awareness.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/VRoffShore Simulator.jpeg" alt="VR Offshore Simulator"><span>Industrial Simulation</span><i></i></div></div></a>
+<a class="project-scene" href="tune-protect.html"><div class="scene-inner wrap"><span class="scene-num">05</span><div class="scene-copy"><div class="scene-tags">Unity / Gamification</div><h3>Tune Protect<br>Onboarding</h3><p>Gamified employee onboarding designed to make orientation more interactive and engaging.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/Tune Protect onboarding.png?v=20261010" alt="Tune Protect Onboarding"><span>Interactive Onboarding</span><i></i></div></div></a>
+<a class="project-scene" href="velocity-rush.html"><div class="scene-inner wrap"><span class="scene-num">06</span><div class="scene-copy"><div class="scene-tags">Game / Multiplayer / Unity</div><h3>Velocity Rush</h3><p>Fast-paced online multiplayer game built around competitive player interaction.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/Velocity Rush.png" alt="Velocity Rush"><span>Multiplayer Gameplay</span><i></i></div></div></a>
+<a class="project-scene" href="biomedical-park.html"><div class="scene-inner wrap"><span class="scene-num">07</span><div class="scene-copy"><div class="scene-tags">Unity / 3D / Visualization</div><h3>Bio-Medical<br>Park Malaysia</h3><p>A first-person 3D walkthrough where visitors explore the biomedical park and activate videos at key locations.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/Bio medical Park malaysia.png" alt="Bio-Medical Park Malaysia"><span>Real-time Visualization</span><i></i></div></div></a>
+<a class="project-scene project-scene--poster" href="traces-white-soul.html"><div class="scene-inner wrap"><span class="scene-num">08</span><div class="scene-copy"><div class="scene-tags">Game / 2D / Unity</div><h3>Traces of the<br>White Soul</h3><p>A 2D action platformer with three levels, enemies and boss encounters, set in a fantasy kingdom.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art scene-art--traces"><img loading="lazy" decoding="async" src="images/projects/Traces of teh white soul.jpg" alt="Traces of the White Soul"><span>2D Platformer</span><i></i></div></div></a>
+<a class="project-scene project-scene--poster" href="in-the-dark.html"><div class="scene-inner wrap"><span class="scene-num">09</span><div class="scene-copy"><div class="scene-tags">Game / Environment / 3D</div><h3>In the Dark</h3><p>Atmospheric horror environment built around tension and environmental storytelling.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art scene-art--in-the-dark"><img loading="lazy" decoding="async" src="images/projects/In the Dark.png" alt="In the Dark" style="object-fit:contain;object-position:center;background:#050608"><span>Horror Environment</span><i></i></div></div></a>
+<a class="project-scene" href="hybrid-classroom.html"><div class="scene-inner wrap"><span class="scene-num">10</span><div class="scene-copy"><div class="scene-tags">Unity / Education / 3D</div><h3>Hybrid<br>Classroom</h3><p>Interactive 3D classroom environments themed around different subjects.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/Hybrid classroom.jpeg" alt="Hybrid Classroom"><span>Interactive Learning</span><i></i></div></div></a>
+<a class="project-scene" href="paper-weather.html"><div class="scene-inner wrap"><span class="scene-num">11</span><div class="scene-copy"><div class="scene-tags">Game / Education / Unity</div><h3>Paper Weather</h3><p>Educational action game using weather powers to fight pollution and restore the environment.</p><span class="scene-link">Enter project ↗</span></div><div class="scene-art"><img loading="lazy" decoding="async" src="images/projects/PaperWeather.jpeg" alt="Paper Weather"><span>Educational Game</span><i></i></div></div></a>
 </div>
 </section>
-<section class="profile-section" id="profile"><div class="wrap profile-grid"><div><div class="kicker">Profile / Beyond the build</div><h2 class="section-title art-heading-target" data-art-lines="IMAGINE.|BUILD.|IMMERSE." data-gradient-word="IMMERSE." data-slate-depth="true" aria-label="Imagine. Build. Immerse."><span >Imagine.<br>Build.<br><span>Immerse.</span></span></h2></div><div class="profile-copy"><p>I work across development, research and creative production, combining programming with game design and immersive interaction to turn ideas into working experiences.</p><p>My work spans VR and XR development, gameplay systems, rapid prototyping, interactive 3D environments and educational experiences, with a continuing interest in AI and machine learning for immersive technology.</p><div class="skill-line">Unity / C# / XR / VR / AR / Game Programming / Game Design / Prototyping / 3D / Digital Art / Research</div></div></div></section>
+<section class="profile-section" id="profile"><div class="wrap profile-grid"><div><div class="kicker">Profile / Beyond the build</div><h2 class="section-title"><span class="title-line"><span>Imagine.</span></span> <span class="title-line"><span>Build.</span></span> <span class="title-line"><span><span class="grad">Immerse.</span></span></span></h2></div><div class="profile-copy"><p>I work across development, research and creative production, combining programming with game design and immersive interaction to turn ideas into working experiences.</p><p>My work spans VR and XR development, gameplay systems, rapid prototyping, interactive 3D environments and educational experiences, with a continuing interest in AI and machine learning for immersive technology.</p><ul class="skill-line" aria-label="Skills"><li>Unity</li><li>C#</li><li>XR</li><li>VR</li><li>AR</li><li>Game Programming</li><li>Game Design</li><li>Prototyping</li><li>3D</li><li>Digital Art</li><li>Research</li></ul></div></div></section>
 <section class="journey-section" id="experience">
 <div class="wrap">
-<div class="journey-head"><div class="kicker">Career / Learning</div><h2 class="section-title art-heading-target" data-art-lines="EXPERIENCE &amp; EDUCATION" data-gradient-word="EDUCATION" data-slate-depth="true" aria-label="Experience and Education"><span >Experience <span>&amp; Education</span></span></h2><p>Selected roles, research and project collaborations across games and immersive technology.</p></div>
+<div class="journey-head"><div class="kicker">Career / Learning</div><h2 class="section-title"><span class="title-line"><span>Experience <span class="grad">&amp; Education</span></span></span></h2><p>Selected roles, research and project collaborations across games and immersive technology.</p></div>
 <div class="journey-grid">
 <div class="journey-column journey-column--experience">
-<h3 class="journey-column-title art-heading-target" data-art-lines="EXPERIENCE" data-gradient-word="EXPERIENCE" data-slate-depth="true" aria-label="Experience"><span >Experience</span></h3>
+<h3 class="journey-column-title">Experience</h3>
 <div class="journey-list">
 <article class="journey-card"><div class="journey-meta"><span>Apr 2026 — Present</span><span class="journey-type">Current role</span></div><h4 class="journey-role">XR / VR Developer</h4><div class="journey-org">Spark Capital</div><p>Developing Meta Quest 3 science-lab simulations, including multilingual UI, experiment validation, guided workflows and standalone VR performance optimization.</p></article>
 <article class="journey-card"><div class="journey-meta"><span>Aug 2023 — Sep 2025</span><span class="journey-type">Research role</span></div><h4 class="journey-role">Graduate Research Associate</h4><div class="journey-org">Asia Pacific University of Technology and Innovation (APU/APIIT)</div><p>Led an educational VR role-playing research project for children with ASD, developing Unity scenarios and interaction systems and evaluating learning through structured study data.</p></article>
@@ -65,7 +66,7 @@
 </div>
 </div>
 <div class="journey-column journey-column--education">
-<h3 class="journey-column-title art-heading-target" data-art-lines="EDUCATION" data-gradient-word="EDUCATION" data-slate-depth="true" aria-label="Education"><span >Education</span></h3>
+<h3 class="journey-column-title">Education</h3>
 <div class="journey-list">
 <article class="journey-card"><div class="journey-meta"><span>Viva completed · 2026</span><span class="journey-type">By research</span></div><h4 class="journey-role">MSc in Computing<br>(By Research)</h4><div class="journey-org">Asia Pacific University</div><p>Research on an educational immersive VR role-playing experience supporting everyday-life and communication skills for children with ASD.</p></article>
 <article class="journey-card"><div class="journey-meta"><span>Completed · 2022</span><span class="journey-type">Undergraduate</span></div><h4 class="journey-role">BSc in Computer Games Development</h4><div class="journey-org">Asia Pacific University of Technology and Innovation</div></article>
@@ -76,7 +77,7 @@
 </section>
 <section class="papers-section" id="papers">
 <div class="wrap">
-<div class="papers-head"><div class="kicker">Research / Publications</div><h2 class="section-title art-heading-target" data-art-lines="PUBLICATIONS" data-gradient-word="PUBLICATIONS" data-slate-depth="true" aria-label="Publications"><span>Publications</span></h2><p>Peer-reviewed work on immersive technology, educational games and virtual reality.</p></div>
+<div class="papers-head"><div class="kicker">Research / Publications</div><h2 class="section-title"><span class="title-line"><span><span class="grad">Publications</span></span></span></h2><p>Peer-reviewed work on immersive technology, educational games and virtual reality.</p></div>
 <div class="papers-list">
 <article class="paper-card">
 <div class="paper-year">2026</div>
@@ -94,199 +95,9 @@
 </div>
 </section>
 </main>
-<footer class="footer" id="contact"><div class="wrap footer-grid"><div><div class="kicker">Let's build something immersive</div><h2 class="art-heading-target" data-art-lines="GET IN TOUCH." data-gradient-word="TOUCH." data-slate-words="GET IN" data-slate-depth="true" aria-label="Get in touch"><span >Get in <span>touch.</span></span></h2></div><div><a href="mailto:tahmidul86@gmail.com">tahmidul86@gmail.com</a><p>Kuala Lumpur, Malaysia • Open to relocate</p><div class="social-links"><a href="https://www.linkedin.com/in/mohammad-tahmidul-hasan-24559a133/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a><a href="https://github.com/mth996" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div></div></div></footer>
-<script>
-const scenes=[...document.querySelectorAll('.project-scene')];
-if('IntersectionObserver' in window){
- const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{threshold:.2});
- scenes.forEach(s=>observer.observe(s));
-}else{scenes.forEach(s=>s.classList.add('in-view'))}
-const artGlyphCache=new Map();
-const artColor={
- cyanFace:"you-can-step-into",
- whiteFace:"building-worlds"
-};
-const artGradientStops=[
- {at:0,color:[84,218,220]},
- {at:.5,color:[157,133,232]},
- {at:1,color:[226,105,181]}
-];
-function artMixColor(progress){
- const t=Math.max(0,Math.min(1,progress));
- const right=artGradientStops.findIndex(stop=>stop.at>=t);
- const a=artGradientStops[Math.max(0,right-1)],b=artGradientStops[right<0?artGradientStops.length-1:right];
- const amount=b.at===a.at?0:(t-a.at)/(b.at-a.at);
- return a.color.map((channel,index)=>Math.round(channel+(b.color[index]-channel)*amount));
-}
-function artGradientPixel(r,g,b,progress){
- const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
- if(isExtrusion){
-  return [165,177,194];
- }
- const target=artMixColor(progress);
- const lum=(.2126*r+.7152*g+.0722*b)/255;
- const shade=Math.max(.72,Math.min(1.16,.73+lum*.38));
- return target.map(channel=>Math.min(255,Math.round(channel*shade)));
-}
-async function artGlyphData(letter,set,recolor="normal",gradientStart=0,gradientEnd=1){
- const key=[letter,set,recolor,recolor==="gradient"?gradientStart.toFixed(4):"",recolor==="gradient"?gradientEnd.toFixed(4):""].join("|");
- if(artGlyphCache.has(key)) return artGlyphCache.get(key);
- const promise=(async()=>{
-  const source=new Image();
-  source.src=`images/hero-glyphs/${set}/${letter}.png?v=20261017-glyph-outline-v2`;
-  await source.decode();
-  let drawable=source;
-  if(recolor==="purple"||recolor==="gradient"||recolor==="slate"){
-   const canvas=document.createElement("canvas");
-   canvas.width=source.naturalWidth;canvas.height=source.naturalHeight;
-   const context=canvas.getContext("2d",{willReadFrequently:true});
-   context.drawImage(source,0,0);
-   const image=context.getImageData(0,0,canvas.width,canvas.height);
-   const pixels=image.data;
-   for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
-    const i=(y*canvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
-    if(a<=8)continue;
-    if(recolor==="slate"&&g>r*1.15&&b>r*1.15&&b>g*.9){
-     pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
-    }else if(recolor==="purple"&&r>68&&r>g*.76&&r>b*.62){
-     const lum=(.2126*r+.7152*g+.0722*b)/255;
-     const shade=Math.min(1,.48+lum*.56);
-     pixels[i]=Math.round(164*shade);pixels[i+1]=Math.round(74*shade);pixels[i+2]=Math.round(255*shade);
-    }else if(recolor==="gradient"){
-     const progress=gradientStart+(gradientEnd-gradientStart)*(x/Math.max(1,canvas.width-1));
-     const color=artGradientPixel(r,g,b,progress);
-     pixels[i]=color[0];pixels[i+1]=color[1];pixels[i+2]=color[2];
-    }
-   }
-   context.putImageData(image,0,0);
-   drawable=new Image();
-   drawable.src=canvas.toDataURL("image/png");
-   await drawable.decode();
-  }
-  const canvas=document.createElement("canvas");
-  canvas.width=drawable.naturalWidth;canvas.height=drawable.naturalHeight;
-  const context=canvas.getContext("2d",{willReadFrequently:true});
-  context.drawImage(drawable,0,0);
-  const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
-  let left=canvas.width,top=canvas.height,right=-1,bottom=-1;
-  for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++){
-   if(pixels[(y*canvas.width+x)*4+3]>8){
-    left=Math.min(left,x);right=Math.max(right,x);top=Math.min(top,y);bottom=Math.max(bottom,y);
-   }
-  }
-  if(right<left||bottom<top)throw new Error("Empty glyph: "+letter);
-  return {src:drawable.src,width:canvas.width,height:canvas.height,left,top,right,bottom};
- })();
- artGlyphCache.set(key,promise);
- return promise;
-}
-function artGlyph(letter,set,recolor="normal",gradientStart=0,gradientEnd=1){
- const box=document.createElement("span");
- box.className="art-heading-glyph";
- const image=document.createElement("img");
- image.alt="";image.setAttribute("aria-hidden","true");image.decoding="async";
- box.appendChild(image);
- return artGlyphData(letter,set,recolor,gradientStart,gradientEnd).then(m=>{
-  const visibleWidth=m.right-m.left+1,visibleHeight=m.bottom-m.top+1,scale=1/visibleHeight;
-  box.style.width=(visibleWidth*scale)+"em";
-  box.style.height="1em";
-  image.src=m.src;
-  image.style.width=(m.width*scale)+"em";
-  image.style.height=(m.height*scale)+"em";
-  image.style.left=(-m.left*scale)+"em";
-  image.style.top=(-m.top*scale)+"em";
-  return box;
- });
-}
-async function artWord(word,set,recolor="normal"){
- const holder=document.createElement("span");
- holder.className="art-heading-word";
- const letters=[...word].filter(character=>/[A-Z]/.test(character));
- let total=0;
- const metrics=recolor==="gradient"?await Promise.all(letters.map(character=>artGlyphData(character,set))):[];
- const widths=metrics.map(m=>(m.right-m.left+1)/(m.bottom-m.top+1));
- total=widths.reduce((sum,width)=>sum+width,0)+Math.max(0,widths.length-1)*.025;
- let letterIndex=0,cursor=0;
- for(const character of word){
-  if(/[A-Z]/.test(character)){
-   const width=widths[letterIndex]||1;
-   const start=total?cursor/total:0,end=total?(cursor+width)/total:1;
-   holder.appendChild(await artGlyph(character,set,recolor,recolor==="gradient"?start:0,recolor==="gradient"?end:1));
-   cursor+=width+.025;letterIndex++;
-  }else if(character==="."){
-   const dot=document.createElement("span");
-   dot.className="art-heading-period"+(recolor==="gradient"?" art-heading-period--gradient":"");
-   dot.setAttribute("aria-hidden","true");
-   if(recolor==="gradient")dot.style.setProperty("--period-color",`rgb(${artMixColor(1).join(",")})`);
-   holder.appendChild(dot);
-  }
- }
- return holder;
-}
-async function artRegularLine(text,gradientWord="",slateWords=new Set()){
- const line=document.createElement("span");
- line.className="art-heading-line";
- for(const word of text.split(/\s+/)){
-  if(!word)continue;
-  if(slateWords.has(word)){
-   line.appendChild(await artWord(word,artColor.whiteFace,"slate"));
-  }else if(word===gradientWord){
-   line.appendChild(await artWord(word,artColor.cyanFace,"gradient"));
-  }else if(word==="&"){
-   const symbol=document.createElement("span");
-   symbol.className="art-heading-ampersand";
-   symbol.textContent="&";
-   symbol.setAttribute("aria-hidden","true");
-   line.appendChild(symbol);
-  }else{
-   line.appendChild(await artWord(word,artColor.whiteFace));
-  }
- }
- return line;
-}
-async function renderArtHeading(target){
- const fallback=document.createElement("span");
- fallback.className="art-heading-fallback";
- while(target.firstChild)fallback.appendChild(target.firstChild);
- target.appendChild(fallback);
- const visual=document.createElement("span");
- visual.className="art-heading-visual";
- visual.setAttribute("aria-hidden","true");
- const gradientWord=target.dataset.gradientWord||"";
- const slateWords=new Set((target.dataset.slateWords||"").split(/\s+/).filter(Boolean));
- if(target.dataset.slateDepth==="true"){
-  for(const text of target.dataset.artLines.split("|")){
-   for(const word of text.split(/\s+/)){
-    if(word&&word!=="&"&&word!==gradientWord)slateWords.add(word);
-   }
-  }
- }
- for(const text of target.dataset.artLines.split("|")){
-  visual.appendChild(await artRegularLine(text,gradientWord,slateWords));
- }
- target.appendChild(visual);
- target.classList.add("art-ready");
-}
-function fitArtRows(target){
- const available=target.getBoundingClientRect().width;
- target.querySelectorAll(".art-heading-line").forEach(line=>{
-  line.style.transform="none";
-  requestAnimationFrame(()=>{
-   const natural=line.scrollWidth,width=line.clientWidth||available;
-   if(natural>width&&width>0)line.style.transform="scaleX("+(width/natural)+")";
-  });
- });
-}
-document.querySelectorAll(".art-heading-target").forEach(target=>{
- renderArtHeading(target).then(()=>{
-  fitArtRows(target);
-  if("ResizeObserver" in window)new ResizeObserver(()=>fitArtRows(target)).observe(target);
-  else window.addEventListener("resize",()=>fitArtRows(target),{passive:true});
- }).catch(error=>console.warn("Block heading unavailable; keeping text fallback.",error));
-});
-</script>
-<script src="world-mode.js?v=noir-1" defer></script>
-<script src="home-fx.js?v=noir-1" defer></script>
+<footer class="footer" id="contact"><div class="wrap footer-grid"><div><div class="kicker">Let's build something immersive</div><h2 class="footer-title"><span class="title-line"><span>Get in <span class="grad">touch.</span></span></span></h2></div><div><a class="footer-email" href="mailto:tahmidul86@gmail.com" data-magnetic>tahmidul86@gmail.com</a><p>Kuala Lumpur, Malaysia • Open to relocate</p><div class="social-links"><a data-magnetic href="https://www.linkedin.com/in/mohammad-tahmidul-hasan-24559a133/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a><a data-magnetic href="https://github.com/mth996" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div></div></div></footer>
+<script src="world-mode.js?v=noir-2" defer></script>
+<script src="home-fx.js?v=noir-2" defer></script>
 <script src="scroll-exploration.js?v=xr-archipelago-5" defer></script>
 </body>
 </html>
