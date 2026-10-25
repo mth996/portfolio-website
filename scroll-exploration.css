@@ -87,6 +87,8 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
   transition:opacity .35s ease,translate .5s var(--ease-out);
 }
 .journey-ui__panel.is-changing{opacity:0;translate:0 12px}
+/* While the guide is on the move the panel steps aside; it returns as the guide slows at a stop */
+.journey-ui__panel.is-travelling{opacity:0;pointer-events:none}
 /* Card on the right: the panel moves under it, clear of the progress bar and hint */
 .journey-ui__panel--right{left:auto;right:max(4vw,calc((100vw - 1180px)/2));bottom:118px}
 .journey-ui__kicker{
@@ -156,9 +158,10 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
 .journey-ui__tick:last-child:hover::after,.journey-ui__tick:last-child:focus-visible::after{translate:0 0}
 
 .journey-ui__hint{
-  position:absolute;right:max(4vw,calc((100vw - 1180px)/2));bottom:74px;margin:0;
+  position:absolute;right:max(4vw,calc((100vw - 1180px)/2));bottom:74px;margin:0;transition:opacity .6s ease;
   color:var(--text-4);font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
 }
+.journey-ui.has-travelled .journey-ui__hint{opacity:0}
 
 @media(max-width:760px){
   .journey-ui__top{top:22px;left:16px}

@@ -6,6 +6,8 @@
 //     hand, rise to the face, and hand over to the "wearing" scan with a top-down scan-line dissolve (and back again);
 //   - long jumps along the route become an XR-style teleport dissolve instead of a sprint.
 // Which state a stop needs comes from its `experience` ("vr" or "non-vr"), set on each project card in index.html.
+// Movement lives in journey-travel.js: this module only animates the guide where it is told to be, so a rigged
+// character can replace it later behind the same interface: { group, ready, update(frame), teleport(), busy, dispose }.
 
 const ASSETS = {
   holding: { mesh: "explorer-holding-body.glb", color: "explorer-holding-color.webp", normal: "explorer-holding-normal.webp" },
@@ -14,10 +16,6 @@ const ASSETS = {
 };
 const HEIGHT = 1.9;
 const LEG_LENGTH = 0.85;
-const MAX_SPEED = 4.2;        // m/s: a brisk jog
-const ACCEL = 5;              // m/s²
-const PUT_ON_DISTANCE = 2.6;  // metres before a VR stop where the headset goes on
-const TELEPORT_DISTANCE = 34; // metres of route beyond which the guide teleports instead of jogging
 const HEADSET_IN_HAND = { position: [-0.2553, 1.3645, 0.1873], rotation: [0, 0, 0] };
 const HEADSET_ON_FACE = { position: [0.0, 1.76, 0.0], rotation: [0, 0.05, 0.18] };
 
@@ -150,10 +148,10 @@ export function createExplorer({ THREE, GLTFLoader, base = "models/", lite = fal
 
   // ---------- State ----------
   const state = {
-    k: 0, speed: 0, worn: false, yaw: 0, phase: 0, stride: 0, walk: 0, idleFor: 0,
-    transition: null, arrived: -1, present: 0, placed: false
+    speed: 0, worn: false, wantWorn: false, yaw: 0, phase: 0, stride: 0, walk: 0, idleFor: 0,
+    transition: null, arrived: false, present: 0, placed: false
   };
-  const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3(), from = new THREE.Vector3();
+  const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3();
 
   function holdingParts() { return [parts.holding, parts.headset].filter(Boolean); }
   function showWorn(worn) {
@@ -180,7 +178,7 @@ export function createExplorer({ THREE, GLTFLoader, base = "models/", lite = fal
     state.transition = { type, t: 0, dur: { on: 1.9, off: 1.8, teleport: 1.05 }[type], ...extra };
     onEvent(type === "teleport" ? "teleport" : "headset-" + type);
   }
-  function runTransition(tr, dt, place) {
+  function runTransition(tr, dt) {
     tr.t += dt / 1000;
     const p = Math.min(1, tr.t / tr.dur);
     const cutAt = (a, b) => -0.05 + smooth(a, b, p) * 1.1;
@@ -197,9 +195,7 @@ export function createExplorer({ THREE, GLTFLoader, base = "models/", lite = fal
       else {
         if (!tr.jumped) {
           tr.jumped = true;
-          state.k = tr.to;
-          state.speed = 0;
-          place();
+          if (tr.onJump) tr.onJump();   // the travel controller moves the guide while it is fully dissolved
           showWorn(tr.worn);
         }
         crossfade([], state.worn ? [parts.vr] : holdingParts(), cutAt(0.52, 1), colors.warp);
@@ -215,108 +211,46 @@ export function createExplorer({ THREE, GLTFLoader, base = "models/", lite = fal
   }
 
   // ---------- Per-frame update ----------
-  // frame: { dt (ms), time (s), target (stop index), stops, standPoint(i, out), camera (Vector3) }
+  // frame: { dt (ms), position (Vector3 on the floor), speed (m/s, ≥ 0), heading (yaw while moving),
+  //          wantWorn (should the headset be on?), presentTo (point to turn to on arrival, or null), camera (Vector3) }
   function update(frame) {
     if (!parts.holding) return;
-    const { dt, target, stops, standPoint, camera } = frame;
-    const last = stops.length - 1;
-    const isVR = i => stops[Math.max(0, Math.min(last, i))].experience === "vr";
-    const pointAt = (k, out) => {
-      const i = Math.min(last - 1, Math.max(0, Math.floor(k)));
-      const f = Math.max(0, Math.min(1, k - i));
-      standPoint(i, tmpB);
-      standPoint(i + 1, tmpC);
-      return out.lerpVectors(tmpB, tmpC, f);
-    };
-    const place = () => { pointAt(state.k, tmpA); group.position.set(tmpA.x, 0, tmpA.z); };
-
+    const { dt, position, speed, heading, wantWorn, presentTo, camera } = frame;
+    state.wantWorn = wantWorn;
+    group.position.x = position.x;
+    group.position.z = position.z;
     if (!state.placed) {
-      state.k = target;
-      place();
-      showWorn(isVR(target));
       state.placed = true;
-      vrReady.then(() => { if (!state.transition) showWorn(isVR(Math.round(state.k))); });
+      showWorn(wantWorn);
+      vrReady.then(() => { if (!state.transition) showWorn(state.wantWorn); });
     }
     [parts.holding, parts.headset, parts.vr].filter(Boolean).forEach(m => { m.material.userData.u.uRootY.value = group.position.y; });
 
     if (still) {
-      // Reduced motion: hold a still pose at the current stop; state changes are instant
-      if (Math.round(state.k) !== target || !state.placed) { state.k = target; place(); }
-      if (state.worn !== (isVR(target) && !!parts.vr)) showWorn(isVR(target));
+      // Reduced motion: hold a still pose; state changes are instant
+      if (state.worn !== (wantWorn && !!parts.vr)) showWorn(wantWorn);
       faceToward(camera, 16, Infinity);
       setPose(0, 0);
       return;
     }
 
-    const prevX = group.position.x, prevZ = group.position.z;
-    if (state.transition) {
-      runTransition(state.transition, dt, place);
-      state.speed = 0;
-    } else {
-      const dir = Math.sign(target - state.k);
-      if (dir !== 0) {
-        // Remaining route length to the target stop
-        let remaining = 0, k = state.k;
-        const step = dir > 0 ? 1 : -1;
-        let nextInt = dir > 0 ? Math.floor(k) + 1 : Math.ceil(k) - 1;
-        pointAt(k, tmpB);
-        from.copy(tmpB);
-        while ((dir > 0 && nextInt <= target) || (dir < 0 && nextInt >= target)) {
-          standPoint(nextInt, tmpC);
-          remaining += from.distanceTo(tmpC);
-          from.copy(tmpC);
-          nextInt += step;
-        }
-        const nextStop = dir > 0 ? Math.floor(state.k + 1e-4) + 1 : Math.ceil(state.k - 1e-4) - 1;
-        standPoint(Math.max(0, Math.min(last, nextStop)), tmpC);
-        const toNext = group.position.distanceTo(tmpC.setY(0));
-        if (remaining > TELEPORT_DISTANCE) {
-          startTransition("teleport", { to: target, worn: isVR(target) && !!parts.vr });
-        } else if (state.worn && !isVR(nextStop)) {
-          startTransition("off");                       // leaving a VR area: headset comes off first
-        } else if (!state.worn && parts.vr && isVR(nextStop) && toNext < PUT_ON_DISTANCE) {
-          startTransition("on");                        // approaching a VR area: headset goes on
-        } else {
-          const wanted = Math.min(MAX_SPEED, Math.sqrt(2 * ACCEL * remaining));
-          state.speed += Math.sign(wanted - state.speed) * Math.min(Math.abs(wanted - state.speed), ACCEL * dt / 1000);
-          let travel = state.speed * dt / 1000;
-          // Advance along the polyline of stand points, segment by segment
-          while (travel > 0 && Math.abs(target - state.k) > 1e-5) {
-            const i = dir > 0 ? Math.floor(state.k + 1e-6) : Math.ceil(state.k - 1e-6) - 1;
-            standPoint(Math.max(0, i), tmpB);
-            standPoint(Math.min(last, i + 1), tmpC);
-            const segment = Math.max(0.01, tmpB.distanceTo(tmpC));
-            const edge = dir > 0 ? i + 1 : i;
-            const left = Math.abs(edge - state.k) * segment;
-            const used = Math.min(travel, left);
-            state.k += dir * used / segment;
-            travel -= used;
-            if ((dir > 0 && state.k >= target) || (dir < 0 && state.k <= target)) { state.k = target; break; }
-          }
-          place();
-        }
-      } else {
-        state.speed = 0;
-        // Arrived somewhere needing the other state (e.g. the VR scan finished loading late)
-        if (parts.vr && state.worn !== isVR(target)) startTransition(isVR(target) ? "on" : "off");
-      }
-    }
+    if (state.transition) runTransition(state.transition, dt);
+    else if (parts.vr && state.worn !== wantWorn) startTransition(wantWorn ? "on" : "off");
+    state.speed = speed;
 
-    // Facing: travel direction while moving, the screen briefly on arrival, then the camera
-    const dx = group.position.x - prevX, dz = group.position.z - prevZ;
-    const moving = state.speed > 0.15 && Math.hypot(dx, dz) > 1e-5;
-    if (moving) { state.idleFor = 0; state.present = 0; faceAngle(Math.atan2(dx, dz), dt, 0.009); }
+    // Facing: travel direction while moving, the card briefly on arrival, then the camera
+    const moving = speed > 0.15;
+    if (moving) { state.idleFor = 0; state.present = 0; state.arrived = false; faceAngle(heading, dt, 0.009); }
     else {
       state.idleFor += dt;
-      const here = Math.round(state.k);
-      if (!state.transition && state.idleFor > 250 && state.arrived !== here) {
-        state.arrived = here;
-        state.present = 1400;
-        onEvent("arrive", here);
+      if (!state.transition && state.idleFor > 250 && !state.arrived) {
+        state.arrived = true;
+        state.present = presentTo ? 1400 : 0;
+        onEvent("arrive");
       }
-      if (state.present > 0 && stops[here].kind === "project") {
+      if (state.present > 0 && presentTo) {
         state.present -= dt;
-        faceToward(stops[here].center, dt, 0.006);
+        faceToward(presentTo, dt, 0.006);
       } else faceToward(camera, dt, 0.006);
     }
 
@@ -351,7 +285,13 @@ export function createExplorer({ THREE, GLTFLoader, base = "models/", lite = fal
     group,
     ready: holdingReady,
     update,
+    // XR-style teleport: dissolve out, onJump() moves the guide while unseen, dissolve back in wearing the right gear
+    teleport(worn, onJump) {
+      if (still || !parts.holding) { onJump(); if (parts.holding) showWorn(worn); return; }
+      startTransition("teleport", { worn: worn && !!parts.vr, onJump });
+    },
     get busy() { return !!state.transition; },
+    get teleporting() { return state.transition?.type === "teleport"; },
     dispose() { disposables.forEach(d => d.dispose && d.dispose()); group.removeFromParent(); }
   };
 }

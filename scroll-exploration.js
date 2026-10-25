@@ -11,7 +11,7 @@
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const coarsePointer = window.matchMedia("(hover:none), (pointer:coarse)");
-  const returnParam = new URLSearchParams(window.location.search).get("returnIsland");
+  let returnParam = new URLSearchParams(window.location.search).get("returnIsland");
   const buttonParent = button.parentNode;
   const buttonNext = button.nextSibling;
   const startLabel = "ENTER 3D JOURNEY";
@@ -43,6 +43,8 @@
     const url = new URL(window.location.href);
     url.searchParams.delete("returnIsland");
     history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+    // Used once: later entries start from wherever the visitor is on the page
+    returnParam = null;
   }
 
   // Projects come straight from the page, so the journey always matches the cards.
@@ -112,7 +114,7 @@
     button.disabled = true;
     updateControls();
     try {
-      const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }, { GLTFLoader }, audio, explorerModule] = await Promise.all([
+      const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }, { GLTFLoader }, audio, explorerModule, travelModule] = await Promise.all([
         import("three"),
         import("three/addons/postprocessing/EffectComposer.js"),
         import("three/addons/postprocessing/RenderPass.js"),
@@ -121,10 +123,11 @@
         import("three/addons/postprocessing/ShaderPass.js"),
         import("three/addons/loaders/GLTFLoader.js"),
         import("./journey-audio.js?v=1").catch(() => null),
-        import("./journey-explorer.js?v=1").catch(() => null)
+        import("./journey-explorer.js?v=2").catch(() => null),
+        import("./journey-travel.js?v=3")
       ]);
       if (document.fonts) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
-      teardown = buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule });
+      teardown = buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule });
       active = true;
       clearReturnParam();
     } catch (error) {
@@ -156,7 +159,7 @@
     }
   }
 
-  function buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule }) {
+  function buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule }) {
     const lite = coarsePointer.matches || window.innerWidth < 760;
     const still = reducedMotion.matches;
     const css = getComputedStyle(root);
@@ -531,8 +534,9 @@
     function standPoint(i, out) {
       const stop = stops[i];
       const c = stop.center;
-      // On the path, a step across from the card and level with its near edge, so the card never sits behind the guide
-      if (stop.kind === "project") return out.set(-stop.side * GUIDE_OFFSET, 0, c.z + 1.6);
+      // On the path, a step across from the card and a little in front of it, so the card never sits behind the guide
+      // and the guide stands nearer the camera than the card does
+      if (stop.kind === "project") return out.set(-stop.side * GUIDE_OFFSET, 0, c.z + 3.2);
       if (stop.kind === "career") return out.set(c.x + 1.8, 0, c.z + 1.6);
       if (stop.kind === "research") return out.set(c.x + 1.95, 0, c.z + 2.6);
       if (stop.kind === "profile") return out.set(c.x + 2.4, 0, c.z + 2.4);
@@ -573,9 +577,7 @@
       guide.mixer = new THREE.AnimationMixer(model);
       gltf.animations.forEach(clip => { guide.actions[clip.name] = guide.mixer.clipAction(clip); });
       guide.mixer.addEventListener("finished", () => play("Idle", 0.4));
-      guide.k = still ? cutStop : currentK;
-      standPoint(Math.min(last - 1, Math.floor(guide.k)), guide.pos);
-      if (guide.k === last) standPoint(last, guide.pos);
+      travel.position(guide.pos);
       model.position.copy(guide.pos);
       scene.add(model);
       guide.model = model;
@@ -658,39 +660,53 @@
     });
     composer.addPass(finish);
 
-    // ---------- Camera shots ----------
-    // Each project gets a different framing, cycling like shots in an edit: dolly, low angle, crane, side angle.
-    const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), tmpC = new THREE.Vector3(), shotAim = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
-    const SHOT_DISTANCE = 10.5;   // metres back from the aim point at a project stop
-    const SHOT_AIM_BLEND = 0.45; // 0 aims at the card, 1 at the guide
-    const SHOT_LIFT = -0.55;       // raises (+) or lowers (-) the aim point on desktop
-    function shotFor(i, drift, outPos, outTarget) {
+    // ---------- Camera ----------
+    // The camera always frames the guide (it reads the travel controller, never the scroll), so it can't run ahead.
+    // Travelling: behind and above the guide, looking a little way down the path.
+    // At a project stop: beside the guide on the side away from the card, looking across the path at the card.
+    // Portals and section stations keep their fixed wide shots, which the follow camera blends into.
+    const tmpA = new THREE.Vector3();
+    // fov: following and project framings use a slightly wider lens than the section shots, to fit card and guide
+    const FOLLOW = lite ? { up: 2.7, back: 8.2, ahead: 3, lookY: 0.15, fov: 56 } : { up: 2.1, back: 4.8, ahead: 3, lookY: 0.75, fov: 46 };
+    // Desktop values were solved for 16:10 so the card clears the top bar and the panel and the guide's feet clear the hint
+    const STOP_VIEW = lite ? { side: 0.9, up: 2.9, back: 9.6, aim: 0.55, lift: -1.7, fov: 56 } : { side: 1.6, up: 1.8, back: 5.5, aim: 0.65, lift: -1.3, fov: 50 };
+    const STOP_VIEW_POSTER = lite ? STOP_VIEW : { ...STOP_VIEW, back: 6.5, lift: -1.0 };   // posters are taller
+    const baseFov = () => (window.innerWidth < 760 ? 56 : 42);
+    let framingFov = FOLLOW.fov;
+    const FRAMING_NEAR = 2;          // metres from a stop where its framing has fully taken over
+    const FRAMING_FAR = 9;           // metres from a stop where its framing starts to blend in
+    const CAMERA_DAMPING = 0.0065;   // per ms: how quickly the camera eases onto its framing
+    const smoothstep = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    function shotFor(i, outPos, outTarget) {
       const stop = stops[i];
       const c = stop.center;
       if (stop.kind === "intro" || stop.kind === "outro") {
-        outPos.set(c.x, c.y + 0.1, c.z + 12 - drift * 3);
+        outPos.set(c.x, c.y + 0.1, c.z + 12);
         outTarget.set(c.x, c.y, c.z);
         return;
       }
-      if (stop.kind !== "project") {
-        // Section stations: a straight-on wide shot; the experience wall needs the most room
-        const back = (stop.kind === "career" ? 10.5 : 12) + (lite ? 4 : 0) - drift * 2.5;
-        outPos.set(c.x, c.y + 0.6, c.z + back);
-        outTarget.set(c.x + (lite ? 0 : -2.4), c.y - (lite ? 2 : 1.5), c.z);
-        return;
-      }
-      const n = stop.normal;
-      const type = (i - 1) % 4;
-      const dist = ((lite ? 11.5 : SHOT_DISTANCE) - drift * 1.4) * (stop.poster ? 1.12 : 1); // posters are taller
-      // Aim between the card and the guide (who stands across the path from it) so both share the frame
-      const aim = shotAim.copy(c).lerp(standPoint(i, tmpC).setY(1), SHOT_AIM_BLEND);
-      if (type === 0) { outPos.copy(aim).addScaledVector(n, dist).add(tmpA.set(0, 0.15, 0)); outTarget.copy(aim); }
-      else if (type === 1) { outPos.copy(aim).addScaledVector(n, dist * 0.95).add(tmpA.set(0, -1.2, 0)); outTarget.copy(aim).add(tmpA.set(0, 0.5, 0)); }
-      else if (type === 2) { outPos.copy(aim).addScaledVector(n, dist * 1.1).add(tmpA.set(0, 2.2, 0)); outTarget.copy(aim).add(tmpA.set(0, -0.15, 0)); }
-      else { tmpB.copy(n).applyAxisAngle(up, -stop.side * 0.45); outPos.copy(aim).addScaledVector(tmpB, dist * 1.04).add(tmpA.set(0, 0.6, 0)); outTarget.copy(aim); }
-      // Phones: the panel spans the bottom of the screen, so lift the scene above it
-      if (lite) outTarget.y -= 1.9;
-      else outTarget.y += SHOT_LIFT;
+      // Section stations: a straight-on wide shot; the experience wall needs the most room
+      const back = (stop.kind === "career" ? 10.5 : 12) + (lite ? 4 : 0);
+      outPos.set(c.x, c.y + 0.6, c.z + back);
+      outTarget.set(c.x + (lite ? 0 : -2.4), c.y - (lite ? 2 : 1.5), c.z);
+    }
+    const followPos = new THREE.Vector3(), followTarget = new THREE.Vector3(), stopPos = new THREE.Vector3(), stopTarget = new THREE.Vector3();
+    function framing(at, outPos, outTarget) {
+      followPos.set(at.x, FOLLOW.up, at.z + FOLLOW.back);
+      followTarget.set(at.x, FOLLOW.lookY, at.z - FOLLOW.ahead);
+      const j = travel.nearest;
+      const w = still ? 1 : smoother(1 - smoothstep(FRAMING_NEAR, FRAMING_FAR, travel.distanceTo(j)));
+      if (w <= 0) { outPos.copy(followPos); outTarget.copy(followTarget); framingFov = FOLLOW.fov; return; }
+      const stop = stops[j];
+      framingFov = FOLLOW.fov + ((stop.kind === "project" ? STOP_VIEW.fov : baseFov()) - FOLLOW.fov) * w;
+      if (stop.kind === "project") {
+        const view = stop.poster ? STOP_VIEW_POSTER : STOP_VIEW;
+        stopPos.set(at.x - stop.side * view.side, view.up, at.z + view.back);
+        stopTarget.set(at.x, 1, at.z).lerp(stop.center, view.aim);
+        stopTarget.y += view.lift;
+      } else shotFor(j, stopPos, stopTarget);
+      outPos.lerpVectors(followPos, stopPos, w);
+      outTarget.lerpVectors(followTarget, stopTarget, w);
     }
 
     // ---------- Overlay UI ----------
@@ -785,15 +801,34 @@
     }
 
     // ---------- Input: wheel, touch, keys, clicks ----------
+    // Input only moves the travel controller (journey-travel.js); the guide, camera and panel all follow it.
     const last = stops.length - 1;
-    let targetK = startStopFor(stops);
-    let currentK = targetK;
-    let snapTimer = 0;
+    const travel = travelModule.createTravel({ THREE, count: stops.length, standPoint });
+    const TRAVEL = travelModule.TRAVEL;
+    const startStop = startStopFor(stops);
+    travel.jumpTo(startStop);
+    const METRES_PER_PIXEL = SPACING / 640;   // one wheel notch (~100 px) walks about 3.4 m
+    const TRANSITION_SPEED = 1.1;             // m/s while the headset goes on or comes off
+    const PUT_ON_DISTANCE = 2.8;              // metres before a VR stop where the headset goes on
+    const TAKE_OFF_DISTANCE = 3.4;            // metres past a VR stop where it comes off again
+    const PANEL_HIDE_SPEED = 1.5;             // m/s above which the info panel steps aside for the guide
     let wheelBank = 0;
     let wheelLock = 0;
-    const clampK = k => Math.max(0, Math.min(last, k));
-    function goTo(i) { targetK = clampK(Math.round(i)); }
-    function scheduleSnap() { clearTimeout(snapTimer); snapTimer = setTimeout(() => { targetK = clampK(Math.round(targetK)); }, 170); }
+    let cutTimer = 0;
+    let pendingJump = null;
+    let snapCamera = true;
+    const wornAt = i => stops[i].experience === "vr";
+    // Go to a stop: walk when it's close, teleport when it's far, cut when motion is reduced
+    function goTo(i) {
+      i = Math.max(0, Math.min(last, Math.round(i)));
+      if (still) { cutTo(i); return; }
+      if (!travel.goTo(i)) pendingJump = i;
+    }
+    function cutTo(i) {
+      if (cutTimer || i === travel.target) return;
+      canvas.classList.add("is-cutting");
+      cutTimer = setTimeout(() => { travel.jumpTo(i); snapCamera = true; canvas.classList.remove("is-cutting"); cutTimer = 0; }, 320);
+    }
     function onWheel(event) {
       if (event.ctrlKey) return;
       const list = event.target instanceof Element ? event.target.closest(".journey-ui__list, .journey-ui__chips") : null;
@@ -804,11 +839,10 @@
         // Reduced motion: whole steps only, so every move is a simple cut
         const now = performance.now();
         wheelBank += delta;
-        if (now > wheelLock && Math.abs(wheelBank) > 60) { goTo(targetK + Math.sign(wheelBank)); wheelBank = 0; wheelLock = now + 650; }
+        if (now > wheelLock && Math.abs(wheelBank) > 60) { goTo(travel.target + Math.sign(wheelBank)); wheelBank = 0; wheelLock = now + 650; }
         return;
       }
-      targetK = clampK(targetK + delta / 720);
-      scheduleSnap();
+      travel.nudge(delta * METRES_PER_PIXEL, performance.now());
     }
     let touchY = null;
     function onTouchStart(event) { touchY = event.touches[0].clientY; }
@@ -816,14 +850,13 @@
       if (touchY === null) return;
       event.preventDefault();
       const y = event.touches[0].clientY;
-      if (!still) targetK = clampK(targetK + (touchY - y) / (window.innerHeight * 0.75));
+      if (!still) travel.nudge((touchY - y) / (window.innerHeight * 0.75) * SPACING, performance.now());
       else wheelBank += touchY - y;
       touchY = y;
     }
     function onTouchEnd() {
       touchY = null;
-      if (still) { if (Math.abs(wheelBank) > 40) goTo(targetK + Math.sign(wheelBank)); wheelBank = 0; }
-      else scheduleSnap();
+      if (still) { if (Math.abs(wheelBank) > 40) goTo(travel.target + Math.sign(wheelBank)); wheelBank = 0; }
     }
     function onKey(event) {
       if (event.altKey || event.ctrlKey || event.metaKey) return;
@@ -831,8 +864,8 @@
       if (k === "Escape") { event.preventDefault(); exit(); return; }
       const inUi = event.target instanceof HTMLElement && event.target.closest("a,button") && (k === " " || k === "Enter");
       if (inUi) return;
-      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(k)) { event.preventDefault(); goTo(Math.round(targetK) + 1); }
-      else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(k)) { event.preventDefault(); goTo(Math.round(targetK) - 1); }
+      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(k)) { event.preventDefault(); goTo(travel.target + 1); }
+      else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(k)) { event.preventDefault(); goTo(travel.target - 1); }
       else if (k === "Home") { event.preventDefault(); goTo(0); }
       else if (k === "End") { event.preventDefault(); goTo(last); }
       else if (k === "m" || k === "M") toggleSound();
@@ -882,7 +915,7 @@
     else soundButton.hidden = true;
     const wake = () => { if (soundtrack) soundtrack.resume(); };
     ["pointerdown", "keydown", "touchstart", "wheel"].forEach(type => window.addEventListener(type, wake, { passive: true }));
-    let heardStop = Math.round(targetK);
+    let heardStop = startStop;
 
     // ---------- Resize and adaptive quality ----------
     function resize() {
@@ -914,75 +947,79 @@
 
     // ---------- Frame loop ----------
     const camPos = new THREE.Vector3(), camTarget = new THREE.Vector3();
-    const posA = new THREE.Vector3(), posB = new THREE.Vector3(), tgtA = new THREE.Vector3(), tgtB = new THREE.Vector3();
+    const posA = new THREE.Vector3(), tgtA = new THREE.Vector3(), guidePos = new THREE.Vector3();
     const smoother = t => t * t * t * (t * (t * 6 - 15) + 10);
     let frame = 0;
     let lastTime = performance.now();
     let elapsed = 0;
-    let cutStop = Math.round(currentK);
-    let cutTimer = 0;
+    let worn = wornAt(startStop);
     function draw(now) {
       frame = requestAnimationFrame(draw);
       const dt = Math.min(64, now - lastTime);
       lastTime = now;
       if (!still) elapsed += dt / 1000;
 
-      if (still) {
-        // Reduced motion: hold each shot and cross-fade (via the canvas opacity) to the next one
-        const wanted = Math.round(targetK);
-        if (wanted !== cutStop && !cutTimer) {
-          canvas.classList.add("is-cutting");
-          cutTimer = setTimeout(() => { cutStop = wanted; currentK = wanted; canvas.classList.remove("is-cutting"); cutTimer = 0; }, 320);
-        }
-      } else {
-        currentK += (targetK - currentK) * (1 - Math.exp(-dt * 0.0042));
-        if (Math.abs(targetK - currentK) < 0.0005) currentK = targetK;
+      // Travel: a far jump teleports once the guide is free; headset changes slow it to a walk; a teleport holds it
+      const scrolledJump = travel.takeJump();
+      if (scrolledJump !== null) pendingJump = scrolledJump;
+      if (pendingJump !== null && !(explorer && explorer.busy)) {
+        const i = pendingJump;
+        pendingJump = null;
+        const jump = () => { travel.jumpTo(i); worn = wornAt(i); snapCamera = true; };
+        if (explorer) explorer.teleport(wornAt(i), jump);
+        else jump();
       }
-      const k = still ? cutStop : currentK;
-      const i = Math.min(last - 1, Math.floor(k));
-      const f = k - i;
-      // Hold near each stop, travel in the middle of the segment
-      const travel = smoother(Math.max(0, Math.min(1, (f - 0.22) / 0.56)));
-      shotFor(i, Math.max(-0.5, Math.min(0.5, f)), posA, tgtA);
-      shotFor(i + 1, Math.max(-0.5, Math.min(0.5, f - 1)), posB, tgtB);
-      camPos.lerpVectors(posA, posB, travel);
-      camPos.y += Math.sin(Math.PI * travel) * 1.4;
-      camTarget.lerpVectors(tgtA, tgtB, travel);
-      if (!still) { camPos.x += parallax.x * 0.35; camPos.y -= parallax.y * 0.2; }
+      if (!still) travel.update(dt, now, explorer && explorer.busy ? (explorer.teleporting ? 0 : TRANSITION_SPEED) : TRAVEL.MAX_SPEED);
+      travel.position(guidePos);
+      const k = travel.k;
+
+      // Headset: on near VR stops and between two VR stops, off elsewhere (with a little hysteresis)
+      const near = travel.nearest;
+      const seg = Math.min(last - 1, Math.floor(k));
+      worn = (wornAt(seg) && wornAt(seg + 1)) || (wornAt(near) && travel.distanceTo(near) < (worn ? TAKE_OFF_DISTANCE : PUT_ON_DISTANCE));
+
+      // Camera: framed on the guide, eased so it never jumps
+      framing(guidePos, posA, tgtA);
+      let fov = framingFov;
+      if (snapCamera || still) { camPos.copy(posA); camTarget.copy(tgtA); snapCamera = false; }
+      else {
+        const ease = 1 - Math.exp(-dt * CAMERA_DAMPING);
+        camPos.lerp(posA, ease);
+        camTarget.lerp(tgtA, ease);
+        fov = camera.fov + (framingFov - camera.fov) * ease;
+      }
+      if (Math.abs(fov - camera.fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
       camera.position.copy(camPos);
+      if (!still) { camera.position.x += parallax.x * 0.25; camera.position.y -= parallax.y * 0.15; }
       camera.lookAt(camTarget);
       showStop(Math.round(k));
+      panel.classList.toggle("is-travelling", !still && travel.speed > PANEL_HIDE_SPEED);
+      // The scroll hint has done its job once the visitor moves; fading it keeps the guide's corner clear
+      if (travel.target !== startStop) ui.classList.add("has-travelled");
       trackFill.style.transform = `scaleX(${(k / last).toFixed(4)})`;
       if (soundtrack) {
-        const wantedStop = Math.round(targetK);
-        if (wantedStop !== heardStop) { heardStop = wantedStop; soundtrack.whoosh(); }
-        soundtrack.setEnergy(Math.abs(targetK - currentK) * 2.5);
+        if (travel.target !== heardStop) { heardStop = travel.target; soundtrack.whoosh(); }
+        soundtrack.setEnergy(travel.speed / TRAVEL.MAX_SPEED);
       }
 
-      // Guide: the explorer animates itself; the fallback robot walks or runs between stand points and gestures
+      // Guide: the explorer animates itself where the controller puts it; the fallback robot does the same with its clips
+      const here = stops[near];
+      const atStop = travel.distanceTo(near) < 0.5;
       if (explorer) {
-        explorer.update({ dt, target: still ? cutStop : Math.round(targetK), stops, standPoint, camera: camera.position });
+        explorer.update({
+          dt, position: guidePos, speed: travel.speed, heading: travel.heading(), wantWorn: worn,
+          presentTo: atStop && here.kind === "project" ? here.center : null, camera: camera.position
+        });
         const at = explorer.group.position;
         lightRig.position.set(at.x, 0, at.z);
         key.position.set(camera.position.x - at.x - 2, 5, camera.position.z - at.z);
         key.target.position.set(0, 1, 0);
         rim.position.set(-1.2, 2.4, -1.6);
       } else if (guide.model) {
-        const prevX = guide.pos.x, prevZ = guide.pos.z;
-        if (still) guide.k = cutStop;
-        else {
-          guide.k += (targetK - guide.k) * (1 - Math.exp(-dt * 0.0058));
-          if (Math.abs(targetK - guide.k) < 0.0005) guide.k = targetK;
-        }
-        const gi = Math.min(last - 1, Math.floor(guide.k));
-        const gf = guide.k - gi;
-        standPoint(gi, posA);
-        standPoint(gi + 1, posB);
-        guide.pos.lerpVectors(posA, posB, smoother(Math.max(0, Math.min(1, gf))));
-        const dx = guide.pos.x - prevX, dz = guide.pos.z - prevZ;
-        const speed = Math.hypot(dx, dz) / Math.max(0.001, dt / 1000);
+        guide.pos.copy(guidePos);
+        const speed = travel.speed;
         let yaw = guide.yaw;
-        if (speed > 0.25) { yaw = Math.atan2(dx, dz); guide.idleFor = 0; }
+        if (speed > 0.25) { yaw = travel.heading(); guide.idleFor = 0; }
         else { guide.idleFor += dt; yaw = Math.atan2(camera.position.x - guide.pos.x, camera.position.z - guide.pos.z); }
         let turn = yaw - guide.yaw;
         turn = Math.atan2(Math.sin(turn), Math.cos(turn));
@@ -995,10 +1032,9 @@
             guide.arrived = -1;
             play(moving);
             if (guide.current) guide.current.timeScale = Math.min(1.6, Math.max(0.8, speed / (moving === "Running" ? 6 : 2.2)));
-          } else if (guide.idleFor > 220 && guide.arrived !== Math.round(guide.k)) {
-            guide.arrived = Math.round(guide.k);
-            const kind = stops[guide.arrived].kind;
-            const pick = { intro: "Wave", outro: "Dance", profile: "Wave", career: "ThumbsUp", research: "Yes" }[kind] || (guide.gestures++ % 2 ? "ThumbsUp" : "Yes");
+          } else if (guide.idleFor > 220 && atStop && guide.arrived !== near) {
+            guide.arrived = near;
+            const pick = { intro: "Wave", outro: "Dance", profile: "Wave", career: "ThumbsUp", research: "Yes" }[here.kind] || (guide.gestures++ % 2 ? "ThumbsUp" : "Yes");
             if (guide.current) guide.current.timeScale = 1;
             gesture(pick);
             if (soundtrack) soundtrack.chime();
@@ -1046,7 +1082,7 @@
     body.appendChild(button);
     body.appendChild(ui);
     resize();
-    showStop(Math.round(currentK));
+    showStop(startStop);
     // Guide: the explorer scans (journey-explorer.js); the robot steps in if they can't load
     let explorer = null;
     if (explorerModule) {
@@ -1071,7 +1107,7 @@
       }
     }
     if (!explorer) loadGuide();
-    const order = screens.slice().sort((a, b) => Math.abs(a.stop - targetK) - Math.abs(b.stop - targetK));
+    const order = screens.slice().sort((a, b) => Math.abs(a.stop - startStop) - Math.abs(b.stop - startStop));
 
     (async () => { for (const entry of order) { if (cancelled) return; await loadArtwork(entry); } })();
     window.addEventListener("resize", resize, { passive: true });
@@ -1088,7 +1124,6 @@
     return () => {
       cancelled = true;
       cancelAnimationFrame(frame);
-      clearTimeout(snapTimer);
       clearTimeout(panelTimer);
       clearTimeout(cutTimer);
       window.removeEventListener("resize", resize);
