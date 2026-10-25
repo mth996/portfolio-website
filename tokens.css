@@ -8,6 +8,10 @@
   --surface-poster:#07070c;
   --surface-raised:linear-gradient(135deg,rgba(22,22,36,.92),rgba(10,10,18,.94));
   --surface-raised-hover:linear-gradient(135deg,rgba(28,28,46,.98),rgba(12,12,22,.98));
+  /* Glass: translucent ink over the 3D scene or imagery */
+  --glass:rgba(7,7,12,.72);
+  --glass-strong:rgba(7,7,12,.9);
+  --glass-panel:linear-gradient(160deg,rgba(13,13,22,.78),rgba(7,7,12,.62));
 
   /* Text, brightest to faintest */
   --text-1:#f2f4ff;
@@ -34,6 +38,9 @@
   --glow-accent-2:rgba(139,92,255,.4);
   --glow-accent-3:rgba(255,61,154,.35);
   --spotlight:rgba(62,240,255,.11);
+  --edge-accent:rgba(62,240,255,.55);
+  --edge-accent-soft:rgba(62,240,255,.12);
+  --text-glow:rgba(62,240,255,.22);
   --grid-line:rgba(62,240,255,.14);
 
   /* Pill buttons */

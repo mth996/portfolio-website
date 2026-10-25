@@ -1,59 +1,30 @@
+// Optional cinematic 3D journey through the portfolio: projects, profile, experience, publications and contact,
+// with a robot guide and a generative soundtrack. Three.js and its addons load from the CDN (see the import map in
+// index.html) only when the visitor clicks "Enter 3D journey". The regular page stays the default.
 (() => {
   const body = document.body;
+  const root = document.documentElement;
   const button = document.getElementById("archipelago-toggle");
   const canvas = document.getElementById("archipelago-canvas");
-  const cue = document.querySelector(".scroll-instruction");
-  const cueLabel = document.querySelector(".scroll-cue__label");
   const status = document.getElementById("archipelago-status");
   if (!body || !button || !canvas) return;
-  const returnStopParam = new URLSearchParams(window.location.search).get("returnIsland");
-  const buttonParent = button.parentNode;
-  const buttonNext = button.nextSibling;
-  function restoreButton() { if (buttonParent) buttonParent.insertBefore(button, buttonNext); }
 
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const coarsePointer = window.matchMedia("(hover:none), (pointer:coarse)");
-  function clearReturnParam() {
-    if (returnStopParam === null) return;
-    const url = new URL(window.location.href);
-    url.searchParams.delete("returnIsland");
-    history.replaceState(history.state, "", url.pathname + url.search + url.hash);
-  }
-  function jumpScrollTo(top) {
-    const previous = document.documentElement.style.scrollBehavior;
-    document.documentElement.style.scrollBehavior = "auto";
-    window.scrollTo(0, top);
-    document.documentElement.style.scrollBehavior = previous;
-  }
-  function fallbackToReturnSection() {
-    if (returnStopParam === null) return;
-    const index = /^\d+$/.test(returnStopParam) ? Number(returnStopParam) : NaN;
-    const project = Number.isFinite(index) ? document.querySelectorAll(".project-scene")[index] : null;
-    const sectionSelector = {hub:"#top",profile:"#profile",career:"#experience",research:"#papers",contact:"#contact"}[returnStopParam];
-    const target = project || (sectionSelector ? document.querySelector(sectionSelector) : null);
-    if (target) jumpScrollTo(window.scrollY + target.getBoundingClientRect().top + 24);
-  }
-  function showHomeReturnControl(token) {
-    let link = document.getElementById("archipelago-home-return");
-    if (!link) {
-      link = document.createElement("a");
-      link.id = "archipelago-home-return";
-      link.className = "archipelago-return-home";
-      link.textContent = "RETURN TO ISLAND";
-      link.setAttribute("aria-label", "Return to this point in the XR Archipelago");
-      document.body.appendChild(link);
-    }
-    const target = new URL("index.html", window.location.href);
-    target.searchParams.set("returnIsland", token);
-    link.href = target.toString();
-  }
-  let renderer = null;
+  const returnParam = new URLSearchParams(window.location.search).get("returnIsland");
+  const buttonParent = button.parentNode;
+  const buttonNext = button.nextSibling;
+  const startLabel = "ENTER 3D JOURNEY";
+  // Guide character: "RobotExpressive" by Tomás Laulhé (Quaternius), CC0, from the three.js examples
+  const GUIDE_URL = "https://cdn.jsdelivr.net/gh/mrdoob/three.js@r170/examples/models/gltf/RobotExpressive/RobotExpressive.glb";
+  const SECTION_SELECTORS = { profile: "#profile", career: "#experience", research: "#papers", outro: "#contact" };
+  const stopLabel = "EXIT 3D JOURNEY";
+
   let active = false;
   let booting = false;
-  let destroyScene = null;
+  let teardown = null;
   let statusTimer = 0;
-  const startLabel = "ENTER 3D JOURNEY";
-  const stopLabel = "EXIT 3D JOURNEY";
+  let savedScrollY = 0;
 
   function announce(message) {
     if (!status) return;
@@ -63,451 +34,105 @@
     statusTimer = setTimeout(() => status.classList.remove("is-visible"), 2600);
   }
   function updateControls() {
-    button.textContent = active ? stopLabel : startLabel;
+    button.textContent = booting ? "LOADING JOURNEY" : active ? stopLabel : startLabel;
     button.setAttribute("aria-pressed", String(active));
-    button.setAttribute("aria-label", active ? "Exit the XR Archipelago and return to the regular portfolio view" : "Enter the optional 3D XR Archipelago portfolio view");
-    if (cue) cue.setAttribute("aria-label", active ? (coarsePointer.matches ? "Swipe to travel through the portfolio" : "Scroll to travel through the portfolio") : (coarsePointer.matches ? "Swipe to explore" : "Scroll to explore"));
-    if (cueLabel) cueLabel.textContent = active ? (coarsePointer.matches ? "SWIPE TO TRAVEL" : "SCROLL TO TRAVEL") : (coarsePointer.matches ? "SWIPE TO EXPLORE" : "SCROLL TO EXPLORE");
+    button.setAttribute("aria-label", active ? "Exit the 3D journey and return to the regular portfolio" : "Enter the optional 3D journey through the projects");
   }
+  function clearReturnParam() {
+    if (returnParam === null) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete("returnIsland");
+    history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+  }
+
+  // Projects come straight from the page, so the journey always matches the cards.
+  function readProjects() {
+    return [...document.querySelectorAll(".project-scene")].map((card, index) => {
+      const img = card.querySelector("img");
+      return {
+        index,
+        href: card.href,
+        num: (card.querySelector(".scene-num")?.textContent || String(index + 1)).trim(),
+        title: (card.querySelector("h3")?.innerText || "").replace(/\s+/g, " ").trim(),
+        tags: (card.querySelector(".scene-tags")?.textContent || "").trim(),
+        desc: (card.querySelector(".scene-copy p")?.textContent || "").trim(),
+        image: img ? img.currentSrc || img.src : "",
+        experience: card.dataset.experience === "vr" ? "vr" : "non-vr",
+        poster: card.classList.contains("project-scene--poster")
+      };
+    });
+  }
+  const text = el => (el?.innerText || el?.textContent || "").replace(/\s+/g, " ").trim();
+  function readSections() {
+    return {
+      profileLead: text(document.querySelector(".profile-copy > p")),
+      skills: [...document.querySelectorAll(".skill-line li")].map(text),
+      roles: [...document.querySelectorAll(".journey-card")].map(card => ({
+        dates: text(card.querySelector(".journey-meta span")),
+        type: text(card.querySelector(".journey-type")),
+        role: text(card.querySelector(".journey-role")),
+        org: text(card.querySelector(".journey-org")),
+        education: !!card.closest(".journey-column--education")
+      })),
+      papers: [...document.querySelectorAll(".paper-card")].map(card => ({
+        year: text(card.querySelector(".paper-year")),
+        venue: text(card.querySelector(".paper-venue")),
+        title: text(card.querySelector(".paper-title")),
+        href: card.querySelector(".paper-links a")?.href || card.querySelector(".paper-title")?.href || ""
+      }))
+    };
+  }
+  function startStopFor(stops) {
+    const kindIndex = kind => stops.findIndex(s => s.kind === kind);
+    if (returnParam !== null) {
+      if (/^\d+$/.test(returnParam)) return Math.min(stops.length - 2, Number(returnParam) + 1);
+      const map = { contact: "outro", profile: "profile", career: "career", research: "research" };
+      return Math.max(0, kindIndex(map[returnParam]));
+    }
+    // Start at whatever the visitor was looking at: a project card or one of the later sections.
+    for (const [kind, selector] of Object.entries(SECTION_SELECTORS)) {
+      const rect = document.querySelector(selector)?.getBoundingClientRect();
+      if (rect && rect.top < window.innerHeight * 0.5 && rect.bottom > window.innerHeight * 0.5) return Math.max(0, kindIndex(kind));
+    }
+    // Start at the project card nearest the middle of the screen, if the visitor has scrolled to the projects.
+    const middle = window.innerHeight / 2;
+    let best = 0;
+    let bestDistance = Infinity;
+    document.querySelectorAll(".project-scene").forEach((card, i) => {
+      const rect = card.getBoundingClientRect();
+      const distance = Math.abs(rect.top + rect.height / 2 - middle);
+      if (rect.bottom > 0 && rect.top < window.innerHeight && distance < bestDistance) { best = i + 1; bestDistance = distance; }
+    });
+    return best;
+  }
+
   async function enter() {
     if (active || booting) return;
     booting = true;
     button.disabled = true;
-    button.textContent = "OPENING ARCHIPELAGO";
+    updateControls();
     try {
-      const THREE = await import("https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js");
-      if (!document.body.contains(canvas)) return;
-      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "low-power" });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
-      renderer.setSize(window.innerWidth, window.innerHeight, false);
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.22;
-      const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x050914, 0.0065);
-      const camera = new THREE.PerspectiveCamera(49, window.innerWidth / window.innerHeight, 0.1, 260);
-      scene.add(new THREE.HemisphereLight(0xc4ebff, 0x1a2234, 2.45));
-      const keyLight = new THREE.DirectionalLight(0xe1f5ff, 3.1);
-      keyLight.position.set(-9, 17, 8);
-      scene.add(keyLight);
-      const rimLight = new THREE.PointLight(0x46e4ff, 25, 48, 2);
-      scene.add(rimLight);
-      const violetLight = new THREE.PointLight(0xb18bff, 24, 52, 2);
-      scene.add(violetLight);
-
-      const projectEls = [...document.querySelectorAll(".project-scene")];
-      const tailEls = ["#profile", "#experience", "#papers", "#contact"].map(s => document.querySelector(s)).filter(Boolean);
-      const landmarks = [
-        { el: document.querySelector(".hero"), label: "XR ARCHIPELAGO", kind: "hub" },
-        ...projectEls.map((el, i) => ({
-          el,
-          label: (el.querySelector("h3")?.innerText || "PROJECT " + String(i + 1).padStart(2, "0")).replace(/\s+/g, " ").trim(),
-          kind: "project",
-          index: i
-        })),
-        ...tailEls.map((el, i) => ({
-          el,
-          label: (el.querySelector("h2")?.innerText || ["PROFILE", "EXPERIENCE", "PUBLICATIONS", "CONTACT"][i]).replace(/\s+/g, " ").trim(),
-          kind: ["profile", "career", "research", "contact"][i]
-        }))
-      ].filter(item => item.el);
-      if (landmarks.length < 2) throw new Error("Portfolio route could not be assembled.");
-
-      const points = landmarks.map((item, i) => {
-        const side = i === 0 ? 0 : (i % 2 ? -1 : 1);
-        const x = side * (i === 0 ? 0 : 2.1 + (i % 3) * 0.38);
-        const y = i === 0 ? 0 : Math.sin(i * 1.31) * 0.42;
-        const z = -i * 12.5;
-        const rect = item.el.getBoundingClientRect();
-        const scrollTop = window.scrollY + rect.top + (item.kind === "hub" ? 0 : rect.height * 0.48);
-        return { ...item, point: new THREE.Vector3(x, y, z), scrollTop };
-      });
-      const route = new THREE.CatmullRomCurve3(points.map(p => p.point), false, "centripetal", 0.45);
-      const routeMaterial = new THREE.MeshBasicMaterial({ color: 0x39d5f4, transparent: true, opacity: 0.78 });
-      const routeLine = new THREE.Mesh(new THREE.TubeGeometry(route, Math.max(180, points.length * 18), 0.075, 6, false), routeMaterial);
-      routeLine.position.y = 0.14;
-      scene.add(routeLine);
-      const routeCore = new THREE.Mesh(new THREE.TubeGeometry(route, Math.max(180, points.length * 18), 0.022, 5, false), new THREE.MeshBasicMaterial({ color: 0xc8fbff, transparent: true, opacity: 0.96 }));
-      routeCore.position.y = 0.16;
-      scene.add(routeCore);
-
-      const islandTop = new THREE.MeshStandardMaterial({ color: 0x37676b, roughness: 0.88, metalness: 0.02 });
-      const rockMat = new THREE.MeshStandardMaterial({ color: 0x29384e, roughness: 0.92, metalness: 0.05, flatShading: true });
-      const treeTrunk = new THREE.MeshStandardMaterial({ color: 0x65504a, roughness: 1 });
-      const treeLeaf = new THREE.MeshStandardMaterial({ color: 0x48a18b, roughness: 0.84, flatShading: true });
-      const accentMats = [
-        new THREE.MeshStandardMaterial({ color: 0x73eaff, emissive: 0x1a8fa6, emissiveIntensity: 0.85, metalness: 0.22, roughness: 0.35 }),
-        new THREE.MeshStandardMaterial({ color: 0xc6adff, emissive: 0x6847ae, emissiveIntensity: 0.78, metalness: 0.2, roughness: 0.38 }),
-        new THREE.MeshStandardMaterial({ color: 0xffd995, emissive: 0x9d6021, emissiveIntensity: 0.65, metalness: 0.16, roughness: 0.4 })
-      ];
-      const shared = {
-        rock: new THREE.CylinderGeometry(3.15, 2.25, 1.42, 9, 1, false),
-        top: new THREE.CylinderGeometry(3.08, 3.08, 0.16, 14),
-        trunk: new THREE.CylinderGeometry(0.085, 0.13, 0.82, 5),
-        crown: new THREE.ConeGeometry(0.53, 1.32, 6),
-        shard: new THREE.OctahedronGeometry(0.72, 0),
-        smallShard: new THREE.OctahedronGeometry(0.28, 0)
-      };
-      const seed = n => { const x = Math.sin(n * 127.1 + 18.7) * 43758.5453; return x - Math.floor(x); };
-
-      const clickableSprites = [];
-      let routeNav = null;
-      const raycaster = new THREE.Raycaster();
-      const pointerNdc = new THREE.Vector2();
-
-      function makeLabel(text, color, position, item) {
-        const c = document.createElement("canvas");
-        c.width = 768; c.height = 190;
-        const ctx = c.getContext("2d");
-        ctx.clearRect(0, 0, c.width, c.height);
-        ctx.fillStyle = "rgba(5,12,23,.86)";
-        ctx.strokeStyle = "rgba(137,225,255,.58)";
-        ctx.lineWidth = 3;
-        const x = 8, y = 13, w = 752, h = 164, r = 30;
-        ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
-        ctx.fill(); ctx.stroke();
-        ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        let title = text.toUpperCase();
-        if (title.length > 27) title = title.slice(0, 26) + "…";
-        ctx.font = "700 34px Arial, sans-serif";
-        ctx.fillStyle = color;
-        ctx.fillText(title, c.width / 2, 72, 690);
-        ctx.font = "700 18px Arial, sans-serif";
-        ctx.fillStyle = "#d6eaf5";
-        ctx.fillText(item.kind === "project" ? "CLICK TO OPEN PROJECT" : "CLICK TO OPEN SECTION", c.width / 2, 134, 680);
-        const texture = new THREE.CanvasTexture(c);
-        texture.colorSpace = THREE.SRGBColorSpace;
-        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }));
-        sprite.position.copy(position);
-        sprite.scale.set(6.6, 1.64, 1);
-        sprite.userData.landmark = item;
-        scene.add(sprite);
-        clickableSprites.push(sprite);
-      }
-
-      function addTree(x, z, scale) {
-        const g = new THREE.Group();
-        const trunk = new THREE.Mesh(shared.trunk, treeTrunk);
-        trunk.position.y = 0.43 * scale;
-        trunk.scale.setScalar(scale);
-        const crown = new THREE.Mesh(shared.crown, treeLeaf);
-        crown.position.y = 1.2 * scale;
-        crown.scale.setScalar(scale);
-        g.add(trunk, crown);
-        g.position.set(x, 0.04, z);
-        scene.add(g);
-      }
-
-      function addLandmark(item, index) {
-        const p = item.point;
-        const island = new THREE.Group();
-        island.position.set(p.x, p.y - 0.62, p.z);
-        const rock = new THREE.Mesh(shared.rock, rockMat);
-        rock.position.y = -0.12;
-        const grass = new THREE.Mesh(shared.top, islandTop);
-        grass.position.y = 0.62;
-        island.add(rock, grass);
-        scene.add(island);
-
-        for (let j = 0; j < 3; j++) {
-          const angle = seed(index * 7 + j) * Math.PI * 2;
-          const radius = 1.75 + seed(index * 11 + j + 2) * 0.68;
-          addTree(p.x + Math.cos(angle) * radius, p.z + Math.sin(angle) * radius, 0.72 + seed(j + index * 4) * 0.52);
-        }
-
-        const glow = accentMats[index % accentMats.length];
-        const name = item.label.toLowerCase();
-        const structure = new THREE.Group();
-        structure.position.set(p.x, p.y + 0.08, p.z);
-        const box = (w, h, d, material, x, y, z, geo = null) => {
-          const mesh = new THREE.Mesh(geo || new THREE.BoxGeometry(w, h, d), material);
-          mesh.position.set(x, y, z); structure.add(mesh); return mesh;
-        };
-        const cyl = (rt, rb, h, material, x, y, z, sides = 8) => {
-          const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, sides), material);
-          mesh.position.set(x, y, z); structure.add(mesh); return mesh;
-        };
-        if (item.kind === "hub") {
-          cyl(1.35, 1.8, 0.28, glow, 0, 0.26, 0, 12);
-          const ring = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.055, 6, 24), accentMats[0]);
-          ring.position.set(0, 1.1, 0); ring.rotation.x = Math.PI / 2; structure.add(ring);
-          cyl(0.28, 0.4, 1.65, accentMats[1], 0, 1.0, 0, 7);
-        } else if (/sci|lab|biomed|medical/.test(name)) {
-          box(2.3, 1.75, 1.65, accentMats[0], 0, 0.92, 0);
-          for (let r = -1; r <= 1; r++) box(0.28, 0.42, 0.08, accentMats[2], r * 0.58, 1.0, 0.86);
-          box(0.48, 0.62, 0.16, accentMats[1], 0, 0.48, 0.89);
-          box(1.6, 0.12, 1.35, rockMat, 0, 1.88, 0);
-        } else if (/museum|conservation|artifact/.test(name)) {
-          box(2.8, 0.24, 2.0, accentMats[2], 0, 1.55, 0);
-          for (let r = -1; r <= 1; r++) cyl(0.13, 0.17, 1.35, accentMats[0], r * 0.86, 0.75, 0.35, 7);
-          box(3.2, 0.18, 2.3, rockMat, 0, 1.7, 0);
-        } else if (/offshore|oil|rig|simulator/.test(name)) {
-          for (let r = -1; r <= 1; r += 2) {
-            box(0.16, 2.7, 0.16, accentMats[0], r * 0.68, 1.35, 0);
-            box(1.45, 0.16, 1.12, glow, 0, 0.75, 0);
-            box(1.6, 0.12, 1.25, rockMat, 0, 2.7, 0);
-          }
-          box(0.12, 1.5, 0.12, accentMats[2], 0, 2.25, 0);
-        } else if (/contact|get in touch/.test(name)) {
-          cyl(0.64, 0.78, 3.25, accentMats[0], 0, 1.65, 0, 7);
-          const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.44, 8, 6), accentMats[2]);
-          lamp.position.set(0, 3.38, 0); structure.add(lamp);
-          for (let r = -1; r <= 1; r += 2) box(0.1, 1.8, 0.1, accentMats[1], r * 0.68, 1.95, 0);
-        } else if (/publication|research|paper/.test(name)) {
-          for (let r = 0; r < 4; r++) {
-            box(1.35 + (r % 2) * 0.2, 0.22, 0.95, r % 2 ? accentMats[1] : accentMats[0], (r % 2) * 0.08, 0.25 + r * 0.27, 0);
-          }
-        } else if (/experience|career/.test(name)) {
-          for (let r = -1; r <= 1; r++) {
-            box(0.58, 1.05 + (r + 1) * 0.35, 0.58, r === 0 ? accentMats[1] : accentMats[0], r * 0.76, 0.55 + (r + 1) * 0.16, 0);
-          }
-        } else if (/profile/.test(name)) {
-          const crystal = new THREE.Mesh(shared.shard, accentMats[1]);
-          crystal.position.set(0, 1.0, 0); crystal.scale.set(.9, 1.8, .9); structure.add(crystal);
-          const base = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 6, 20), accentMats[0]);
-          base.rotation.x = Math.PI / 2; base.position.y = 0.35; structure.add(base);
-        } else if (/quest|hero|everyday/.test(name)) {
-          for (let r = -1; r <= 1; r++) {
-            box(0.82, 0.7 + (r === 0 ? .35 : 0), 0.72, r === 0 ? accentMats[0] : glow, r * 1.0, 0.45, 0);
-            const roof = new THREE.Mesh(new THREE.ConeGeometry(0.7, 0.48, 4), accentMats[1]);
-            roof.position.set(r * 1.0, 1.0 + (r === 0 ? .35 : 0), 0); roof.rotation.y = Math.PI / 4; structure.add(roof);
-          }
-        } else {
-          for (let r = 0; r < 5; r++) {
-            const cube = new THREE.Mesh(shared.smallShard, r % 2 ? accentMats[1] : accentMats[0]);
-            cube.position.set((r - 2) * 0.58, 0.4 + seed(r + index) * 1.8, (seed(r * 4 + index) - .5) * 1.2);
-            cube.rotation.set(seed(r) * 2, seed(r + 1) * 2, seed(r + 2) * 2);
-            structure.add(cube);
-          }
-        }
-        scene.add(structure);
-        const signPos = p.clone().add(new THREE.Vector3(0, 3.35, 0));
-        makeLabel(item.label, index % 3 === 0 ? "#b5f3ff" : index % 3 === 1 ? "#d9c8ff" : "#ffe0aa", signPos, item);
-        for (let j = 0; j < 5; j++) {
-          const shard = new THREE.Mesh(shared.smallShard, accentMats[(j + index) % accentMats.length]);
-          const a = seed(index * 13 + j) * Math.PI * 2;
-          const r = 3.5 + seed(index * 8 + j) * 2.1;
-          shard.position.set(p.x + Math.cos(a) * r, p.y - 0.3 + seed(j + 24) * 2.2, p.z + Math.sin(a) * r);
-          shard.rotation.set(seed(j) * 3, seed(j + 1) * 3, seed(j + 2) * 3);
-          shard.scale.setScalar(.45 + seed(j + index) * .72);
-          scene.add(shard);
-        }
-      }
-      points.forEach(addLandmark);
-
-      routeNav = document.createElement("nav");
-      routeNav.className = "archipelago-a11y";
-      routeNav.setAttribute("aria-label", "XR Archipelago destinations");
-      const routeHeading = document.createElement("h2");
-      routeHeading.textContent = "Archipelago destinations";
-      routeNav.appendChild(routeHeading);
-      points.forEach(item => {
-        const link = document.createElement("button");
-        link.type = "button";
-        link.textContent = item.kind === "project" ? "Open project: " + item.label : "Open section: " + item.label;
-        link.addEventListener("click", () => activateLandmark(item));
-        routeNav.appendChild(link);
-      });
-
-      const starGeo = new THREE.BufferGeometry();
-      const starPositions = [];
-      for (let i = 0; i < 740; i++) {
-        starPositions.push((seed(i + 500) - .5) * 92, (seed(i + 1200) - .42) * 35, -seed(i + 2400) * points.length * 14 - 12);
-      }
-      starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starPositions, 3));
-      scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xe1f7ff, size: .085, transparent: true, opacity: .9, sizeAttenuation: true })));
-
-      const avatar = new THREE.Group();
-      const suit = new THREE.MeshStandardMaterial({ color: 0x34566d, roughness: .68, metalness: .12 });
-      const suitLight = new THREE.MeshStandardMaterial({ color: 0x72eaff, emissive: 0x1786a1, emissiveIntensity: .82, roughness: .34 });
-      const skin = new THREE.MeshStandardMaterial({ color: 0xdda77e, roughness: .78 });
-      const dark = new THREE.MeshStandardMaterial({ color: 0x101923, roughness: .88 });
-      const torso = new THREE.Mesh(new THREE.CylinderGeometry(.26, .34, .78, 7), suit);
-      torso.position.y = 1.16; avatar.add(torso);
-      const head = new THREE.Mesh(new THREE.SphereGeometry(.245, 9, 7), skin);
-      head.position.y = 1.77; avatar.add(head);
-      const visor = new THREE.Mesh(new THREE.SphereGeometry(.252, 9, 5, 0, Math.PI * 2, .2, .5), dark);
-      visor.position.set(0, 1.82, -.035); visor.scale.set(1.02, .72, .94); avatar.add(visor);
-      const pack = new THREE.Mesh(new THREE.BoxGeometry(.42, .48, .22), suitLight);
-      pack.position.set(0, 1.18, .27); avatar.add(pack);
-      const hips = new THREE.Mesh(new THREE.BoxGeometry(.46, .22, .32), dark);
-      hips.position.y = .72; avatar.add(hips);
-      const limb = (geo, material, x, y) => {
-        const pivot = new THREE.Group(); pivot.position.set(x, y, 0);
-        const mesh = new THREE.Mesh(geo, material); mesh.position.y = -.34; pivot.add(mesh); avatar.add(pivot);
-        return pivot;
-      };
-      const armGeo = new THREE.CylinderGeometry(.095, .075, .7, 6);
-      const legGeo = new THREE.CylinderGeometry(.13, .105, .76, 6);
-      const arms = [limb(armGeo, suit, -.39, 1.42), limb(armGeo, suit, .39, 1.42)];
-      const legs = [limb(legGeo, dark, -.16, .68), limb(legGeo, dark, .16, .68)];
-      arms.forEach((a, i) => {
-        const glove = new THREE.Mesh(new THREE.SphereGeometry(.105, 6, 5), skin);
-        glove.position.y = -.7; a.add(glove);
-      });
-      legs.forEach((l, i) => {
-        const boot = new THREE.Mesh(new THREE.BoxGeometry(.23, .15, .4), suitLight);
-        boot.position.set(0, -.69, -.08); l.add(boot);
-      });
-      scene.add(avatar);
-
-      const shadow = new THREE.Mesh(new THREE.CircleGeometry(.78, 18), new THREE.MeshBasicMaterial({ color: 0x02050b, transparent: true, opacity: .48, depthWrite: false }));
-      shadow.rotation.x = -Math.PI / 2; shadow.position.y = .04; scene.add(shadow);
-
-      function progressForScroll(scrollY) {
-        if (scrollY <= points[0].scrollTop) return 0;
-        const last = points.length - 1;
-        if (scrollY >= points[last].scrollTop) return 1;
-        for (let i = 0; i < last; i++) {
-          const a = points[i].scrollTop, b = Math.max(a + 1, points[i + 1].scrollTop);
-          if (scrollY <= b) return (i + Math.max(0, Math.min(1, (scrollY - a) / (b - a)))) / last;
-        }
-        return 1;
-      }
-      function updateStopOffsets() {
-        const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-        points.forEach(item => {
-          const rect = item.el.getBoundingClientRect();
-          item.scrollTop = window.scrollY + rect.top + (item.kind === "hub" ? 0 : rect.height * 0.48);
-        });
-        const terminalGap = Math.min(190, Math.max(96, window.innerHeight * 0.15));
-        points[0].scrollTop = 0;
-        points[points.length - 1].scrollTop = maxScroll;
-        for (let i = points.length - 2; i > 0; i--) {
-          points[i].scrollTop = Math.max(0, Math.min(points[i].scrollTop, points[i + 1].scrollTop - terminalGap));
-        }
-      }
-      updateStopOffsets();
-
-      let targetU = progressForScroll(window.scrollY);
-      let currentU = targetU;
-      let frame = 0, dead = false;
-      let scrollDirection = 1;
-      if (returnStopParam !== null) {
-        const requestedIndex = /^\d+$/.test(returnStopParam) ? Number(returnStopParam) : NaN;
-        const returnPoint = Number.isFinite(requestedIndex)
-          ? points.find(p => p.kind === "project" && p.index === requestedIndex)
-          : points.find(p => p.kind === returnStopParam);
-        if (returnPoint) jumpScrollTo(returnPoint.scrollTop);
-        targetU = progressForScroll(window.scrollY);
-        currentU = targetU;
-      }
-      function resize() {
-        if (dead) return;
-        const w = window.innerWidth, h = window.innerHeight;
-        renderer.setSize(w, h, false);
-        camera.aspect = w / h;
-        camera.fov = w < 700 ? 55 : 49;
-        camera.updateProjectionMatrix();
-        updateStopOffsets();
-        targetU = progressForScroll(window.scrollY);
-        currentU = targetU;
-      }
-      function onScroll() {
-        const next = progressForScroll(window.scrollY);
-        if (Math.abs(next - targetU) > 0.0001) scrollDirection = Math.sign(next - targetU);
-        targetU = next;
-      }
-      function findClickedLandmark(event) {
-        const rect = canvas.getBoundingClientRect();
-        pointerNdc.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
-        raycaster.setFromCamera(pointerNdc, camera);
-        const hit = raycaster.intersectObjects(clickableSprites, false)[0];
-        return hit ? hit.object.userData.landmark : null;
-      }
-      function onPointerMove(event) {
-        canvas.style.cursor = findClickedLandmark(event) ? "pointer" : "grab";
-      }
-      function activateLandmark(item) {
-        if (!item) return;
-        if (item.kind === "project") {
-          const destination = new URL(item.el.href, window.location.href);
-          destination.searchParams.set("returnIsland", String(item.index));
-          window.location.assign(destination.toString());
-          return;
-        }
-        const token = item.kind === "hub" ? "hub" : item.kind;
-        const returnUrl = new URL(window.location.href);
-        returnUrl.searchParams.set("returnIsland", token);
-        history.replaceState(history.state, "", returnUrl.pathname + returnUrl.search + returnUrl.hash);
-        showHomeReturnControl(token);
-        const destination = item.kind === "hub" ? 0 : item.scrollTop;
-        exit();
-        window.scrollTo({ top: destination, behavior: reducedMotion.matches ? "auto" : "smooth" });
-      }
-      function onCanvasClick(event) {
-        const item = findClickedLandmark(event);
-        if (item) activateLandmark(item);
-      }
-      function draw(time) {
-        if (dead) return;
-        frame = requestAnimationFrame(draw);
-        currentU += (targetU - currentU) * (reducedMotion.matches ? .22 : .075);
-        if (Math.abs(targetU - currentU) < .0004) currentU = targetU;
-        const pos = route.getPoint(currentU);
-        const tangent = route.getTangent(currentU).normalize();
-        const right = new THREE.Vector3().crossVectors(tangent, new THREE.Vector3(0, 1, 0)).normalize();
-        const bob = reducedMotion.matches ? 0 : Math.sin(time * .009) * .045;
-        avatar.position.copy(pos);
-        avatar.position.y += bob;
-        avatar.rotation.y = Math.atan2(-tangent.x, -tangent.z);
-        const movement = Math.min(1, Math.abs(targetU - currentU) * 55);
-        const walk = reducedMotion.matches ? 0 : time * .012;
-        legs[0].rotation.x = Math.sin(walk) * (.14 + movement * .46) * scrollDirection;
-        legs[1].rotation.x = -legs[0].rotation.x;
-        arms[0].rotation.x = -legs[0].rotation.x * .62;
-        arms[1].rotation.x = -legs[1].rotation.x * .62;
-        camera.position.copy(pos).addScaledVector(tangent, -7.5).addScaledVector(right, 0.15).add(new THREE.Vector3(0, 3.55, 0));
-        const look = pos.clone().addScaledVector(tangent, 4.2).add(new THREE.Vector3(0, 1.1, 0));
-        camera.lookAt(look);
-        shadow.position.set(pos.x, pos.y + .04, pos.z);
-        rimLight.position.set(pos.x - 5, pos.y + 5, pos.z + 3);
-        violetLight.position.set(pos.x + 6, pos.y + 3, pos.z - 6);
-        routeMaterial.opacity = .47 + Math.sin(time * .0018) * .1;
-        if (!reducedMotion.matches || Math.abs(targetU - currentU) > .0005) renderer.render(scene, camera);
-        else renderer.render(scene, camera);
-      }
-      window.addEventListener("resize", resize, { passive: true });
-      window.addEventListener("scroll", onScroll, { passive: true });
-      canvas.addEventListener("pointermove", onPointerMove, { passive: true });
-      canvas.addEventListener("click", onCanvasClick);
-      resize();
+      const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }, { GLTFLoader }, audio, explorerModule] = await Promise.all([
+        import("three"),
+        import("three/addons/postprocessing/EffectComposer.js"),
+        import("three/addons/postprocessing/RenderPass.js"),
+        import("three/addons/postprocessing/UnrealBloomPass.js"),
+        import("three/addons/postprocessing/OutputPass.js"),
+        import("three/addons/postprocessing/ShaderPass.js"),
+        import("three/addons/loaders/GLTFLoader.js"),
+        import("./journey-audio.js?v=1").catch(() => null),
+        import("./journey-explorer.js?v=1").catch(() => null)
+      ]);
+      if (document.fonts) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
+      teardown = buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule });
       active = true;
-      body.classList.add("is-archipelago");
-      body.appendChild(button);
-      if (routeNav) body.appendChild(routeNav);
       clearReturnParam();
-      updateControls();
-      draw(0);
-      destroyScene = () => {
-        dead = true;
-        cancelAnimationFrame(frame);
-        window.removeEventListener("resize", resize);
-        window.removeEventListener("scroll", onScroll);
-        canvas.removeEventListener("pointermove", onPointerMove);
-        canvas.removeEventListener("click", onCanvasClick);
-        canvas.style.cursor = "";
-        if (routeNav) { routeNav.remove(); routeNav = null; }
-        scene.traverse(o => {
-          if (o.geometry) o.geometry.dispose();
-          if (o.material) for (const m of (Array.isArray(o.material) ? o.material : [o.material])) {
-            if (m.map) m.map.dispose();
-            m.dispose();
-          }
-        });
-        renderer.dispose();
-        renderer = null;
-      };
     } catch (error) {
-      console.error("XR Archipelago could not start:", error);
-      body.classList.remove("is-archipelago");
-      restoreButton();
+      console.error("3D journey could not start:", error);
+      if (teardown) { teardown(); teardown = null; }
       active = false;
-      updateControls();
-      announce("3D mode isn’t available in this browser. The standard portfolio remains fully usable.");
-      fallbackToReturnSection();
+      announce("The 3D journey isn't available in this browser. The portfolio works as normal.");
       clearReturnParam();
-      if (renderer) { renderer.dispose(); renderer = null; }
     } finally {
       booting = false;
       button.disabled = false;
@@ -515,21 +140,982 @@
     }
   }
 
-  function exit() {
+  function exit(scrollToSelector) {
+    if (!active) return;
     active = false;
-    restoreButton();
-    body.classList.remove("is-archipelago");
-    if (destroyScene) { destroyScene(); destroyScene = null; }
-    else if (renderer) { renderer.dispose(); renderer = null; }
+    if (teardown) { teardown(); teardown = null; }
     updateControls();
-    announce("Back to the regular portfolio view.");
+    const target = scrollToSelector ? document.querySelector(scrollToSelector) : null;
+    const heading = target ? target.querySelector("h2, h3") : null;
+    if (target) {
+      target.scrollIntoView({ behavior: "instant", block: "start" });
+      if (heading) { heading.setAttribute("tabindex", "-1"); heading.focus({ preventScroll: true }); }
+    } else {
+      announce("Back to the regular portfolio.");
+      button.focus({ preventScroll: true });
+    }
   }
 
-  button.addEventListener("click", () => active ? exit() : enter());
-  window.addEventListener("keydown", event => { if (event.key === "Escape" && active) exit(); });
-  coarsePointer.addEventListener?.("change", updateControls);
+  function buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule }) {
+    const lite = coarsePointer.matches || window.innerWidth < 760;
+    const still = reducedMotion.matches;
+    const css = getComputedStyle(root);
+    const token = name => new THREE.Color(css.getPropertyValue(name).trim() || "#ffffff");
+    const ink = token("--bg");
+    const neon = [token("--accent"), token("--accent-2"), token("--accent-3"), token("--accent-warm")];
+    const hdr = (color, power) => color.clone().multiplyScalar(power);
+    const fontDisplay = css.getPropertyValue("--font-display").trim();
+    const fontMono = css.getPropertyValue("--font-mono").trim();
+    const fontBody = css.getPropertyValue("--font-body").trim();
+    const cssColor = name => css.getPropertyValue(name).trim();
+    const sections = readSections();
+
+    const projects = readProjects();
+    if (!projects.length) throw new Error("No projects on the page.");
+
+    // ---------- Renderer, scene, camera ----------
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, alpha: false, powerPreference: "high-performance" });
+    let pixelRatio = Math.min(window.devicePixelRatio || 1, lite ? 1 : 1.5);
+    renderer.setPixelRatio(pixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight, false);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.NeutralToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    renderer.setClearColor(ink, 1);
+
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(ink, lite ? 0.03 : 0.026);
+    const camera = new THREE.PerspectiveCamera(lite ? 56 : 42, window.innerWidth / window.innerHeight, 0.1, 600);
+    const disposables = [];
+    const keep = obj => { disposables.push(obj); return obj; };
+
+    // ---------- Shared textures drawn on canvas ----------
+    function radialTexture(stops) {
+      const c = document.createElement("canvas");
+      c.width = c.height = 128;
+      const g = c.getContext("2d");
+      const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      stops.forEach(([at, alpha]) => grad.addColorStop(at, `rgba(255,255,255,${alpha})`));
+      g.fillStyle = grad;
+      g.fillRect(0, 0, 128, 128);
+      return keep(new THREE.CanvasTexture(c));
+    }
+    const dotTexture = radialTexture([[0, 1], [0.25, 0.55], [1, 0]]);
+    const haloTexture = radialTexture([[0, 0.55], [0.45, 0.18], [1, 0]]);
+
+    // ---------- World layout ----------
+    const SPACING = 16;
+    const SECTION_GAP = 26;
+    const stops = [
+      { kind: "intro" },
+      ...projects.map(p => ({ kind: "project", ...p })),
+      { kind: "profile", label: "Profile" },
+      ...(sections.roles.length ? [{ kind: "career", label: "Experience" }] : []),
+      ...(sections.papers.length ? [{ kind: "research", label: "Publications" }] : []),
+      { kind: "outro", label: "Contact" }
+    ];
+    const projectZ = j => -14 - (j - 1) * SPACING;
+    let sectionZ = projectZ(projects.length) - 6;
+    stops.forEach((stop, i) => {
+      if (stop.kind === "intro") { stop.center = new THREE.Vector3(0, 3.3, 0); stop.rotY = 0; }
+      else if (stop.kind !== "project") { sectionZ -= SECTION_GAP; stop.center = new THREE.Vector3(0, 3.4, sectionZ); stop.rotY = 0; }
+      else {
+        const side = i % 2 ? -1 : 1;
+        stop.side = side;
+        stop.rotY = -side * 0.3;
+        stop.center = new THREE.Vector3(side * 3.2, 3.4, projectZ(i));
+      }
+      stop.normal = new THREE.Vector3(Math.sin(stop.rotY), 0, Math.cos(stop.rotY));
+      stop.color = neon[i % 3];
+    });
+    const endZ = sectionZ;
+    // Intro, sections and contact are non-VR stops: the guide holds the headset there
+    stops.forEach(stop => { if (!stop.experience) stop.experience = "non-vr"; });
+
+    // Sky: ink overhead, violet and magenta haze on the horizon
+    const sky = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: { uInk: { value: ink }, uGlow: { value: neon[1] }, uHot: { value: neon[2] } },
+      vertexShader: "varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
+      fragmentShader: `uniform vec3 uInk; uniform vec3 uGlow; uniform vec3 uHot; varying vec3 vDir;
+        void main(){ float h = vDir.y; float band = exp(-pow(h*7.0,2.0)); float haze = exp(-max(h,0.0)*3.5);
+          vec3 col = uInk + uGlow*band*0.42 + uHot*exp(-pow((h+0.02)*16.0,2.0))*0.16 + uGlow*haze*0.05;
+          gl_FragColor = vec4(col,1.0); }`
+    }));
+    sky.position.z = endZ / 2;
+    scene.add(sky);
+
+    // Floor: neon grid that fades into the fog; slightly see-through so mirrored screens read as reflections
+    const floorMaterial = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, fog: false,
+      uniforms: { uLine: { value: hdr(neon[0], 0.55) }, uBase: { value: ink.clone().multiplyScalar(0.9) }, uFog: { value: ink }, uDensity: { value: scene.fog.density }, uTime: { value: 0 }, uPulse: { value: hdr(neon[2], 0.9) } },
+      vertexShader: "varying vec3 vWorld; varying float vDepth; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vWorld = w.xyz; vec4 mv = viewMatrix * w; vDepth = -mv.z; gl_Position = projectionMatrix * mv; }",
+      fragmentShader: `uniform vec3 uLine; uniform vec3 uBase; uniform vec3 uFog; uniform float uDensity; uniform float uTime; uniform vec3 uPulse;
+        varying vec3 vWorld; varying float vDepth;
+        void main(){
+          vec2 c = vWorld.xz / 2.0;
+          vec2 g = abs(fract(c - 0.5) - 0.5) / fwidth(c);
+          float line = 1.0 - min(min(g.x, g.y), 1.0);
+          float route = exp(-pow(vWorld.x * 0.55, 2.0));
+          float pulse = route * smoothstep(0.92, 1.0, fract(vWorld.z * 0.02 + uTime * 0.18));
+          vec3 col = uBase + uLine * line * (0.35 + route * 0.5) + uPulse * pulse * line * 1.4;
+          float fog = 1.0 - exp(-pow(uDensity * vDepth, 2.0));
+          col = mix(col, uFog, fog);
+          gl_FragColor = vec4(col, mix(0.82, 1.0, fog));
+        }`
+    });
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(220, Math.abs(endZ) + 140), floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.z = endZ / 2;
+    floor.renderOrder = 1;
+    scene.add(floor);
+
+    // Route: a thin light line on the floor linking every stop
+    const routeCurve = new THREE.CatmullRomCurve3(stops.map(s => new THREE.Vector3(s.center.x * 0.45, 0.03, s.center.z + (s.kind === "intro" || s.kind === "outro" ? 0 : 4.5))), false, "centripetal");
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(routeCurve, stops.length * 24, 0.025, 5, false), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 1.6), fog: true })));
+
+    // ---------- Portals at the start and the end ----------
+    const portalMaterials = [];
+    function addPortal(center, color) {
+      const group = new THREE.Group();
+      group.position.copy(center);
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(3.1, 0.05, 12, 160), new THREE.MeshBasicMaterial({ color: hdr(color, 2.2) }));
+      const ringOuter = new THREE.Mesh(new THREE.TorusGeometry(3.45, 0.012, 8, 160), new THREE.MeshBasicMaterial({ color: hdr(color, 1.6) }));
+      const veil = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+        uniforms: { uTime: { value: 0 }, uA: { value: color }, uB: { value: neon[1] } },
+        vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
+        fragmentShader: `uniform float uTime; uniform vec3 uA; uniform vec3 uB; varying vec2 vUv;
+          void main(){ vec2 p = vUv - 0.5; float r = length(p) * 2.0; float a = atan(p.y, p.x);
+            float swirl = 0.5 + 0.5 * sin(a * 3.0 + r * 9.0 - uTime * 0.9);
+            float rim = smoothstep(0.62, 0.97, r) * (1.0 - smoothstep(0.97, 1.0, r));
+            float inner = smoothstep(1.0, 0.2, r) * 0.025;
+            vec3 col = mix(uB, uA, swirl) * (rim * (0.16 + swirl * 0.12) + inner * swirl);
+            gl_FragColor = vec4(col, 1.0); }`
+      });
+      portalMaterials.push(veil);
+      const disk = new THREE.Mesh(new THREE.CircleGeometry(3.08, 64), veil);
+      group.add(ring, ringOuter, disk);
+      scene.add(group);
+      return group;
+    }
+    const portals = [addPortal(stops[0].center, neon[0]), addPortal(stops[stops.length - 1].center, neon[2])];
+
+    // ---------- Project screens ----------
+    const screens = [];
+    const beamMaterials = [];
+    const maxTextureWidth = lite ? 960 : 1600;
+    function captionTexture(stop) {
+      const c = document.createElement("canvas");
+      c.width = 1024; c.height = 160;
+      const g = c.getContext("2d");
+      g.fillStyle = `#${stop.color.getHexString(THREE.SRGBColorSpace)}`;
+      g.font = `500 30px ${fontMono}`;
+      g.textBaseline = "middle";
+      g.fillText(stop.num.padStart(2, "0"), 6, 40);
+      g.fillStyle = "#f2f4ff";
+      g.font = `800 44px ${fontDisplay}`;
+      let title = stop.title.toUpperCase();
+      while (g.measureText(title).width > 1000 && title.length > 4) title = title.slice(0, -2);
+      if (title !== stop.title.toUpperCase()) title = title.trim() + "…";
+      g.fillText(title, 6, 110);
+      const tex = keep(new THREE.CanvasTexture(c));
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+    stops.forEach((stop, i) => {
+      if (stop.kind !== "project") return;
+      const w = stop.poster ? 3.5 : 6.4;
+      const h = stop.poster ? 4.66 : 3.6;
+      const group = new THREE.Group();
+      group.position.copy(stop.center);
+      group.rotation.y = stop.rotY;
+
+      const frame = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.14, h + 0.14), new THREE.MeshBasicMaterial({ color: hdr(stop.color, 1.4) }));
+      frame.position.z = -0.02;
+      const back = new THREE.Mesh(new THREE.PlaneGeometry(w + 0.14, h + 0.14), new THREE.MeshBasicMaterial({ color: ink }));
+      back.position.z = -0.04;
+      back.rotation.y = Math.PI;
+      const screenMaterial = new THREE.MeshBasicMaterial({ color: ink.clone().multiplyScalar(2) });
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(w, h), screenMaterial);
+      screen.userData.stop = i;
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(w * 2.1, h * 2.4), new THREE.MeshBasicMaterial({ map: haloTexture, color: stop.color, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false }));
+      halo.position.z = -0.3;
+      const caption = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 0.66), new THREE.MeshBasicMaterial({ map: captionTexture(stop), transparent: true, depthWrite: false }));
+      caption.position.set(-w / 2 + 2.1, -h / 2 - 0.62, 0.02);
+      group.add(halo, back, frame, screen, caption);
+
+      let reflection = null;
+      if (!lite) {
+        reflection = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: ink.clone().multiplyScalar(2), transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
+        // Mirror image below the see-through floor
+        reflection.rotation.y = stop.rotY;
+        reflection.scale.y = -1;
+        reflection.renderOrder = 0;
+        scene.add(reflection);
+      }
+
+      // Light beam from above
+      const beamHeight = 10;
+      const beamMaterial = new THREE.ShaderMaterial({
+        transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+        uniforms: { uColor: { value: stop.color }, uStrength: { value: 0.06 } },
+        vertexShader: `varying float vY; varying vec3 vNormal; varying vec3 vView;
+          void main(){ vY = position.y / ${beamHeight.toFixed(1)} + 0.5; vNormal = normalize(normalMatrix * normal);
+            vec4 mv = modelViewMatrix * vec4(position,1.0); vView = normalize(-mv.xyz); gl_Position = projectionMatrix * mv; }`,
+        fragmentShader: `uniform vec3 uColor; uniform float uStrength; varying float vY; varying vec3 vNormal; varying vec3 vView;
+          void main(){ float facing = pow(abs(dot(vNormal, vView)), 3.0); float fall = vY * vY;
+            gl_FragColor = vec4(uColor * uStrength * facing * fall, 1.0); }`
+      });
+      beamMaterials.push(beamMaterial);
+      const beam = new THREE.Mesh(new THREE.ConeGeometry(w * 0.55, beamHeight, 40, 1, true), beamMaterial);
+      beam.position.set(stop.center.x, stop.center.y + beamHeight / 2 - 1.2, stop.center.z - 0.4);
+      scene.add(group, beam);
+      screens.push({ stop: i, group, screen, frame, halo, reflection, beamMaterial, baseY: stop.center.y, w, h, material: screenMaterial });
+    });
+
+    // Load artwork nearest to the starting stop first, downscaled so uploads stay light.
+    let cancelled = false;
+    function loadArtwork(entry) {
+      const src = stops[entry.stop].image;
+      if (!src) return Promise.resolve();
+      return new Promise(resolve => {
+        const img = new Image();
+        img.decoding = "async";
+        img.onload = () => {
+          if (cancelled) return resolve();
+          const scale = Math.min(1, maxTextureWidth / img.naturalWidth);
+          const c = document.createElement("canvas");
+          c.width = Math.round(img.naturalWidth * scale);
+          c.height = Math.round(img.naturalHeight * scale);
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          const tex = keep(new THREE.CanvasTexture(c));
+          tex.colorSpace = THREE.SRGBColorSpace;
+          tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+          // Fit the artwork inside the screen without stretching (posters keep their whole image)
+          const screenAspect = entry.w / entry.h, imageAspect = c.width / c.height;
+          if (imageAspect > screenAspect) { tex.repeat.set(screenAspect / imageAspect, 1); tex.offset.set((1 - tex.repeat.x) / 2, 0); }
+          else { tex.repeat.set(1, imageAspect / screenAspect); tex.offset.set(0, (1 - tex.repeat.y) / 2); }
+          entry.material.map = tex;
+          entry.material.color.setScalar(1);
+          entry.material.needsUpdate = true;
+          if (entry.reflection) { entry.reflection.material.map = tex; entry.reflection.material.color.setScalar(1); entry.reflection.material.needsUpdate = true; }
+          resolve();
+        };
+        img.onerror = () => resolve();
+        img.src = src;
+      });
+    }
+
+    // ---------- Section stations: profile, experience, publications ----------
+    function canvasTexture(width, height, paint) {
+      const c = document.createElement("canvas");
+      c.width = width; c.height = height;
+      paint(c.getContext("2d"), width, height);
+      const tex = keep(new THREE.CanvasTexture(c));
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.anisotropy = 4;
+      return tex;
+    }
+    function roundRect(g, x, y, w, h, r) {
+      g.beginPath();
+      g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+      g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+    }
+    function glass(g, w, h, edge) {
+      roundRect(g, 4, 4, w - 8, h - 8, 28);
+      g.fillStyle = cssColor("--glass-strong");
+      g.fill();
+      g.lineWidth = 4;
+      g.strokeStyle = edge;
+      g.stroke();
+    }
+    function wrap(g, words, x, y, maxWidth, lineHeight, maxLines) {
+      const parts = words.split(" ");
+      let line = "", lines = 0;
+      for (let n = 0; n < parts.length; n++) {
+        const test = line ? line + " " + parts[n] : parts[n];
+        if (g.measureText(test).width > maxWidth && line) {
+          if (++lines === maxLines) { g.fillText(line + "…", x, y); return; }
+          g.fillText(line, x, y); line = parts[n]; y += lineHeight;
+        } else line = test;
+      }
+      g.fillText(line, x, y);
+    }
+    const floaters = [];
+    const orbiters = [];
+    stops.forEach(stop => {
+      const c = stop.center;
+      if (stop.kind === "profile") {
+        // A glowing core wrapped in a wireframe shell, with the skills orbiting as neon chips
+        const core = new THREE.Group();
+        core.position.copy(c);
+        const shell = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.7, 1)), new THREE.LineBasicMaterial({ color: hdr(neon[1], 1.8) }));
+        const heart = new THREE.Mesh(new THREE.OctahedronGeometry(0.75), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 2.4) }));
+        const glow = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), new THREE.MeshBasicMaterial({ map: haloTexture, color: neon[1], transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
+        glow.position.z = -0.5;
+        core.add(glow, shell, heart);
+        scene.add(core);
+        floaters.push({ obj: core, baseY: c.y, spin: shell, heart });
+        sections.skills.forEach((skill, n) => {
+          const tex = canvasTexture(512, 112, (g, w, h) => {
+            roundRect(g, 4, 4, w - 8, h - 8, 52);
+            g.fillStyle = cssColor("--glass-strong"); g.fill();
+            g.lineWidth = 4; g.strokeStyle = cssColor(["--accent", "--accent-2", "--accent-3"][n % 3]); g.stroke();
+            g.fillStyle = cssColor("--text-1"); g.font = `500 40px ${fontMono}`; g.textAlign = "center"; g.textBaseline = "middle";
+            g.fillText(skill, w / 2, h / 2 + 2, w - 40);
+          });
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+          sprite.scale.set(2.1, 0.46, 1);
+          scene.add(sprite);
+          orbiters.push({ sprite, center: c, angle: (n / sections.skills.length) * Math.PI * 2, radius: 3.4 + (n % 2) * 0.9, lift: ((n % 3) - 1) * 1.1 });
+        });
+      }
+      if (stop.kind === "career") {
+        // The roles on a curved holographic wall (experience above, education below), facing the camera
+        const focus = new THREE.Vector3(c.x, 0, c.z + 6);
+        const radius = 7.5;
+        const rows = [sections.roles.filter(r => !r.education), sections.roles.filter(r => r.education)];
+        rows.forEach((row, rowIndex) => {
+          row.forEach((role, n) => {
+            const tex = canvasTexture(1024, 560, (g, w, h) => {
+              glass(g, w, h, cssColor(role.education ? "--accent-2" : "--accent"));
+              g.textBaseline = "alphabetic";
+              g.fillStyle = cssColor("--accent"); g.font = `500 34px ${fontMono}`; g.fillText(role.dates.toUpperCase(), 56, 96);
+              g.fillStyle = cssColor("--accent-2-light"); g.textAlign = "right"; g.fillText(role.type.toUpperCase(), w - 56, 96, 420); g.textAlign = "left";
+              g.fillStyle = cssColor("--text-1"); g.font = `800 56px ${fontDisplay}`; wrap(g, role.role, 56, 200, w - 112, 66, 2);
+              g.fillStyle = cssColor("--text-2"); g.font = `600 38px ${fontBody}`; wrap(g, role.org, 56, h - 110, w - 112, 46, 2);
+            });
+            const card = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 1.59), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
+            const angle = (n - (row.length - 1) / 2) * 0.4 + 0.12;
+            card.position.set(focus.x + Math.sin(angle) * radius, rowIndex ? 1.7 : 4.15, focus.z - Math.cos(angle) * radius);
+            card.rotation.y = -angle;
+            scene.add(card);
+            floaters.push({ obj: card, baseY: card.position.y, phase: n + rowIndex * 3 });
+          });
+        });
+      }
+      if (stop.kind === "research") {
+        // Each paper as a tall floating page with its year outlined in neon
+        sections.papers.forEach((paper, n) => {
+          const tex = canvasTexture(768, 1024, (g, w, h) => {
+            glass(g, w, h, cssColor(["--accent", "--accent-2", "--accent-3"][n % 3]));
+            g.lineWidth = 3; g.strokeStyle = cssColor("--accent"); g.font = `800 150px ${fontDisplay}`; g.strokeText(paper.year, 52, 200);
+            g.fillStyle = cssColor("--text-4"); g.font = `500 24px ${fontMono}`; wrap(g, paper.venue.toUpperCase(), 56, 270, w - 112, 34, 4);
+            g.fillStyle = cssColor("--text-1"); g.font = `700 44px ${fontBody}`; wrap(g, paper.title, 56, 470, w - 112, 56, 8);
+          });
+          const page = new THREE.Mesh(new THREE.PlaneGeometry(3, 4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
+          const offset = n - (sections.papers.length - 1) / 2;
+          page.position.set(c.x + offset * 3.9, c.y, c.z - Math.abs(offset) * 1.2);
+          page.rotation.set(0, -offset * 0.28, offset * 0.03);
+          scene.add(page);
+          floaters.push({ obj: page, baseY: c.y, phase: n * 1.7 });
+        });
+      }
+    });
+
+    // ---------- Guide character ----------
+    const lightRig = new THREE.Group();
+    const hemi = new THREE.HemisphereLight(neon[0], neon[1], 1.1);
+    const key = new THREE.DirectionalLight(0xffffff, 2.2);
+    const rim = new THREE.PointLight(neon[2], 18, 9, 2);
+    lightRig.add(hemi, key, key.target, rim);
+    scene.add(lightRig);
+    const guide = { model: null, mixer: null, actions: {}, current: null, pos: new THREE.Vector3(), yaw: 0, k: 0, idleFor: 0, arrived: -1, gestures: 0 };
+    const sideVec = new THREE.Vector3();
+    function standPoint(i, out) {
+      const stop = stops[i];
+      const c = stop.center;
+      if (stop.kind === "project") {
+        const entry = screens.find(sc => sc.stop === i);
+        const halfW = entry ? entry.w / 2 : 3;
+        sideVec.set(Math.cos(stop.rotY), 0, -Math.sin(stop.rotY));
+        // In front of the screen's lower-right corner, like a host presenting it
+        return out.set(c.x, 0, c.z).addScaledVector(stop.normal, 1.9).addScaledVector(sideVec, halfW * 0.5);
+      }
+      if (stop.kind === "career") return out.set(c.x + 1.8, 0, c.z + 1.6);
+      if (stop.kind === "research") return out.set(c.x + 1.95, 0, c.z + 2.6);
+      if (stop.kind === "profile") return out.set(c.x + 2.4, 0, c.z + 2.4);
+      return out.set(c.x + 2.3, 0, c.z + 1.2);
+    }
+    function play(name, fade = 0.35) {
+      const next = guide.actions[name];
+      if (!next || guide.current === next) return;
+      next.reset().setEffectiveWeight(1).fadeIn(fade).play();
+      if (guide.current) guide.current.fadeOut(fade);
+      guide.current = next;
+    }
+    function gesture(name) {
+      const action = guide.actions[name];
+      if (!action) return;
+      action.setLoop(name === "Dance" ? THREE.LoopRepeat : THREE.LoopOnce, Infinity);
+      action.clampWhenFinished = true;
+      play(name, 0.25);
+    }
+    const loadGuide = () => new GLTFLoader().load(GUIDE_URL, gltf => {
+      if (cancelled) return;
+      const model = gltf.scene;
+      const box = new THREE.Box3().setFromObject(model);
+      model.scale.setScalar(1.85 / Math.max(0.01, box.max.y - box.min.y));
+      // Neon-noir finish: violet body, dark joints with a cyan glow
+      model.traverse(obj => {
+        if (!obj.isMesh) return;
+        obj.frustumCulled = false;
+        const mats = [].concat(obj.material).map(m => {
+          const mat = m.clone();
+          if (/main/i.test(mat.name)) { mat.color.copy(neon[1]).multiplyScalar(0.55); mat.emissive.copy(neon[1]).multiplyScalar(0.16); mat.metalness = 0.45; mat.roughness = 0.35; }
+          else if (/black/i.test(mat.name)) { mat.color.copy(ink); mat.emissive.copy(neon[0]).multiplyScalar(0.55); }
+          else { mat.color.copy(ink).multiplyScalar(5); mat.metalness = 0.6; mat.roughness = 0.3; }
+          return mat;
+        });
+        obj.material = mats.length === 1 ? mats[0] : mats;
+      });
+      guide.mixer = new THREE.AnimationMixer(model);
+      gltf.animations.forEach(clip => { guide.actions[clip.name] = guide.mixer.clipAction(clip); });
+      guide.mixer.addEventListener("finished", () => play("Idle", 0.4));
+      guide.k = still ? cutStop : currentK;
+      standPoint(Math.min(last - 1, Math.floor(guide.k)), guide.pos);
+      if (guide.k === last) standPoint(last, guide.pos);
+      model.position.copy(guide.pos);
+      scene.add(model);
+      guide.model = model;
+      play("Idle", 0);
+      if (still) guide.mixer.update(0);
+    }, undefined, () => { /* the journey works without the guide */ });
+
+    // ---------- Atmosphere: dust and sculptures ----------
+    const dustCount = lite ? 380 : 1600;
+    const dustPositions = new Float32Array(dustCount * 3);
+    const dustColors = new Float32Array(dustCount * 3);
+    const dustSeeds = new Float32Array(dustCount);
+    for (let i = 0; i < dustCount; i++) {
+      dustPositions[i * 3] = (Math.random() - 0.5) * 60;
+      dustPositions[i * 3 + 1] = Math.random() * 14;
+      dustPositions[i * 3 + 2] = 18 - Math.random() * (Math.abs(endZ) + 40);
+      const c = neon[Math.floor(Math.random() * 3)].clone().lerp(new THREE.Color(1, 1, 1), 0.35);
+      dustColors.set([c.r, c.g, c.b], i * 3);
+      dustSeeds[i] = Math.random() * 100;
+    }
+    const dustGeometry = new THREE.BufferGeometry();
+    dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
+    dustGeometry.setAttribute("color", new THREE.BufferAttribute(dustColors, 3));
+    dustGeometry.setAttribute("seed", new THREE.BufferAttribute(dustSeeds, 1));
+    const dustMaterial = new THREE.ShaderMaterial({
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexColors: true,
+      uniforms: { uTime: { value: 0 }, uMap: { value: dotTexture }, uScale: { value: window.innerHeight * 0.5 }, uFog: { value: scene.fog.density } },
+      vertexShader: `attribute float seed; uniform float uTime; uniform float uScale; varying vec3 vColor; varying float vFade; uniform float uFog;
+        void main(){ vec3 p = position; p.y = mod(p.y + uTime * (0.12 + fract(seed) * 0.25), 14.0); p.x += sin(uTime * 0.2 + seed) * 0.6;
+          vec4 mv = modelViewMatrix * vec4(p,1.0); float d = -mv.z; vFade = exp(-pow(uFog * d, 2.0)) * (0.35 + 0.65 * fract(seed * 7.13));
+          vColor = color; gl_PointSize = (0.05 + fract(seed * 3.7) * 0.07) * uScale / d; gl_Position = projectionMatrix * mv; }`,
+      fragmentShader: "uniform sampler2D uMap; varying vec3 vColor; varying float vFade; void main(){ float a = texture2D(uMap, gl_PointCoord).a; gl_FragColor = vec4(vColor * a * vFade, 1.0); }"
+    });
+    scene.add(new THREE.Points(dustGeometry, dustMaterial));
+
+    const sculptures = [];
+    const sculptureCount = lite ? 4 : 9;
+    const shapes = [() => new THREE.IcosahedronGeometry(5, 1), () => new THREE.TorusKnotGeometry(3.6, 0.9, 90, 8), () => new THREE.OctahedronGeometry(5.5, 0), () => new THREE.TorusGeometry(6, 0.4, 6, 40)];
+    for (let i = 0; i < sculptureCount; i++) {
+      const geometry = shapes[i % shapes.length]();
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(geometry, 12), new THREE.LineBasicMaterial({ color: hdr(neon[i % 3], 1.25), transparent: true, opacity: 0.55, fog: true }));
+      geometry.dispose();
+      const side = i % 2 ? -1 : 1;
+      edges.position.set(side * (20 + (i * 7) % 14), 7 + (i * 5) % 8, 6 - i * (Math.abs(endZ) / sculptureCount));
+      edges.rotation.set(i * 0.7, i * 1.3, 0);
+      edges.userData.spin = (i % 2 ? 1 : -1) * (0.04 + (i % 3) * 0.02);
+      scene.add(edges);
+      sculptures.push(edges);
+    }
+
+    // ---------- Post-processing ----------
+    const composer = new EffectComposer(renderer);
+    composer.setPixelRatio(pixelRatio);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    composer.addPass(new RenderPass(scene, camera));
+    const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), lite ? 0.55 : 0.7, 0.42, 0.92);
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+    // Film finish: soft focus toward the edges (cheap depth-of-field look), slight colour fringing, vignette and grain
+    const finish = new ShaderPass({
+      uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uRes: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }, uGrain: { value: still ? 0 : 0.045 }, uVignette: { value: 0.85 }, uAberration: { value: lite ? 0 : 0.0035 }, uBlur: { value: lite ? 0 : 0.0042 } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }",
+      fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; uniform vec2 uRes; uniform float uGrain; uniform float uVignette; uniform float uAberration; uniform float uBlur; varying vec2 vUv;
+        float rand(vec2 co){ return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }
+        void main(){
+          vec2 d = vUv - 0.5; float r = length(d * vec2(uRes.x / uRes.y, 1.0));
+          vec2 fringe = d * uAberration * r;
+          float b = uBlur * smoothstep(0.45, 1.0, r);
+          vec3 col = vec3(0.0);
+          for (int i = 0; i < 8; i++) {
+            float a = float(i) * 0.7853982; vec2 o = vec2(cos(a), sin(a)) * b;
+            col += vec3(texture2D(tDiffuse, vUv + o + fringe).r, texture2D(tDiffuse, vUv + o).g, texture2D(tDiffuse, vUv + o - fringe).b);
+          }
+          col /= 8.0;
+          col *= mix(1.0, smoothstep(1.15, 0.3, r), uVignette);
+          col += (rand(vUv * uRes + fract(uTime) * 91.7) - 0.5) * uGrain;
+          gl_FragColor = vec4(col, 1.0);
+        }`
+    });
+    composer.addPass(finish);
+
+    // ---------- Camera shots ----------
+    // Each project gets a different framing, cycling like shots in an edit: dolly, low angle, crane, side angle.
+    const tmpA = new THREE.Vector3(), tmpB = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+    function shotFor(i, drift, outPos, outTarget) {
+      const stop = stops[i];
+      const c = stop.center;
+      if (stop.kind === "intro" || stop.kind === "outro") {
+        outPos.set(c.x, c.y + 0.1, c.z + 12 - drift * 3);
+        outTarget.set(c.x, c.y, c.z);
+        return;
+      }
+      if (stop.kind !== "project") {
+        // Section stations: a straight-on wide shot; the experience wall needs the most room
+        const back = (stop.kind === "career" ? 10.5 : 12) + (lite ? 4 : 0) - drift * 2.5;
+        outPos.set(c.x, c.y + 0.6, c.z + back);
+        outTarget.set(c.x + (lite ? 0 : -2.4), c.y - (lite ? 2 : 1.5), c.z);
+        return;
+      }
+      const n = stop.normal;
+      const type = (i - 1) % 4;
+      const dist = (lite ? 11.5 : 9.4) - drift * 1.4;
+      if (type === 0) { outPos.copy(c).addScaledVector(n, dist).add(tmpA.set(0, 0.15, 0)); outTarget.copy(c); }
+      else if (type === 1) { outPos.copy(c).addScaledVector(n, dist * 0.95).add(tmpA.set(0, -1.6, 0)); outTarget.copy(c).add(tmpA.set(0, 0.5, 0)); }
+      else if (type === 2) { outPos.copy(c).addScaledVector(n, dist * 1.1).add(tmpA.set(0, 3.1, 0)); outTarget.copy(c).add(tmpA.set(0, -0.3, 0)); }
+      else { tmpB.copy(n).applyAxisAngle(up, stop.side * 0.62); outPos.copy(c).addScaledVector(tmpB, dist * 1.04).add(tmpA.set(0, 0.6, 0)); outTarget.copy(c); }
+      // Push the screen up and to the right of frame so the title panel (bottom-left) never covers it
+      const right = tmpA.crossVectors(tmpB.subVectors(outTarget, outPos).normalize(), up).normalize();
+      outTarget.addScaledVector(right, lite ? 0 : -1.0).add(tmpB.set(0, lite ? -1.9 : -1.45, 0));
+    }
+
+    // ---------- Overlay UI ----------
+    const ui = document.createElement("div");
+    ui.className = "journey-ui";
+    ui.setAttribute("role", "region");
+    ui.setAttribute("aria-label", "3D journey");
+    ui.tabIndex = -1;
+    const projectTotal = String(projects.length).padStart(2, "0");
+    ui.innerHTML = `
+      <div class="journey-ui__top"><span class="journey-ui__brand">3D Journey</span><span class="journey-ui__count" aria-hidden="true"></span>
+        <button type="button" class="journey-ui__sound" aria-pressed="false"><span class="journey-ui__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="journey-ui__sound-label">Sound off</span></button></div>
+      <div class="journey-ui__panel" aria-live="polite"></div>
+      <nav class="journey-ui__progress" aria-label="Journey stops"><div class="journey-ui__track" aria-hidden="true"><i></i></div><div class="journey-ui__ticks"></div></nav>
+      <p class="journey-ui__hint" aria-hidden="true">${coarsePointer.matches ? "Swipe to travel" : "Scroll or use arrow keys to travel · Esc to exit"}</p>`;
+    const panel = ui.querySelector(".journey-ui__panel");
+    const count = ui.querySelector(".journey-ui__count");
+    const trackFill = ui.querySelector(".journey-ui__track i");
+    const ticks = ui.querySelector(".journey-ui__ticks");
+    const escapeHtml = text => text.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+    stops.forEach((stop, i) => {
+      const tick = document.createElement("button");
+      tick.type = "button";
+      tick.className = "journey-ui__tick journey-ui__tick--" + stop.kind;
+      const label = stop.kind === "project" ? stop.title : stop.kind === "intro" ? "Start" : stop.label;
+      tick.setAttribute("aria-label", stop.kind === "project" ? `Go to project ${stop.num}: ${stop.title}` : `Go to ${label}`);
+      tick.dataset.label = label;
+      tick.addEventListener("click", () => goTo(i));
+      ticks.appendChild(tick);
+    });
+    const heroLead = document.querySelector(".hero .lead")?.textContent.trim() || "";
+    const footerKicker = document.querySelector(".footer .kicker")?.textContent.trim() || "";
+    const email = document.querySelector(".footer-email");
+    function panelHtml(stop) {
+      if (stop.kind === "intro") {
+        return `<p class="journey-ui__kicker">${escapeHtml(document.querySelector(".hero-kicker")?.textContent.trim() || "")}</p>
+          <h2 class="journey-ui__title">Building Worlds <span class="grad">You Can Step Into</span></h2>
+          <p class="journey-ui__desc">${escapeHtml(heroLead)}</p>`;
+      }
+      if (stop.kind === "profile") {
+        return `<p class="journey-ui__kicker">${escapeHtml(text(document.querySelector("#profile .kicker")))}</p>
+          <h2 class="journey-ui__title">Imagine. Build. <span class="grad">Immerse.</span></h2>
+          <p class="journey-ui__desc">${escapeHtml(sections.profileLead)}</p>
+          <ul class="journey-ui__chips">${sections.skills.map(sk => `<li>${escapeHtml(sk)}</li>`).join("")}</ul>
+          <div class="journey-ui__actions"><button type="button" class="journey-ui__open journey-ui__open--ghost" data-goto="#profile">Open profile</button></div>`;
+      }
+      if (stop.kind === "career") {
+        return `<p class="journey-ui__kicker">${escapeHtml(text(document.querySelector("#experience .kicker")))}</p>
+          <h2 class="journey-ui__title">Experience <span class="grad">&amp; Education</span></h2>
+          <ul class="journey-ui__list">${sections.roles.map(r => `<li><span>${escapeHtml(r.dates)}</span><b>${escapeHtml(r.role)}</b>${escapeHtml(r.org)}</li>`).join("")}</ul>
+          <div class="journey-ui__actions"><button type="button" class="journey-ui__open journey-ui__open--ghost" data-goto="#experience">Open experience</button></div>`;
+      }
+      if (stop.kind === "research") {
+        return `<p class="journey-ui__kicker">${escapeHtml(text(document.querySelector("#papers .kicker")))}</p>
+          <h2 class="journey-ui__title"><span class="grad">Publications</span></h2>
+          <ul class="journey-ui__list">${sections.papers.map(pa => `<li><span>${escapeHtml(pa.year)}</span>${pa.href ? `<a href="${pa.href}" target="_blank" rel="noopener noreferrer">${escapeHtml(pa.title)} ↗</a>` : escapeHtml(pa.title)}</li>`).join("")}</ul>
+          <div class="journey-ui__actions"><button type="button" class="journey-ui__open journey-ui__open--ghost" data-goto="#papers">Open publications</button></div>`;
+      }
+      if (stop.kind === "outro") {
+        return `<p class="journey-ui__kicker">${escapeHtml(footerKicker)}</p>
+          <h2 class="journey-ui__title">Get in <span class="grad">touch.</span></h2>
+          <div class="journey-ui__actions">${email ? `<a class="journey-ui__open" href="${email.href}">${escapeHtml(email.textContent.trim())}</a>` : ""}<button type="button" class="journey-ui__open journey-ui__open--ghost" data-exit>Back to the site</button></div>`;
+      }
+      return `<p class="journey-ui__kicker"><span>${escapeHtml(stop.num.padStart(2, "0"))}</span>${escapeHtml(stop.tags)}</p>
+        <h2 class="journey-ui__title">${escapeHtml(stop.title)}</h2>
+        <p class="journey-ui__desc">${escapeHtml(stop.desc)}</p>
+        <div class="journey-ui__actions"><a class="journey-ui__open" href="${projectLink(stop)}">Open case study ↗</a></div>`;
+    }
+    function projectLink(stop) {
+      const url = new URL(stop.href, window.location.href);
+      url.searchParams.set("returnIsland", String(stop.index));
+      return url.toString();
+    }
+    let shownStop = -1;
+    let panelTimer = 0;
+    function showStop(i) {
+      if (i === shownStop) return;
+      shownStop = i;
+      const stop = stops[i];
+      count.textContent = stop.kind === "project" ? `${stop.num.padStart(2, "0")} / ${projectTotal}` : stop.kind === "intro" ? `00 / ${projectTotal}` : stop.label;
+      [...ticks.children].forEach((t, k) => { t.classList.toggle("is-active", k === i); t.toggleAttribute("aria-current", k === i); });
+      panel.classList.add("is-changing");
+      clearTimeout(panelTimer);
+      panelTimer = setTimeout(() => {
+        panel.innerHTML = panelHtml(stop);
+        panel.querySelector("[data-exit]")?.addEventListener("click", () => exit());
+        panel.querySelector("[data-goto]")?.addEventListener("click", event => exit(event.currentTarget.dataset.goto));
+        panel.classList.remove("is-changing");
+      }, still ? 0 : 220);
+    }
+
+    // ---------- Input: wheel, touch, keys, clicks ----------
+    const last = stops.length - 1;
+    let targetK = startStopFor(stops);
+    let currentK = targetK;
+    let snapTimer = 0;
+    let wheelBank = 0;
+    let wheelLock = 0;
+    const clampK = k => Math.max(0, Math.min(last, k));
+    function goTo(i) { targetK = clampK(Math.round(i)); }
+    function scheduleSnap() { clearTimeout(snapTimer); snapTimer = setTimeout(() => { targetK = clampK(Math.round(targetK)); }, 170); }
+    function onWheel(event) {
+      if (event.ctrlKey) return;
+      const list = event.target instanceof Element ? event.target.closest(".journey-ui__list, .journey-ui__chips") : null;
+      if (list && list.scrollHeight > list.clientHeight) return;
+      event.preventDefault();
+      const delta = (event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY) || (event.deltaMode === 1 ? event.deltaX * 16 : event.deltaX);
+      if (still) {
+        // Reduced motion: whole steps only, so every move is a simple cut
+        const now = performance.now();
+        wheelBank += delta;
+        if (now > wheelLock && Math.abs(wheelBank) > 60) { goTo(targetK + Math.sign(wheelBank)); wheelBank = 0; wheelLock = now + 650; }
+        return;
+      }
+      targetK = clampK(targetK + delta / 720);
+      scheduleSnap();
+    }
+    let touchY = null;
+    function onTouchStart(event) { touchY = event.touches[0].clientY; }
+    function onTouchMove(event) {
+      if (touchY === null) return;
+      event.preventDefault();
+      const y = event.touches[0].clientY;
+      if (!still) targetK = clampK(targetK + (touchY - y) / (window.innerHeight * 0.75));
+      else wheelBank += touchY - y;
+      touchY = y;
+    }
+    function onTouchEnd() {
+      touchY = null;
+      if (still) { if (Math.abs(wheelBank) > 40) goTo(targetK + Math.sign(wheelBank)); wheelBank = 0; }
+      else scheduleSnap();
+    }
+    function onKey(event) {
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const k = event.key;
+      if (k === "Escape") { event.preventDefault(); exit(); return; }
+      const inUi = event.target instanceof HTMLElement && event.target.closest("a,button") && (k === " " || k === "Enter");
+      if (inUi) return;
+      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(k)) { event.preventDefault(); goTo(Math.round(targetK) + 1); }
+      else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(k)) { event.preventDefault(); goTo(Math.round(targetK) - 1); }
+      else if (k === "Home") { event.preventDefault(); goTo(0); }
+      else if (k === "End") { event.preventDefault(); goTo(last); }
+      else if (k === "m" || k === "M") toggleSound();
+      else if (k === "Enter" && stops[shownStop]?.kind === "project") window.location.assign(projectLink(stops[shownStop]));
+    }
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    const parallax = { x: 0, y: 0 };
+    let hovered = null;
+    function pick(event) {
+      pointer.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
+      raycaster.setFromCamera(pointer, camera);
+      const hit = raycaster.intersectObjects(screens.map(s => s.screen), false)[0];
+      return hit ? screens.find(s => s.screen === hit.object) : null;
+    }
+    function onPointerMove(event) {
+      parallax.x = (event.clientX / window.innerWidth - 0.5) * 2;
+      parallax.y = (event.clientY / window.innerHeight - 0.5) * 2;
+      if (coarsePointer.matches) return;
+      hovered = pick(event);
+      canvas.style.cursor = hovered ? "pointer" : "";
+    }
+    function onCanvasClick(event) {
+      const hit = pick(event);
+      if (!hit) return;
+      if (hit.stop === shownStop) window.location.assign(projectLink(stops[hit.stop]));
+      else goTo(hit.stop);
+    }
+
+    // ---------- Sound ----------
+    const soundButton = ui.querySelector(".journey-ui__sound");
+    const soundLabel = ui.querySelector(".journey-ui__sound-label");
+    let soundtrack = null;
+    try { soundtrack = audio ? audio.createSoundtrack() : null; } catch (e) { soundtrack = null; }
+    let soundPref = "on";
+    try { soundPref = localStorage.getItem("journey-sound") || "on"; } catch (e) { /* storage unavailable */ }
+    function setSound(on) {
+      if (!soundtrack) return;
+      soundtrack.setEnabled(on);
+      soundButton.setAttribute("aria-pressed", String(on));
+      soundButton.classList.toggle("is-on", on);
+      soundLabel.textContent = on ? "Sound on" : "Sound off";
+      try { localStorage.setItem("journey-sound", on ? "on" : "off"); } catch (e) { /* storage unavailable */ }
+    }
+    function toggleSound() { if (soundtrack) setSound(!soundtrack.enabled); }
+    if (soundtrack) { soundButton.addEventListener("click", toggleSound); setSound(soundPref !== "off"); }
+    else soundButton.hidden = true;
+    const wake = () => { if (soundtrack) soundtrack.resume(); };
+    ["pointerdown", "keydown", "touchstart", "wheel"].forEach(type => window.addEventListener(type, wake, { passive: true }));
+    let heardStop = Math.round(targetK);
+
+    // ---------- Resize and adaptive quality ----------
+    function resize() {
+      const w = window.innerWidth, h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
+      camera.aspect = w / h;
+      camera.fov = w < 760 ? 56 : 42;
+      camera.updateProjectionMatrix();
+      finish.uniforms.uRes.value.set(w, h);
+      dustMaterial.uniforms.uScale.value = h * 0.5 * pixelRatio;
+    }
+    let slowFrames = 0;
+    let qualityStep = 0;
+    function adapt(dt) {
+      // Aim for 60fps: if frames stay slow, shed the most expensive extras one at a time.
+      slowFrames = dt > 22 ? slowFrames + 1 : Math.max(0, slowFrames - 2);
+      if (slowFrames < 90 || qualityStep > 3) return;
+      slowFrames = 0;
+      qualityStep++;
+      if (qualityStep === 1) finish.uniforms.uBlur.value = 0;
+      else if (qualityStep === 2 || qualityStep === 3) {
+        pixelRatio = Math.max(0.75, pixelRatio - 0.25);
+        renderer.setPixelRatio(pixelRatio);
+        composer.setPixelRatio(pixelRatio);
+        resize();
+      } else bloom.enabled = false;
+    }
+
+    // ---------- Frame loop ----------
+    const camPos = new THREE.Vector3(), camTarget = new THREE.Vector3();
+    const posA = new THREE.Vector3(), posB = new THREE.Vector3(), tgtA = new THREE.Vector3(), tgtB = new THREE.Vector3();
+    const smoother = t => t * t * t * (t * (t * 6 - 15) + 10);
+    let frame = 0;
+    let lastTime = performance.now();
+    let elapsed = 0;
+    let cutStop = Math.round(currentK);
+    let cutTimer = 0;
+    function draw(now) {
+      frame = requestAnimationFrame(draw);
+      const dt = Math.min(64, now - lastTime);
+      lastTime = now;
+      if (!still) elapsed += dt / 1000;
+
+      if (still) {
+        // Reduced motion: hold each shot and cross-fade (via the canvas opacity) to the next one
+        const wanted = Math.round(targetK);
+        if (wanted !== cutStop && !cutTimer) {
+          canvas.classList.add("is-cutting");
+          cutTimer = setTimeout(() => { cutStop = wanted; currentK = wanted; canvas.classList.remove("is-cutting"); cutTimer = 0; }, 320);
+        }
+      } else {
+        currentK += (targetK - currentK) * (1 - Math.exp(-dt * 0.0042));
+        if (Math.abs(targetK - currentK) < 0.0005) currentK = targetK;
+      }
+      const k = still ? cutStop : currentK;
+      const i = Math.min(last - 1, Math.floor(k));
+      const f = k - i;
+      // Hold near each stop, travel in the middle of the segment
+      const travel = smoother(Math.max(0, Math.min(1, (f - 0.22) / 0.56)));
+      shotFor(i, Math.max(-0.5, Math.min(0.5, f)), posA, tgtA);
+      shotFor(i + 1, Math.max(-0.5, Math.min(0.5, f - 1)), posB, tgtB);
+      camPos.lerpVectors(posA, posB, travel);
+      camPos.y += Math.sin(Math.PI * travel) * 1.4;
+      camTarget.lerpVectors(tgtA, tgtB, travel);
+      if (!still) { camPos.x += parallax.x * 0.35; camPos.y -= parallax.y * 0.2; }
+      camera.position.copy(camPos);
+      camera.lookAt(camTarget);
+      showStop(Math.round(k));
+      trackFill.style.transform = `scaleX(${(k / last).toFixed(4)})`;
+      if (soundtrack) {
+        const wantedStop = Math.round(targetK);
+        if (wantedStop !== heardStop) { heardStop = wantedStop; soundtrack.whoosh(); }
+        soundtrack.setEnergy(Math.abs(targetK - currentK) * 2.5);
+      }
+
+      // Guide: the explorer animates itself; the fallback robot walks or runs between stand points and gestures
+      if (explorer) {
+        explorer.update({ dt, target: still ? cutStop : Math.round(targetK), stops, standPoint, camera: camera.position });
+        const at = explorer.group.position;
+        lightRig.position.set(at.x, 0, at.z);
+        key.position.set(camera.position.x - at.x - 2, 5, camera.position.z - at.z);
+        key.target.position.set(0, 1, 0);
+        rim.position.set(-1.2, 2.4, -1.6);
+      } else if (guide.model) {
+        const prevX = guide.pos.x, prevZ = guide.pos.z;
+        if (still) guide.k = cutStop;
+        else {
+          guide.k += (targetK - guide.k) * (1 - Math.exp(-dt * 0.0058));
+          if (Math.abs(targetK - guide.k) < 0.0005) guide.k = targetK;
+        }
+        const gi = Math.min(last - 1, Math.floor(guide.k));
+        const gf = guide.k - gi;
+        standPoint(gi, posA);
+        standPoint(gi + 1, posB);
+        guide.pos.lerpVectors(posA, posB, smoother(Math.max(0, Math.min(1, gf))));
+        const dx = guide.pos.x - prevX, dz = guide.pos.z - prevZ;
+        const speed = Math.hypot(dx, dz) / Math.max(0.001, dt / 1000);
+        let yaw = guide.yaw;
+        if (speed > 0.25) { yaw = Math.atan2(dx, dz); guide.idleFor = 0; }
+        else { guide.idleFor += dt; yaw = Math.atan2(camera.position.x - guide.pos.x, camera.position.z - guide.pos.z); }
+        let turn = yaw - guide.yaw;
+        turn = Math.atan2(Math.sin(turn), Math.cos(turn));
+        guide.yaw += turn * (still ? 1 : 1 - Math.exp(-dt * 0.008));
+        guide.model.position.copy(guide.pos);
+        guide.model.rotation.y = guide.yaw;
+        if (!still) {
+          const moving = speed > 3.2 ? "Running" : speed > 0.35 ? "Walking" : null;
+          if (moving) {
+            guide.arrived = -1;
+            play(moving);
+            if (guide.current) guide.current.timeScale = Math.min(1.6, Math.max(0.8, speed / (moving === "Running" ? 6 : 2.2)));
+          } else if (guide.idleFor > 220 && guide.arrived !== Math.round(guide.k)) {
+            guide.arrived = Math.round(guide.k);
+            const kind = stops[guide.arrived].kind;
+            const pick = { intro: "Wave", outro: "Dance", profile: "Wave", career: "ThumbsUp", research: "Yes" }[kind] || (guide.gestures++ % 2 ? "ThumbsUp" : "Yes");
+            if (guide.current) guide.current.timeScale = 1;
+            gesture(pick);
+            if (soundtrack) soundtrack.chime();
+          } else if (guide.idleFor > 220 && (guide.current === guide.actions.Walking || guide.current === guide.actions.Running)) play("Idle");
+          guide.mixer.update(dt / 1000);
+        }
+        lightRig.position.copy(guide.pos);
+        key.position.set(camera.position.x - guide.pos.x - 2, 5, camera.position.z - guide.pos.z);
+        key.target.position.set(0, 1, 0);
+        rim.position.set(-1.2, 2.4, -1.6);
+      }
+
+      // Animate the world
+      const t = elapsed;
+      floorMaterial.uniforms.uTime.value = t;
+      dustMaterial.uniforms.uTime.value = t;
+      portalMaterials.forEach(m => { m.uniforms.uTime.value = t; });
+      portals.forEach((p, n) => { p.rotation.z = t * 0.05 * (n ? -1 : 1); });
+      sculptures.forEach(s => { s.rotation.y += s.userData.spin * dt / 1000; s.rotation.x += s.userData.spin * 0.4 * dt / 1000; });
+      floaters.forEach(fl => {
+        fl.obj.position.y = fl.baseY + (still ? 0 : Math.sin(t * 0.6 + (fl.phase || 0)) * 0.1);
+        if (fl.spin && !still) { fl.spin.rotation.y = t * 0.25; fl.spin.rotation.x = t * 0.12; fl.heart.rotation.y = -t * 0.6; }
+      });
+      orbiters.forEach(o => {
+        const a = o.angle + (still ? 0 : t * 0.16);
+        o.sprite.position.set(o.center.x + Math.cos(a) * o.radius, o.center.y + o.lift + Math.sin(a * 2) * 0.25, o.center.z + Math.sin(a) * o.radius * 0.55);
+      });
+      screens.forEach((s, n) => {
+        const focus = Math.max(0, 1 - Math.abs(k - s.stop));
+        s.group.position.y = s.baseY + (still ? 0 : Math.sin(t * 0.7 + n) * 0.08);
+        s.frame.material.color.copy(stops[s.stop].color).multiplyScalar(1.1 + focus * 1.6 + (hovered === s ? 0.8 : 0));
+        s.halo.material.opacity = 0.25 + focus * 0.45;
+        s.beamMaterial.uniforms.uStrength.value = 0.02 + focus * 0.05;
+        if (s.reflection) s.reflection.position.set(s.group.position.x, -s.group.position.y, s.group.position.z);
+      });
+      finish.uniforms.uTime.value = t;
+      composer.render();
+      adapt(dt);
+    }
+
+    // ---------- Mount ----------
+    savedScrollY = window.scrollY;
+    root.classList.add("is-journey");
+    body.classList.add("is-archipelago");
+    body.appendChild(button);
+    body.appendChild(ui);
+    resize();
+    showStop(Math.round(currentK));
+    // Guide: the explorer scans (journey-explorer.js); the robot steps in if they can't load
+    let explorer = null;
+    if (explorerModule) {
+      try {
+        explorer = explorerModule.createExplorer({
+          THREE, GLTFLoader, base: "models/", lite, still,
+          colors: { in: neon[0].clone(), out: neon[2].clone(), warp: neon[1].clone() },
+          onEvent: type => {
+            if (!soundtrack) return;
+            if (type === "teleport") soundtrack.whoosh();
+            else if (type === "arrive" || type === "headset-on-done" || type === "headset-off-done") soundtrack.chime();
+          }
+        });
+        scene.add(explorer.group);
+        explorer.ready.catch(error => {
+          console.warn("Explorer scans unavailable, using the robot guide instead.", error);
+          if (explorer) { explorer.dispose(); explorer = null; }
+          loadGuide();
+        });
+      } catch (error) {
+        explorer = null;
+      }
+    }
+    if (!explorer) loadGuide();
+    const order = screens.slice().sort((a, b) => Math.abs(a.stop - targetK) - Math.abs(b.stop - targetK));
+
+    (async () => { for (const entry of order) { if (cancelled) return; await loadArtwork(entry); } })();
+    window.addEventListener("resize", resize, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: false });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    canvas.addEventListener("click", onCanvasClick);
+    frame = requestAnimationFrame(draw);
+    ui.focus({ preventScroll: true });
+
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(frame);
+      clearTimeout(snapTimer);
+      clearTimeout(panelTimer);
+      clearTimeout(cutTimer);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("click", onCanvasClick);
+      ["pointerdown", "keydown", "touchstart", "wheel"].forEach(type => window.removeEventListener(type, wake));
+      if (soundtrack) soundtrack.dispose();
+      if (guide.mixer) guide.mixer.stopAllAction();
+      if (explorer) explorer.dispose();
+
+      canvas.style.cursor = "";
+      canvas.classList.remove("is-cutting");
+      ui.remove();
+      scene.traverse(obj => {
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) [].concat(obj.material).forEach(m => { if (m.map) m.map.dispose(); m.dispose(); });
+      });
+      disposables.forEach(d => d.dispose());
+      composer.dispose();
+      renderer.dispose();
+      root.classList.remove("is-journey");
+      body.classList.remove("is-archipelago");
+      if (buttonParent) buttonParent.insertBefore(button, buttonNext);
+      window.scrollTo({ top: savedScrollY, behavior: "instant" });
+    };
+  }
+
+  button.addEventListener("click", () => (active ? exit() : enter()));
   updateControls();
-  if (returnStopParam !== null) {
+  if (returnParam !== null) {
     const autoEnter = () => enter();
     if (document.readyState === "complete") window.setTimeout(autoEnter, 0);
     else window.addEventListener("load", autoEnter, { once: true });

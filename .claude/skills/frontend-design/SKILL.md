@@ -116,6 +116,24 @@ Cinematic, not bouncy. Use the easing tokens: `--ease-out` for entrances and hov
 - **Scroll reveal**: `world-mode.js` adds `.world-reveal` to section heads and cards and toggles `.world-entered`; blocks fade/slide in and `.title-line`s rise. To reveal a new block, add its selector to `revealItems` in `world-mode.js`.
 - **Reduced motion**: every animation lives inside `@media(prefers-reduced-motion:no-preference)`, so content is fully visible with no motion by default. `home-fx.js` does nothing for reduced motion or touch-only devices.
 
+## 3D journey (`scroll-exploration.js` / `.css`)
+
+An optional cinematic tour of the projects, opened by "Enter 3D journey". It must stay optional and lazy:
+
+- **Loading**: Three.js r186 and its addons load from jsDelivr only when the button is clicked, through the import map in `index.html` (`"three"`, `"three/addons/"`). Bump the version in the import map, never in individual imports.
+- **Content comes from the page**: stops are built from the `.project-scene` cards (title, tags, description, image, link), then Profile (lead paragraph + `.skill-line` chips), Experience & Education (`.journey-card`s) and Publications (`.paper-card`s), bracketed by an intro and a contact stop. Edit content in `index.html` only, and the journey follows.
+- **Stations**: projects are floating screens; Profile is a glowing core with the skills orbiting as chips; Experience is a curved holographic wall of role cards (education on the lower row); Publications are tall floating pages with neon-outlined years. Card and chip art is drawn on canvas with the token colours and fonts.
+- **Guide character** (`journey-explorer.js`, assets in `models/`): two photo-scans of Tahmidul, one holding a VR headset and one wearing it (optimised from Meshy exports; no skeleton). The headset was cut out of the holding scan as its own mesh. The module animates them itself: a procedural walk in the vertex shader (cadence tied to ground speed), turning, and headset put-on/take-off (the headset arcs from hand to face, then a scan-line dissolve swaps scans). Far jumps become a teleport dissolve. If the scans fail, the CC0 RobotExpressive robot is the fallback.
+- **VR or not**: each project card carries `data-experience="vr"` or `"non-vr"` in `index.html`. The guide wears the headset at VR stops and holds it everywhere else (sections, start, contact). Set it on every new project card.
+- **Sound** (`journey-audio.js`): a generative synthwave loop made with the Web Audio API (no audio files): pads, sub bass, a soft heartbeat kick, a delayed arpeggio and air noise. Travelling opens the filter and adds a whoosh; arriving plays a chime. The `.journey-ui__sound` toggle (or M) mutes it, and the choice is saved in `localStorage` (`journey-sound`).
+- **Colours come from tokens**: the scene reads `--bg`, `--accent`, `--accent-2`, `--accent-3`, `--accent-warm`, `--font-display` and `--font-mono` with `getComputedStyle`. Don't hard-code colours in the JS; change the tokens.
+- **Look**: neon-grid floor with a travelling pulse, fog, sky haze, light beams, dust, wireframe sculptures, portals at the start and end, project screens with neon frames, halos and floor reflections. Post-processing: bloom, then a single "film finish" pass (edge soft-focus, slight colour fringing, vignette, grain).
+- **Camera**: one shot per stop, cycling dolly / low angle / crane / side angle. The camera holds near each stop and travels mid-segment with a smootherstep ease. Wheel, touch and arrow keys move a virtual position that snaps to the nearest stop.
+- **Overlay UI** (`.journey-ui`): count, title card, progress ticks (buttons, one per stop) and hint. Keyboard: arrows/PageUp/PageDown/Space/Home/End travel, Enter opens the current project, Esc exits.
+- **Performance tiers**: phones and touch get a lighter scene (pixel ratio 1, fewer particles and sculptures, no reflections, edge blur or fringing). On desktop an adaptive step sheds edge blur, then resolution, then bloom if frames stay above about 22 ms.
+- **Reduced motion**: no drift, bob, grain or character animation (the guide holds its idle pose). Travel is whole-stop cuts with a short canvas fade (`.is-cutting`).
+- **Return links**: project links carry `?returnIsland=<index>`; `archipelago-return.js` on case studies shows "Back to 3D journey", which reopens the journey at that project. `?returnIsland=profile|career|research|contact` opens at those stations. The section panels' "Open …" buttons exit to that section of the page.
+
 ## Shape and spacing
 
 | Token | Value | Use |

@@ -124,7 +124,7 @@ body.home{--bg:var(--bg-home);background:var(--bg-home);isolation:isolate}
 }
 /* Each line rises from behind its own baseline; the clip opens up once the entrance ends so the glow isn't cut off */
 .hero-line{display:block;padding:0 .06em .04em}
-.hero-line__text{display:inline-block;text-wrap:balance;text-shadow:0 0 42px rgba(62,240,255,.22)}
+.hero-line__text{display:inline-block;text-wrap:balance;text-shadow:0 0 42px var(--text-glow)}
 /* Second line: neon gradient with a projector-beam highlight that sweeps across */
 .hero-line--accent .hero-line__text{
   color:transparent;text-shadow:none;
@@ -176,14 +176,14 @@ body.home{--bg:var(--bg-home);background:var(--bg-home);isolation:isolate}
   padding:9px 10px 9px 18px;border:1px solid var(--pill-border);border-radius:var(--radius-pill);
   background:var(--pill-bg);color:var(--text-1);
   font:500 .68rem/1 var(--font-mono);letter-spacing:.16em;text-transform:uppercase;
-  box-shadow:0 0 0 1px rgba(62,240,255,.06),0 8px 32px var(--glow-accent-2);
+  box-shadow:0 0 0 1px var(--edge-accent-soft),0 8px 32px var(--glow-accent-2);
   transition:transform .45s var(--ease-out),border-color .25s ease,box-shadow .25s ease,background .25s ease;
 }
-.scroll-cue:hover{background:var(--pill-bg-hover);border-color:var(--pill-border-hover);box-shadow:0 0 0 1px rgba(255,61,154,.12),0 10px 40px var(--glow-accent-3)}
+.scroll-cue:hover{background:var(--pill-bg-hover);border-color:var(--pill-border-hover);box-shadow:0 10px 40px var(--glow-accent-3)}
 .scroll-cue__mouse,.scroll-cue__finger{
   width:24px;height:38px;display:grid;place-items:start center;position:relative;
-  border:1px solid rgba(62,240,255,.6);border-radius:14px;
-  box-shadow:0 0 18px var(--glow-accent),inset 0 0 10px rgba(62,240,255,.12);
+  border:1px solid var(--edge-accent);border-radius:14px;
+  box-shadow:0 0 18px var(--glow-accent),inset 0 0 10px var(--edge-accent-soft);
 }
 .scroll-cue__mouse i{
   display:block;width:3px;height:8px;margin-top:8px;border-radius:4px;
@@ -196,7 +196,7 @@ body.home{--bg:var(--bg-home);background:var(--bg-home);isolation:isolate}
 }
 .scroll-cue__finger::after{
   content:"";position:absolute;left:8px;top:8px;width:8px;height:15px;
-  border:1px solid rgba(62,240,255,.45);border-radius:6px;
+  border:1px solid var(--edge-accent);border-radius:6px;
 }
 @keyframes scroll-wheel{0%{transform:translateY(0);opacity:1}72%{transform:translateY(12px);opacity:.12}100%{transform:translateY(0);opacity:1}}
 @keyframes scroll-swipe{0%,15%{transform:translateY(9px);opacity:.2}45%{opacity:1}85%,100%{transform:translateY(-11px);opacity:.25}}
@@ -301,7 +301,7 @@ body.home .project-scene:hover .scene-num{-webkit-text-stroke-color:var(--accent
 body.home .project-library .project-scene:not(.project-featured) .scene-num{
   position:absolute;z-index:3;top:16px;left:16px;padding:7px 10px;
   border:1px solid var(--line-soft);border-radius:var(--radius-pill);
-  background:rgba(7,7,12,.7);backdrop-filter:blur(8px);-webkit-text-stroke:0;color:var(--text-1);
+  background:var(--glass);backdrop-filter:blur(8px);-webkit-text-stroke:0;color:var(--text-1);
   font:500 .66rem var(--font-mono);letter-spacing:.14em;
 }
 
@@ -341,7 +341,7 @@ body.home .project-scene:hover .scene-art img{scale:1.05}
 .scene-art i{display:none}
 .scene-art span{
   position:absolute;left:16px;bottom:16px;z-index:2;padding:7px 10px;border-radius:6px;
-  background:rgba(7,7,12,.7);backdrop-filter:blur(6px);
+  background:var(--glass);backdrop-filter:blur(6px);
   color:var(--text-2);font-family:var(--font-mono);font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
 }
 body.home .project-scene:hover .scene-art{border-color:var(--pill-border)}
