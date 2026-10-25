@@ -16,8 +16,7 @@ body.home.is-archipelago>main,body.home.is-archipelago>footer{position:relative;
 body.home.is-archipelago .hero{
   background:linear-gradient(90deg,rgba(6,20,39,.50),rgba(7,24,46,.10) 78%);
 }
-body.home.is-archipelago .hero-grid{opacity:.06}
-body.home.is-archipelago .hero-glow{opacity:.25}
+body.home.is-archipelago .hero-backdrop{opacity:.15}
 body.home.is-archipelago .showcase{
   background:linear-gradient(180deg,rgba(5,9,17,.22),rgba(5,9,17,.36));
 }
@@ -46,15 +45,17 @@ body.home.is-archipelago .topbar{pointer-events:none}
 body.home.is-archipelago .topbar>*{pointer-events:auto}
 #archipelago-toggle{
   display:inline-flex;align-items:center;justify-content:center;gap:9px;
-  min-height:40px;padding:0 15px;border:1px solid rgba(120,222,255,.45);
-  border-radius:999px;background:rgba(6,17,30,.76);color:#e9f7ff;
-  font:700 .64rem/1 var(--font-body);letter-spacing:.13em;text-transform:uppercase;
-  cursor:pointer;box-shadow:0 0 24px rgba(44,190,239,.12);
-  transition:background .25s ease,border-color .25s ease,transform .25s ease,box-shadow .25s ease;
+  min-height:40px;padding:0 16px;border:1px solid var(--pill-border);
+  border-radius:var(--radius-pill);background:var(--pill-bg);color:var(--text-1);
+  font:500 .66rem/1 var(--font-mono);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;
+  cursor:pointer;box-shadow:0 0 24px var(--glow-accent-2);
+  transition:background .25s ease,border-color .25s ease,transform .45s var(--ease-out),box-shadow .25s ease;
 }
-#archipelago-toggle:hover{transform:translateY(-2px);border-color:#8de8ff;background:rgba(12,36,54,.92);box-shadow:0 0 28px rgba(44,190,239,.24)}
-#archipelago-toggle:focus-visible{outline:2px solid #b7f1ff;outline-offset:4px}
-#archipelago-toggle:before{content:"";width:6px;height:6px;border-radius:50%;background:#6ae4ff;box-shadow:0 0 10px #6ae4ff}
+#archipelago-toggle:hover{border-color:var(--pill-border-hover);background:var(--pill-bg-hover);box-shadow:0 0 30px var(--glow-accent-3)}
+#archipelago-toggle:focus-visible{outline:2px solid var(--focus-ring);outline-offset:4px}
+#archipelago-toggle:before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent-3);box-shadow:0 0 10px var(--accent-3);animation:toggle-rec 1.6s ease-in-out infinite}
+@keyframes toggle-rec{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){#archipelago-toggle:before{animation:none}}
 #archipelago-status{
   position:fixed;z-index:140;left:50%;bottom:24px;transform:translate(-50%,12px);
   width:max-content;max-width:calc(100vw - 32px);padding:11px 15px;border:1px solid rgba(150,221,255,.24);
@@ -81,7 +82,7 @@ body.home.is-archipelago .scroll-cue__finger{box-shadow:0 0 27px rgba(73,209,255
   #archipelago-toggle{padding:0 11px;letter-spacing:.09em}
 }
 @media(max-width:760px){
-  #archipelago-toggle{order:2}
+  #archipelago-toggle{grid-area:cta}
 }
 @media(max-width:380px){
   #archipelago-toggle{min-height:34px;padding:0 8px;font-size:.51rem}

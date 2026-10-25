@@ -1,46 +1,58 @@
-/* Design tokens. Every page loads this before styles.css; change values here, not in components.
-   Fonts (Inter, Space Grotesk) are loaded from Google Fonts in each page's <head>. */
+/* Design tokens — "Neon Noir Cinema". Every page loads this before styles.css; change values here, not in components.
+   Fonts (Unbounded, Manrope, JetBrains Mono) are loaded from Google Fonts in each page's <head>. */
 :root{
-  /* Surfaces */
-  --bg:#050608;
-  --bg-home:#0a1425;
-  --surface:#080a0d;
-  --surface-poster:#050608;
-  --surface-raised:linear-gradient(135deg,rgba(18,23,35,.92),rgba(9,11,18,.94));
-  --surface-raised-hover:linear-gradient(135deg,rgba(21,28,43,.98),rgba(10,12,21,.98));
+  /* Surfaces: ink black, lifted slightly for cards */
+  --bg:#07070c;
+  --bg-home:#07070c;
+  --surface:#0d0d16;
+  --surface-poster:#07070c;
+  --surface-raised:linear-gradient(135deg,rgba(22,22,36,.92),rgba(10,10,18,.94));
+  --surface-raised-hover:linear-gradient(135deg,rgba(28,28,46,.98),rgba(12,12,22,.98));
 
   /* Text, brightest to faintest */
-  --text-1:#f4f7fb;
-  --text-2:#c9d0d8;
-  --text-3:#a3acb6;
-  --text-4:#8b97a5;
+  --text-1:#f2f4ff;
+  --text-2:#c5c9dc;
+  --text-3:#9a9fb8;
+  --text-4:#7d8199;
   --fg:var(--text-1);
 
   /* Lines */
-  --line:#20252c;
+  --line:#1a1a26;
   --line-soft:rgba(255,255,255,.1);
-  --line-faint:rgba(255,255,255,.08);
+  --line-faint:rgba(255,255,255,.07);
 
-  /* Brand: cyan, violet, pink */
-  --accent:#72ddff;
-  --accent-2:#9d7bff;
+  /* Neon: cyan, violet, magenta, plus a little amber for warmth */
+  --accent:#3ef0ff;
+  --accent-2:#8b5cff;
   --accent-2-light:#b49cff;
-  --accent-3:#e269b5;
+  --accent-3:#ff3d9a;
+  --accent-warm:#ffb547;
+  --grad-neon:linear-gradient(100deg,var(--accent) 0%,var(--accent-2) 50%,var(--accent-3) 100%);
   --grad-accent:linear-gradient(90deg,var(--accent),var(--accent-2));
-  --grad-spectrum:linear-gradient(180deg,var(--accent),var(--accent-2),#d4a7ff);
+  --grad-spectrum:linear-gradient(180deg,var(--accent),var(--accent-2),var(--accent-3));
+  --glow-accent:rgba(62,240,255,.45);
+  --glow-accent-2:rgba(139,92,255,.4);
+  --glow-accent-3:rgba(255,61,154,.35);
+  --spotlight:rgba(62,240,255,.11);
+  --grid-line:rgba(62,240,255,.14);
 
   /* Pill buttons */
-  --pill-border:rgba(141,216,255,.72);
-  --pill-border-hover:var(--accent-2-light);
-  --pill-bg:linear-gradient(110deg,rgba(49,176,224,.18),rgba(127,83,232,.22));
-  --pill-bg-hover:linear-gradient(110deg,rgba(49,176,224,.32),rgba(127,83,232,.38));
-  --focus-ring:#c4b5fd;
+  --pill-border:rgba(62,240,255,.55);
+  --pill-border-hover:var(--accent-3);
+  --pill-bg:linear-gradient(110deg,rgba(62,240,255,.1),rgba(139,92,255,.16));
+  --pill-bg-hover:linear-gradient(110deg,rgba(62,240,255,.22),rgba(255,61,154,.24));
+  --focus-ring:var(--accent);
 
   /* Type */
-  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  --font-display:"Space Grotesk","Inter",system-ui,sans-serif;
+  --font-body:"Manrope",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --font-display:"Unbounded","Manrope",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
   --text-label:.72rem;
   --tracking-label:.14em;
+
+  /* Motion */
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  --ease-cinema:cubic-bezier(.7,0,.2,1);
 
   /* Shape and spacing */
   --wrap:min(1180px,92vw);

@@ -13,8 +13,8 @@ body.home::before{
   background:
     radial-gradient(ellipse at 14% 17%,hsla(var(--world-hue),100%,66%,.30),transparent 38%),
     radial-gradient(ellipse at 86% 72%,hsla(calc(var(--world-hue) + 70),100%,68%,.27),transparent 38%),
-    radial-gradient(ellipse at 52% 48%,rgba(35,80,143,.25),transparent 58%),
-    linear-gradient(145deg,#142842 0%,#0a1425 48%,#15152d 100%);
+    radial-gradient(ellipse at 52% 48%,var(--glow-accent-2),transparent 58%),
+    linear-gradient(145deg,var(--surface) 0%,var(--bg) 48%,var(--surface) 100%);
   transition:background 1.1s ease;
 }
 body.home>header.topbar{position:absolute;z-index:30}
@@ -76,7 +76,7 @@ body.home .project-scene.world-entered{border-color:rgba(119,195,246,.17)}
     background:
       radial-gradient(ellipse at 10% 16%,hsla(var(--world-hue),100%,65%,.24),transparent 42%),
       radial-gradient(ellipse at 90% 70%,hsla(calc(var(--world-hue) + 74),100%,66%,.21),transparent 38%),
-      linear-gradient(145deg,#13213a 0%,#091323 52%,#14142b 100%);
+      linear-gradient(145deg,var(--surface) 0%,var(--bg) 52%,var(--surface) 100%);
   }
   .world-atmosphere{opacity:.42}
   body.home .scene-art{transform:none!important}

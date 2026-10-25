@@ -4,17 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Mohammad Tahmidul Hasan — XR & Game Developer</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="tokens.css?v=foundation-2">
-<link rel="stylesheet" href="styles.css?v=foundation-2">
-<link rel="stylesheet" href="world-mode.css?v=foundation-2">
-<link rel="stylesheet" href="scroll-exploration.css?v=foundation-2">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&family=Unbounded:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="tokens.css?v=noir-1">
+<link rel="stylesheet" href="styles.css?v=noir-1">
+<link rel="stylesheet" href="world-mode.css?v=noir-1">
+<link rel="stylesheet" href="scroll-exploration.css?v=noir-1">
 </head>
 <body class="home scroll-exploration">
 <header class="topbar wrap">
 <a class="brand" href="#top">MOHAMMAD TAHMIDUL HASAN</a>
 <nav><a href="#projects">Projects</a><a href="#profile">Profile</a><a href="#experience">Experience</a><a href="#papers">Publications</a><a href="#contact">Contact</a></nav>
-<button id="archipelago-toggle" type="button" aria-pressed="false">ENTER 3D JOURNEY</button>
+<button id="archipelago-toggle" type="button" data-magnetic aria-pressed="false">ENTER 3D JOURNEY</button>
 </header>
 <div class="world-progress-track" aria-hidden="true"><span class="world-progress-fill"></span></div>
 <canvas id="world-atmosphere" class="world-atmosphere" aria-hidden="true"></canvas>
@@ -22,12 +22,13 @@
 <div id="archipelago-status" role="status" aria-live="polite"></div>
 <main id="top">
 <section class="hero immersive-hero">
-<div class="hero-grid"></div><div class="hero-glow"></div>
+<div class="hero-backdrop" aria-hidden="true"><div class="hero-floor"></div><div class="hero-horizon"></div><div class="hero-spotlight"></div></div>
+<div class="hero-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
 <div class="wrap hero-content">
-<div class="kicker">XR • VR • AR • Games • Unity</div>
-<h1 class="hero-title hero-title--art"><span class="visually-hidden">Building Worlds You Can Step Into</span><span class="hero-title-line hero-title-line--main" data-glyph-set="building-worlds" data-slate-depth="true" data-words="BUILDING WORLDS" aria-hidden="true"></span><span class="hero-title-line hero-title-line--sub" data-glyph-set="you-can-step-into" data-color-mode="touch-gradient" data-slate-depth="true" data-words="YOU CAN STEP INTO" aria-hidden="true"></span></h1>
+<div class="kicker hero-kicker">XR • VR • AR • Games • Unity</div>
+<h1 class="hero-title"><span class="hero-line hero-line--lead"><span class="hero-line__text">Building Worlds</span></span> <span class="hero-line hero-line--accent"><span class="hero-line__text">You Can Step Into</span></span></h1>
 <p class="lead">I'm Mohammad Tahmidul Hasan — a game and immersive-technology developer creating interactive experiences across VR, games and real-time 3D.</p>
-<div class="scroll-cue scroll-instruction" aria-label="Scroll to explore"><span class="scroll-cue__label">SCROLL TO EXPLORE</span><span class="scroll-cue__mouse" aria-hidden="true"><i></i></span><span class="scroll-cue__finger" aria-hidden="true"><i></i></span></div>
+<div class="scroll-cue scroll-instruction" data-magnetic aria-label="Scroll to explore"><span class="scroll-cue__label">SCROLL TO EXPLORE</span><span class="scroll-cue__mouse" aria-hidden="true"><i></i></span><span class="scroll-cue__finger" aria-hidden="true"><i></i></span></div>
 </div>
 </section>
 <section class="showcase" id="projects">
@@ -94,139 +95,12 @@
 </section>
 </main>
 <footer class="footer" id="contact"><div class="wrap footer-grid"><div><div class="kicker">Let's build something immersive</div><h2 class="art-heading-target" data-art-lines="GET IN TOUCH." data-gradient-word="TOUCH." data-slate-words="GET IN" data-slate-depth="true" aria-label="Get in touch"><span >Get in <span>touch.</span></span></h2></div><div><a href="mailto:tahmidul86@gmail.com">tahmidul86@gmail.com</a><p>Kuala Lumpur, Malaysia • Open to relocate</p><div class="social-links"><a href="https://www.linkedin.com/in/mohammad-tahmidul-hasan-24559a133/" target="_blank" rel="noopener noreferrer">LinkedIn ↗</a><a href="https://github.com/mth996" target="_blank" rel="noopener noreferrer">GitHub ↗</a></div></div></div></footer>
-<svg aria-hidden="true" focusable="false" width="0" height="0" style="position:absolute;overflow:hidden" xmlns="http://www.w3.org/2000/svg">
-<defs>
-<filter id="hero-bevel-white" x="-35%" y="-35%" width="170%" height="190%" color-interpolation-filters="sRGB">
-<feGaussianBlur in="SourceAlpha" stdDeviation="1.45" result="soft-alpha"/>
-<feSpecularLighting in="soft-alpha" surfaceScale="4.2" specularConstant=".96" specularExponent="13" lighting-color="#ffffff" result="bevel-light"><feDistantLight azimuth="225" elevation="55"/></feSpecularLighting>
-<feComposite in="bevel-light" in2="SourceAlpha" operator="in" result="light-inside"/>
-<feOffset in="SourceAlpha" dx="2.1" dy="3.4" result="depth-mask"/>
-<feFlood flood-color="#a5b1c2" result="depth-color"/>
-<feComposite in="depth-color" in2="depth-mask" operator="in" result="depth"/>
-<feMerge><feMergeNode in="depth"/><feMergeNode in="SourceGraphic"/><feMergeNode in="light-inside"/></feMerge>
-</filter>
-<filter id="hero-bevel-violet" x="-35%" y="-35%" width="170%" height="190%" color-interpolation-filters="sRGB">
-<feGaussianBlur in="SourceAlpha" stdDeviation="1.45" result="soft-alpha"/>
-<feSpecularLighting in="soft-alpha" surfaceScale="4.2" specularConstant=".96" specularExponent="13" lighting-color="#e7d7ff" result="bevel-light"><feDistantLight azimuth="225" elevation="55"/></feSpecularLighting>
-<feComposite in="bevel-light" in2="SourceAlpha" operator="in" result="light-inside"/>
-<feOffset in="SourceAlpha" dx="2.1" dy="3.4" result="depth-mask"/>
-<feFlood flood-color="#a5b1c2" result="depth-color"/>
-<feComposite in="depth-color" in2="depth-mask" operator="in" result="depth"/>
-<feMerge><feMergeNode in="depth"/><feMergeNode in="SourceGraphic"/><feMergeNode in="light-inside"/></feMerge>
-</filter>
-</defs>
-</svg>
 <script>
 const scenes=[...document.querySelectorAll('.project-scene')];
 if('IntersectionObserver' in window){
  const observer=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in-view')}),{threshold:.2});
  scenes.forEach(s=>observer.observe(s));
 }else{scenes.forEach(s=>s.classList.add('in-view'))}
-document.querySelectorAll("body.home .hero-title-line[data-glyph-set]").forEach(async line=>{
- const words=line.dataset.words.split(" ");
- const isSub=line.classList.contains("hero-title-line--sub");
- const rowHeight=isSub?260:290, viewWidth=4076, letterGap=6, wordGap=90;
- line.style.aspectRatio=`${viewWidth} / ${rowHeight}`;
- const groups=[];
- for(const word of words){
-  const group=[];
-  for(const character of word){
-   const glyph=document.createElement("img");
-   glyph.className="hero-glyph";
-   glyph.src=`images/hero-glyphs/${line.dataset.glyphSet}/${character}.png?v=20261017-glyph-outline-v2`;
-   glyph.alt="";
-   glyph.setAttribute("aria-hidden","true");
-   glyph.decoding="async";
-   line.appendChild(glyph);
-   group.push(glyph);
-  }
-  groups.push(group);
- }
- const glyphs=groups.flat();
- const touchStops=[{at:0,color:[84,218,220]},{at:.5,color:[157,133,232]},{at:1,color:[226,105,181]}];
- const touchColor=progress=>{
-  const t=Math.max(0,Math.min(1,progress));
-  const right=touchStops.findIndex(stop=>stop.at>=t);
-  const a=touchStops[Math.max(0,right-1)],b=touchStops[right<0?touchStops.length-1:right];
-  const amount=b.at===a.at?0:(t-a.at)/(b.at-a.at);
-  return a.color.map((channel,index)=>Math.round(channel+(b.color[index]-channel)*amount));
- };
- await Promise.all(glyphs.map(async (glyph,glyphIndex)=>{
-  await glyph.decode().catch(()=>{});
-  if(line.dataset.slateDepth!=="true"||!glyph.naturalWidth||!glyph.naturalHeight)return;
-  const recolorCanvas=document.createElement("canvas");
-  recolorCanvas.width=glyph.naturalWidth;recolorCanvas.height=glyph.naturalHeight;
-  const recolorContext=recolorCanvas.getContext("2d",{willReadFrequently:true});
-  if(!recolorContext)return;
-  recolorContext.drawImage(glyph,0,0);
-  const imageData=recolorContext.getImageData(0,0,recolorCanvas.width,recolorCanvas.height);
-  const pixels=imageData.data;
-  for(let y=0;y<recolorCanvas.height;y++)for(let x=0;x<recolorCanvas.width;x++){
-   const i=(y*recolorCanvas.width+x)*4,r=pixels[i],g=pixels[i+1],b=pixels[i+2],a=pixels[i+3];
-   if(a<=8)continue;
-   if(line.dataset.colorMode==="touch-gradient"){
-    const isExtrusion=r>118&&b>150&&g<Math.min(r*.92,b*.78);
-    if(isExtrusion){
-     pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
-    }else{
-     const progress=(glyphIndex+(x+.5)/recolorCanvas.width)/Math.max(1,glyphs.length);
-     const target=touchColor(progress);
-     const lum=(.2126*r+.7152*g+.0722*b)/255;
-     const shade=Math.max(.72,Math.min(1.16,.73+lum*.38));
-     pixels[i]=Math.min(255,Math.round(target[0]*shade));
-     pixels[i+1]=Math.min(255,Math.round(target[1]*shade));
-     pixels[i+2]=Math.min(255,Math.round(target[2]*shade));
-    }
-   }else if(g>r*1.15&&b>r*1.15&&b>g*.9){
-    pixels[i]=165;pixels[i+1]=177;pixels[i+2]=194;
-   }
-  }
-  recolorContext.putImageData(imageData,0,0);
-  glyph.src=recolorCanvas.toDataURL("image/png");
-  await glyph.decode().catch(()=>{});
- }));
- const canvas=document.createElement("canvas");
- const context=canvas.getContext("2d",{willReadFrequently:true});
- const metrics=glyphs.map(glyph=>{
-  const width=glyph.naturalWidth, height=glyph.naturalHeight;
-  if(!width||!height||!context) return {glyph,width:274,height:290,left:0,top:0,right:273,bottom:289};
-  canvas.width=width; canvas.height=height;
-  context.clearRect(0,0,width,height);
-  context.drawImage(glyph,0,0);
-  const pixels=context.getImageData(0,0,width,height).data;
-  let left=width, top=height, right=-1, bottom=-1;
-  for(let y=0;y<height;y++){
-   for(let x=0;x<width;x++){
-    if(pixels[(y*width+x)*4+3]>8){
-     if(x<left)left=x;
-     if(x>right)right=x;
-     if(y<top)top=y;
-     if(y>bottom)bottom=y;
-    }
-   }
-  }
-  if(right<left||bottom<top)return {glyph,width,height,left:0,top:0,right:width-1,bottom:height-1};
-  return {glyph,width,height,left,top,right,bottom};
- });
- const byGlyph=new Map(metrics.map(metric=>[metric.glyph,metric]));
- const scaleFor=metric=>rowHeight/metric.height;
- const totalWidth=groups.reduce((sum,group,groupIndex)=>
-  sum+group.reduce((width,glyph)=>{const m=byGlyph.get(glyph);return width+(m.right-m.left+1)*scaleFor(m)},0)
-  +Math.max(0,group.length-1)*letterGap
-  +(groupIndex<groups.length-1?wordGap:0),0);
- let cursor=(viewWidth-totalWidth)/2;
- for(const [groupIndex,group] of groups.entries()){
-  for(const glyph of group){
-   const m=byGlyph.get(glyph), scale=scaleFor(m), visibleWidth=m.right-m.left+1;
-   glyph.style.setProperty("left",`${(cursor-m.left*scale)/viewWidth*100}%`,"important");
-   glyph.style.setProperty("width",`${m.width*scale/viewWidth*100}%`,"important");
-   glyph.style.setProperty("height","100%","important");
-   glyph.style.clipPath=`inset(${m.top/m.height*100}% ${(m.width-1-m.right)/m.width*100}% ${(m.height-1-m.bottom)/m.height*100}% ${m.left/m.width*100}%)`;
-   cursor+=visibleWidth*scale+letterGap;
-  }
-  if(groupIndex<groups.length-1)cursor+=wordGap;
- }
-});;
 const artGlyphCache=new Map();
 const artColor={
  cyanFace:"you-can-step-into",
@@ -411,7 +285,8 @@ document.querySelectorAll(".art-heading-target").forEach(target=>{
  }).catch(error=>console.warn("Block heading unavailable; keeping text fallback.",error));
 });
 </script>
-<script src="world-mode.js?v=20261027" defer></script>
+<script src="world-mode.js?v=noir-1" defer></script>
+<script src="home-fx.js?v=noir-1" defer></script>
 <script src="scroll-exploration.js?v=xr-archipelago-5" defer></script>
 </body>
 </html>

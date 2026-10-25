@@ -81,7 +81,7 @@
     if (Number.isFinite(index)) setRoute(index);
   }));
 
-  const revealItems = document.querySelectorAll('.hero-content,.showcase-head,.project-scene,.profile-grid,.journey-head,.journey-card,.papers-head,.paper-card,.footer-grid');
+  const revealItems = document.querySelectorAll('.showcase-head,.project-scene,.profile-grid,.journey-head,.journey-card,.papers-head,.paper-card,.footer-grid');
   if ('IntersectionObserver' in window && !reducedMotion) {
     root.classList.add('world-motion-ready');
     const revealObserver = new IntersectionObserver(entries => {

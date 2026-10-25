@@ -3,14 +3,16 @@ name: frontend-design
 description: Design system and change rules for this portfolio site (mthportfolio.chronocraftstudios.com). Use before editing any HTML, CSS or JS that affects how the site looks — tokens, fonts, colours, spacing, labels, radii, new sections or case-study pages.
 ---
 
-# Portfolio design system
+# Portfolio design system: "Neon Noir Cinema"
+
+The art direction is a sci-fi film still: ink-black space, saturated neon used sparingly, light cutting through haze, camera-like framing. High contrast, confident type, motion that feels like a film cut rather than a bounce.
 
 Static site, no build step. Every page loads, in this order:
 
-1. Google Fonts (Inter + Space Grotesk) — the `<link>` tags in each page's `<head>`
+1. Google Fonts (Unbounded + Manrope + JetBrains Mono) — the `<link>` tags in each page's `<head>`
 2. `tokens.css` — all design tokens (CSS custom properties on `:root`)
 3. `styles.css` — all component styles, ordered by section
-4. Homepage only: `world-mode.css` (atmosphere, scroll reveal, card tilt/glow) and `scroll-exploration.css` (optional 3D "journey" mode)
+4. Homepage only: `world-mode.css` (atmosphere, scroll reveal, card tilt/glow) and `scroll-exploration.css` (optional 3D "journey" mode), plus `home-fx.js` (cursor spotlight, magnetic controls)
 
 `tokens.css` is the single source of truth. To change the look, change a token; to add a look, add a token.
 
@@ -31,63 +33,84 @@ Static site, no build step. Every page loads, in this order:
 ### Surfaces
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | `#050608` | Page background (case studies) |
-| `--bg-home` | `#0a1425` | Homepage background (navy) |
-| `--surface` | `#080a0d` | Project cards, poster card copy |
-| `--surface-poster` | `#050608` | Behind full-poster artwork |
+| `--bg`, `--bg-home` | `#07070c` | Ink-black page background, every page |
+| `--surface` | `#0d0d16` | Cards, raised panels |
+| `--surface-poster` | `#07070c` | Behind full-poster artwork |
 | `--surface-raised` / `--surface-raised-hover` | dark gradients | Experience cards |
 
 ### Text (brightest → faintest)
 | Token | Value | Use |
 |---|---|---|
-| `--text-1` (= `--fg`) | `#f4f7fb` | Headings, primary text, button text |
-| `--text-2` | `#c9d0d8` | Lead paragraphs, nav links, org names, case-study body |
-| `--text-3` | `#a3acb6` | Body copy, descriptions, tags, meta |
-| `--text-4` | `#8b97a5` | Kickers, venues, captions, years |
+| `--text-1` (= `--fg`) | `#f2f4ff` | Headings, primary text, button text |
+| `--text-2` | `#c5c9dc` | Lead paragraphs, nav links, org names, case-study body |
+| `--text-3` | `#9a9fb8` | Body copy, descriptions, tags, meta |
+| `--text-4` | `#7d8199` | Kickers, venues, captions, years, frame marks |
 
 Use only these four. Pure `#fff` is reserved for hover states.
 
 ### Lines
-`--line` `#20252c` (section dividers) · `--line-soft` `rgba(255,255,255,.1)` (card borders) · `--line-faint` `rgba(255,255,255,.08)` (top bar, thumbnail edges)
+`--line` `#1a1a26` (section dividers) · `--line-soft` `rgba(255,255,255,.1)` (card borders) · `--line-faint` `rgba(255,255,255,.07)` (top bar, thumbnail edges)
 
-### Brand
+### Neon
 | Token | Value |
 |---|---|
-| `--accent` | `#72ddff` cyan — kickers on hero/case studies, links on hover, active states |
-| `--accent-2` | `#9d7bff` violet |
-| `--accent-2-light` | `#b49cff` — hover borders, secondary labels |
-| `--accent-3` | `#e269b5` pink — end of the brand gradient |
-| `--grad-accent` | cyan → violet (horizontal) — small rules, tag dashes |
-| `--grad-spectrum` | cyan → violet → lilac (vertical) — card edge stripes |
+| `--accent` | `#3ef0ff` electric cyan — kickers, active states, focus ring |
+| `--accent-2` | `#8b5cff` violet |
+| `--accent-2-light` | `#b49cff` — secondary labels |
+| `--accent-3` | `#ff3d9a` hot magenta — hover borders, the "record" dot, end of the gradient |
+| `--accent-warm` | `#ffb547` amber — rare warm highlight; at most one per screen |
+| `--grad-neon` | cyan → violet → magenta (100°) — hero accent line, big display moments |
+| `--grad-accent` | cyan → violet (horizontal) — underlines, tag dashes |
+| `--grad-spectrum` | cyan → violet → magenta (vertical) — card edge stripes |
+| `--glow-accent`, `--glow-accent-2`, `--glow-accent-3` | translucent cyan / violet / magenta | Glows: `box-shadow`, `drop-shadow`, haze |
+| `--spotlight` | faint cyan | Cursor spotlight |
+| `--grid-line` | faint cyan | Neon grid floor lines |
+
+Neon is the accent, not the background: most of every screen stays ink-black, and saturated colour is kept to a few elements so it hits hard.
 
 ### Buttons and focus
-`--pill-border`, `--pill-border-hover`, `--pill-bg`, `--pill-bg-hover` style every pill link (`.project-actions a`, `.social-links a`, `.scene-link`). `--focus-ring` (`#c4b5fd`) is the only focus outline colour: `outline:2px solid var(--focus-ring)`.
+`--pill-border`, `--pill-border-hover`, `--pill-bg`, `--pill-bg-hover` style every pill control (`.project-actions a`, `.social-links a`, `.scene-link`, `.scroll-cue`, `#archipelago-toggle`): cyan edge at rest, magenta on hover. `--focus-ring` (cyan) is the only focus outline colour: `outline:2px solid var(--focus-ring)`.
 
 ## Fonts
 
-| Token | Stack | Use |
+| Token | Family | Use |
 |---|---|---|
-| `--font-body` | Inter, then system fallbacks | Everything by default: body, nav, labels, buttons, paper titles |
-| `--font-display` | Space Grotesk, then Inter | Project titles, case-study `h1`, job titles, project numbers, years, brand name |
+| `--font-display` | **Unbounded** (wide geometric) | Hero headline, section headings, project titles, case-study `h1`, brand name |
+| `--font-body` | **Manrope** | Body copy, descriptions, buttons that read as sentences |
+| `--font-mono` | **JetBrains Mono** | HUD-style labels: kickers, nav, pills, meta, counters |
 
-Weights loaded: Inter 400/500/600/700, Space Grotesk 500/600/700. Don't use a weight that isn't loaded (no 800/900); add it to the Google Fonts URL in every page first if you really need it.
+Weights loaded: Unbounded 500/700/800, Manrope 400/500/600/700, JetBrains Mono 400/500. Don't use a weight that isn't loaded; add it to the Google Fonts URL in every page first if you really need it.
+
+Display type is uppercase, tight (`letter-spacing:-.02em` to `-.025em`, `line-height` about `.98`) and big. The hero headline is real text with a CSS gradient (`--grad-neon`, `background-clip:text`) and a `drop-shadow` glow — no images.
 
 Exceptions:
-- The hero headline and big section headings are currently block-letter **images** (`images/hero-glyphs/`), placed by the script in `index.html`; their `font-size` sets the glyph height. The `&` in those headings deliberately uses Arial Black to match the glyphs.
+- Section headings (not the hero) are still block-letter **images** (`images/hero-glyphs/`) placed by the script in `index.html` until they're converted. Their `font-size` sets the glyph height, and the `&` deliberately uses Arial Black to match the glyphs.
 - The 3D journey canvas (`scroll-exploration.js`) draws its labels with canvas fonts.
 
 ## Label style (uppercase small text)
 
-Kickers, nav, tags, buttons, meta and section labels share one style:
+Kickers, nav, tags, buttons, meta and section labels read like a camera HUD:
 
 ```css
-font-size: var(--text-label);       /* .72rem */
-font-weight: 600;                   /* 500 for nav and meta */
-letter-spacing: var(--tracking-label); /* .14em; kickers use .18em */
+font-family: var(--font-mono);
+font-size: var(--text-label);          /* .72rem */
+font-weight: 500;
+letter-spacing: var(--tracking-label); /* .14em; the hero kicker uses .24em */
 text-transform: uppercase;
 ```
 
-Keep labels short, and don't make them larger or more widely spaced. The calmer type is deliberate.
+Kickers are cyan (`--accent`) and may be flanked by short hairlines (`::before`/`::after`). Keep labels short; the big display type does the shouting.
+
+(Sections below the hero still use the previous Manrope label style until they're restyled. Move them to this one when you touch them.)
+
+## Motion
+
+Cinematic, not bouncy. Use the easing tokens: `--ease-out` for entrances and hover returns, `--ease-cinema` for sweeps and cuts.
+
+- **Entrances**: text lines rise out of a clip mask (`translate`, never `transform`, so it doesn't fight magnetic offsets), then a highlight sweeps once across gradient text.
+- **Magnetic controls**: add `data-magnetic` to a button or pill. `home-fx.js` sets `--mag-x/--mag-y` and the shared `[data-magnetic]` rule turns them into `transform`. Don't put other `transform` hovers on magnetic elements.
+- **Cursor spotlight**: `home-fx.js` writes `--mx/--my` on `.hero`; backgrounds read them in `radial-gradient(… at var(--mx) var(--my), …)`.
+- **Reduced motion**: every animation lives inside `@media(prefers-reduced-motion:no-preference)`, so content is fully visible with no motion by default. `home-fx.js` does nothing for reduced motion or touch-only devices.
 
 ## Shape and spacing
 
