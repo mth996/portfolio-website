@@ -124,7 +124,7 @@
         import("three/addons/loaders/GLTFLoader.js"),
         import("./journey-audio.js?v=1").catch(() => null),
         import("./journey-explorer.js?v=2").catch(() => null),
-        import("./journey-travel.js?v=3")
+        import("./journey-travel.js?v=9")
       ]);
       if (document.fonts) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
       teardown = buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule });
@@ -726,6 +726,10 @@
     const count = ui.querySelector(".journey-ui__count");
     const trackFill = ui.querySelector(".journey-ui__track i");
     const ticks = ui.querySelector(".journey-ui__ticks");
+    const dwellRing = document.createElement("i");
+    dwellRing.className = "journey-ui__dwell";
+    dwellRing.setAttribute("aria-hidden", "true");
+    ui.querySelector(".journey-ui__progress").appendChild(dwellRing);
     const escapeHtml = text => text.replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
     stops.forEach((stop, i) => {
       const tick = document.createElement("button");
@@ -807,18 +811,18 @@
     const TRAVEL = travelModule.TRAVEL;
     const startStop = startStopFor(stops);
     travel.jumpTo(startStop);
-    const METRES_PER_PIXEL = SPACING / 640;   // one wheel notch (~100 px) walks about 3.4 m
+    // Scroll is travel distance: NOTCHES_PER_STATION wheel notches cover one station gap
+    const METRES_PER_PIXEL = SPACING / (TRAVEL.NOTCHES_PER_STATION * TRAVEL.NOTCH_PIXELS);
     const TRANSITION_SPEED = 1.1;             // m/s while the headset goes on or comes off
     const PUT_ON_DISTANCE = 2.8;              // metres before a VR stop where the headset goes on
     const TAKE_OFF_DISTANCE = 3.4;            // metres past a VR stop where it comes off again
     const PANEL_HIDE_SPEED = 1.5;             // m/s above which the info panel steps aside for the guide
     let wheelBank = 0;
-    let wheelLock = 0;
     let cutTimer = 0;
     let pendingJump = null;
     let snapCamera = true;
     const wornAt = i => stops[i].experience === "vr";
-    // Go to a stop: walk when it's close, teleport when it's far, cut when motion is reduced
+    // Shortcuts (keys, ticks, card clicks): ride to a neighbouring stop, teleport further, cut when motion is reduced
     function goTo(i) {
       i = Math.max(0, Math.min(last, Math.round(i)));
       if (still) { cutTo(i); return; }
@@ -827,19 +831,21 @@
     function cutTo(i) {
       if (cutTimer || i === travel.target) return;
       canvas.classList.add("is-cutting");
-      cutTimer = setTimeout(() => { travel.jumpTo(i); snapCamera = true; canvas.classList.remove("is-cutting"); cutTimer = 0; }, 320);
+      cutTimer = setTimeout(() => { travel.jumpTo(i, performance.now(), true); snapCamera = true; canvas.classList.remove("is-cutting"); cutTimer = 0; }, 320);
     }
     function onWheel(event) {
       if (event.ctrlKey) return;
       const list = event.target instanceof Element ? event.target.closest(".journey-ui__list, .journey-ui__chips") : null;
       if (list && list.scrollHeight > list.clientHeight) return;
       event.preventDefault();
-      const delta = (event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY) || (event.deltaMode === 1 ? event.deltaX * 16 : event.deltaX);
+      // Line-based wheels (Firefox: 3 lines a notch) are scaled so one notch is NOTCH_PIXELS, as in Chromium
+      const linePixels = TRAVEL.NOTCH_PIXELS / 3;
+      const delta = (event.deltaMode === 1 ? event.deltaY * linePixels : event.deltaY) || (event.deltaMode === 1 ? event.deltaX * linePixels : event.deltaX);
       if (still) {
-        // Reduced motion: whole steps only, so every move is a simple cut
-        const now = performance.now();
+        // Reduced motion: one gesture is one cut to the next stop; the dwell after it ignores the rest of the gesture
+        if (!travel.gate(performance.now())) { wheelBank = 0; return; }
         wheelBank += delta;
-        if (now > wheelLock && Math.abs(wheelBank) > 60) { goTo(travel.target + Math.sign(wheelBank)); wheelBank = 0; wheelLock = now + 650; }
+        if (Math.abs(wheelBank) > 60) { goTo(travel.target + Math.sign(wheelBank)); wheelBank = 0; }
         return;
       }
       travel.nudge(delta * METRES_PER_PIXEL, performance.now());
@@ -851,7 +857,7 @@
       event.preventDefault();
       const y = event.touches[0].clientY;
       if (!still) travel.nudge((touchY - y) / (window.innerHeight * 0.75) * SPACING, performance.now());
-      else wheelBank += touchY - y;
+      else if (travel.gate(performance.now())) wheelBank += touchY - y;
       touchY = y;
     }
     function onTouchEnd() {
@@ -953,6 +959,7 @@
     let lastTime = performance.now();
     let elapsed = 0;
     let worn = wornAt(startStop);
+    let lastDwellTick = null;
     function draw(now) {
       frame = requestAnimationFrame(draw);
       const dt = Math.min(64, now - lastTime);
@@ -960,16 +967,15 @@
       if (!still) elapsed += dt / 1000;
 
       // Travel: a far jump teleports once the guide is free; headset changes slow it to a walk; a teleport holds it
-      const scrolledJump = travel.takeJump();
-      if (scrolledJump !== null) pendingJump = scrolledJump;
       if (pendingJump !== null && !(explorer && explorer.busy)) {
         const i = pendingJump;
         pendingJump = null;
-        const jump = () => { travel.jumpTo(i); worn = wornAt(i); snapCamera = true; };
+        const jump = () => { travel.jumpTo(i, performance.now(), true); worn = wornAt(i); snapCamera = true; };
         if (explorer) explorer.teleport(wornAt(i), jump);
         else jump();
       }
-      if (!still) travel.update(dt, now, explorer && explorer.busy ? (explorer.teleporting ? 0 : TRANSITION_SPEED) : TRAVEL.MAX_SPEED);
+      // (With reduced motion the guide only cuts between stops, so this just times the dwell after each cut)
+      travel.update(dt, now, explorer && explorer.busy ? (explorer.teleporting ? 0 : TRANSITION_SPEED) : TRAVEL.MAX_SPEED);
       travel.position(guidePos);
       const k = travel.k;
 
@@ -997,6 +1003,14 @@
       // The scroll hint has done its job once the visitor moves; fading it keeps the guide's corner clear
       if (travel.target !== startStop) ui.classList.add("has-travelled");
       trackFill.style.transform = `scaleX(${(k / last).toFixed(4)})`;
+      // Arrival: a ring round the station's tick fills like a timer while the dwell holds scrolling
+      const dwellTick = travel.phase === "dwell" ? ticks.children[travel.target] : null;
+      if (dwellTick !== lastDwellTick) {
+        dwellRing.classList.toggle("is-on", !!dwellTick);
+        if (dwellTick) dwellRing.style.translate = `${ticks.offsetLeft + dwellTick.offsetLeft}px ${ticks.offsetTop + dwellTick.offsetTop}px`;
+        lastDwellTick = dwellTick;
+      }
+      if (dwellTick) dwellRing.style.setProperty("--dwell", travel.dwellProgress(now).toFixed(3));
       if (soundtrack) {
         if (travel.target !== heardStop) { heardStop = travel.target; soundtrack.whoosh(); }
         soundtrack.setEnergy(travel.speed / TRAVEL.MAX_SPEED);

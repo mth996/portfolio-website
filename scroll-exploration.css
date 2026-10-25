@@ -145,6 +145,14 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
 .journey-ui__tick--profile::before,.journey-ui__tick--career::before,.journey-ui__tick--research::before{border-radius:1px}
 .journey-ui__tick:hover::before{background:var(--text-1);scale:1.4}
 .journey-ui__tick.is-active::before{background:var(--accent);scale:1.7;box-shadow:0 0 12px var(--accent)}
+/* Arrival dwell: a thin ring around the station's tick fills like a timer */
+.journey-ui__dwell{
+  position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;pointer-events:none;opacity:0;transition:opacity .25s ease;
+  background:conic-gradient(var(--accent) calc(var(--dwell,0) * 1turn),var(--line-soft) 0);
+  -webkit-mask:radial-gradient(circle,transparent 8px,#000 8.5px,#000 10px,transparent 10.5px);
+  mask:radial-gradient(circle,transparent 8px,#000 8.5px,#000 10px,transparent 10.5px);
+}
+.journey-ui__dwell.is-on{opacity:1}
 .journey-ui__tick::after{
   content:attr(data-label);position:absolute;bottom:calc(100% + 10px);left:50%;translate:-50% 4px;
   padding:6px 9px;border:1px solid var(--line-soft);border-radius:6px;background:var(--glass-strong);white-space:nowrap;
