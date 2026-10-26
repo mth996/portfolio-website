@@ -116,6 +116,10 @@ export function createTravel({ THREE, count, standPoint }) {
       if (state.phase === "rest") {
         const here = stationAt(state.s);
         if (here >= 0) state.from = here;
+        // Input that cannot move the guide (a zero-distance event, or pushing past the first or last stop) leaves it
+        // at rest: setting off would count the unchanged position as an arrival and start a dwell
+        const [lo, hi] = bounds();
+        if (Math.abs(clamp(state.s + metres, lo, hi) - state.s) < AT) return;
         state.phase = "ride";
         state.request = state.intent = state.s;
       } else if (state.settling) state.request = state.intent = state.s;   // new input after settling starts afresh
