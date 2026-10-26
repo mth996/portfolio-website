@@ -269,35 +269,64 @@ export function createCity({ THREE, assets, scene, renderer, ink, neon, lite }) 
     frameAt(s + camBlend.look * facing, fA);
     outTarget.copy(fA.pos).addScaledVector(fA.right, lane(fA.width)).lerp(bike, Math.max(0, 1 - camBlend.look / 4)); outTarget.y = bike.y + 1.1 + camBlend.look * 0.03;
   }
-  // Station: the arrival shot from the route data (behind the stop, checked clear of the city with a view of the card,
-  // the character head to feet and the bike), fitted to the screen: at project stops it aims between the card and the
-  // character and moves along that line to the closest spot (from 0.55 to 1.6 times the checked distance) where the
-  // whole card, the character and the parked bike fit in the frame, so the card is as large as it can be
-  const fitCache = new Map(), probe = new THREE.PerspectiveCamera(50, 1, 0.1, 200), pt = new THREE.Vector3();
+  // Free space: how far a ray from `from` along `dir` goes before it meets a building (at most `far`). Rays are cast
+  // from open space outward, since a ray that starts inside a building passes through its walls unseen.
+  const ray = new THREE.Raycaster(), rayDir = new THREE.Vector3();
+  function clearance(from, dir, far) {
+    ray.set(from, rayDir.copy(dir).normalize()); ray.far = far;
+    const hit = ray.intersectObject(city, true)[0];
+    return hit ? hit.distance : far;
+  }
+  const seenFrom = (pos, p) => { const d = pos.distanceTo(p); return clearance(p, pos.clone().sub(p), d) >= d - 0.3; };
+  const ROOM = 1.2;   // metres kept between a station camera and the nearest wall
+
+  // Station: the arrival shot from the route data, fitted to the screen. At project stops it aims between the card and
+  // the character and moves along that line to the closest spot (0.55 to 1.6 times the route distance) where the whole
+  // card, the character head to feet and the parked bike fit in the frame, so the card is as large as it can be. A spot
+  // must have room behind it and a clear view of all of those; if the route direction has neither, the shot swings
+  // round and up a little until one does. Section stops keep the route shot, pulled in if a wall is close behind it.
+  const fitCache = new Map(), probe = new THREE.PerspectiveCamera(50, 1, 0.1, 200), pt = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
+  const SWINGS = [0, 0.15, 0.3].flatMap(p => [0, 0.15, -0.15, 0.3, -0.3, 0.45, -0.45, 0.6, -0.6].map(yaw => [yaw, p]))
+    .sort((a, b) => Math.abs(a[0]) + Math.abs(a[1]) * 1.5 - Math.abs(b[0]) - Math.abs(b[1]) * 1.5);
   function stationShot(i, outPos, outTarget, portrait = false, fov = 50, aspect = 16 / 9) {
-    const st = route.stops[i], c = st.camera;
-    outPos.set(c.pos[0], c.pos[1], c.pos[2]); outTarget.set(c.target[0], c.target[1], c.target[2]);
-    if (st.kind !== "project" || !st.display) { if (portrait) outPos.lerp(outTarget, -0.35); return; }
-    const key = i + ":" + fov.toFixed(1) + ":" + aspect.toFixed(2);
+    const key = i + ":" + fov.toFixed(1) + ":" + aspect.toFixed(2) + (portrait ? "p" : "");
     let fit = fitCache.get(key);
-    if (!fit) {
-      const spots = stationSpots(i), d = st.display, y = spots.character.y;
-      const along = new THREE.Vector3(-d.nz, 0, d.nx);
-      const k = d.scale || 1, H = (d.y1 - d.y0) * k, W = d.w * k;
-      const pts = [-1, 1].flatMap(sg => [d.y0, d.y0 + H].map(h => spots.display.clone().setY(y + h).addScaledVector(along, sg * W / 2)));
-      pts.push(spots.character.clone().setY(y + 1.9), spots.character.clone().setY(y), spots.bike.clone().setY(y + 1.2), spots.bike.clone());
-      const target = spots.display.clone().setY(y + d.y0 + H / 2).lerp(spots.character.clone().setY(y + 0.9), 0.45);
-      const dir = outPos.clone().sub(target), base = dir.length(); dir.normalize();
-      probe.fov = fov; probe.aspect = aspect; probe.updateProjectionMatrix();
-      let dist = base * 0.55;
-      for (; dist <= base * 1.6; dist += 0.5) {
-        probe.position.copy(target).addScaledVector(dir, dist); probe.lookAt(target); probe.updateMatrixWorld();
-        if (pts.every(p => { pt.copy(p).project(probe); return Math.abs(pt.x) < 0.92 && pt.y < 0.9 && pt.y > -0.92 && pt.z < 1; })) break;
-      }
-      fit = { pos: target.clone().addScaledVector(dir, Math.min(dist, base * 1.6)), target };
-      fitCache.set(key, fit);
-    }
+    if (!fit) { fit = fitStation(i, portrait, fov, aspect); fitCache.set(key, fit); }
     outPos.copy(fit.pos); outTarget.copy(fit.target);
+  }
+  function fitStation(i, portrait, fov, aspect) {
+    const st = route.stops[i], c = st.camera;
+    const routePos = new THREE.Vector3(...c.pos), routeTarget = new THREE.Vector3(...c.target);
+    if (st.kind !== "project" || !st.display) {
+      // narrow screens step back so the station still fits across
+      const dir = routePos.clone().sub(routeTarget), base = dir.length(), want = base * (portrait ? 1.35 : 1);
+      const dist = Math.max(base * 0.5, Math.min(want, clearance(routeTarget, dir, want + ROOM) - ROOM));
+      return { pos: routeTarget.clone().addScaledVector(dir.normalize(), dist), target: routeTarget };
+    }
+    const spots = stationSpots(i), d = st.display, y = spots.character.y;
+    const along = new THREE.Vector3(-d.nz, 0, d.nx);
+    const k = d.scale || 1, H = (d.y1 - d.y0) * k, W = d.w * k;
+    const pts = [-1, 1].flatMap(sg => [d.y0, d.y0 + H].map(h => spots.display.clone().setY(y + h).addScaledVector(along, sg * W / 2)));
+    pts.push(spots.character.clone().setY(y + 1.9), spots.character.clone().setY(y + 0.15), spots.bike.clone().setY(y + 1.2), spots.bike.clone().setY(y + 0.15));
+    const target = spots.display.clone().setY(y + d.y0 + H / 2).lerp(spots.character.clone().setY(y + 0.9), 0.45);
+    const dir0 = routePos.clone().sub(target), base = dir0.length(); dir0.normalize();
+    probe.fov = fov; probe.aspect = aspect; probe.updateProjectionMatrix();
+    const fits = pos => {
+      probe.position.copy(pos); probe.lookAt(target); probe.updateMatrixWorld();
+      return pts.every(p => { pt.copy(p).project(probe); return Math.abs(pt.x) < 0.92 && pt.y < 0.9 && pt.y > -0.92 && pt.z < 1; });
+    };
+    let fallback = null;
+    for (const [yaw, pitch] of SWINGS) {
+      const dir = dir0.clone().applyAxisAngle(UP, yaw); dir.y += pitch; dir.normalize();
+      const reach = Math.min(base * 1.6, clearance(target, dir, base * 1.6 + ROOM) - ROOM);
+      const pos = new THREE.Vector3();
+      let dist = base * 0.55;
+      while (dist <= reach && !fits(pos.copy(target).addScaledVector(dir, dist))) dist += 0.5;
+      if (dist <= reach && pts.every(p => seenFrom(pos, p))) return { pos, target };
+      // nothing fits: the furthest clear spot in the route direction, so the camera is never inside a building
+      if (!fallback) fallback = { pos: target.clone().addScaledVector(dir, Math.max(base * 0.4, reach)), target };
+    }
+    return fallback;
   }
   // Overview: high above and behind the bike, looking ahead over the city
   function overviewShot(s, facing, bike, outPos, outTarget) {
@@ -310,7 +339,7 @@ export function createCity({ THREE, assets, scene, renderer, ink, neon, lite }) 
   return {
     group, route, stops: route.stops, length: route.length,
     centre: new THREE.Vector3(45, 0, 50),
-    frameAt, lane, speedCap, poseBike, stationSpots, parkAt, unpark, rideShot, stationShot, overviewShot,
+    frameAt, lane, speedCap, poseBike, stationSpots, parkAt, unpark, rideShot, stationShot, overviewShot, clearance,
     ride, park,
     dispose() { envMap.dispose(); glowTex.dispose(); ringArc.dispose(); ringMat.dispose(); scene.environment = null; }
   };

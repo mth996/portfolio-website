@@ -126,7 +126,7 @@
         import("./journey-audio.js?v=1").catch(() => null),
         import("./journey-explorer.js?v=2").catch(() => null),
         import("./journey-travel.js?v=10"),
-        import("./journey-city.js?v=2").catch(() => null)
+        import("./journey-city.js?v=3").catch(() => null)
       ]);
       // The city world: its model, bikes and route; any failure falls back to the grid journey
       let cityAssets = null;
@@ -766,7 +766,7 @@
         ${cityMode ? `<button type="button" class="journey-ui__view" aria-pressed="false" aria-label="Camera view: riding. Press to switch to the overview">View · Ride</button>` : ""}</div>
       <div class="journey-ui__panel" aria-live="polite"></div>
       <nav class="journey-ui__progress" aria-label="Journey stops"><div class="journey-ui__track" aria-hidden="true"><i></i></div><div class="journey-ui__ticks"></div></nav>
-      <p class="journey-ui__hint" aria-hidden="true">${coarsePointer.matches ? (cityMode ? "Swipe to ride" : "Swipe to travel") : cityMode ? "Scroll or use arrow keys to ride · V changes the view · Esc to exit" : "Scroll or use arrow keys to travel · Esc to exit"}</p>
+      <p class="journey-ui__hint" aria-hidden="true">${coarsePointer.matches ? (cityMode ? "Swipe up to ride · sideways to look around" : "Swipe up to travel · sideways to look around") : cityMode ? "Scroll or ↑ ↓ to ride · ← → or the screen edges to look around · V changes the view · Esc to exit" : "Scroll or ↑ ↓ to travel · ← → or the screen edges to look around · Esc to exit"}</p>
       ${cityMode ? `<p class="journey-ui__credit">City: <a href="https://sketchfab.com/3d-models/cyberpunk-city-1-14d2eaa145ee42938e004115871adf6c" target="_blank" rel="noopener noreferrer">“Cyberpunk City - #1” by born2012</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></p>` : ""}`;
     const panel = ui.querySelector(".journey-ui__panel");
     const count = ui.querySelector(".journey-ui__count");
@@ -896,6 +896,8 @@
       const list = event.target instanceof Element ? event.target.closest(".journey-ui__list, .journey-ui__chips") : null;
       if (list && list.scrollHeight > list.clientHeight) return;
       event.preventDefault();
+      // a sideways scroll (trackpad, tilt wheel) looks around instead of travelling
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) { nudgeLook((event.deltaMode === 1 ? event.deltaX * 40 : event.deltaX) / 600); return; }
       // Line-based wheels (Firefox: 3 lines a notch) are scaled so one notch is NOTCH_PIXELS, as in Chromium
       const linePixels = TRAVEL.NOTCH_PIXELS / 3;
       const delta = (event.deltaMode === 1 ? event.deltaY * linePixels : event.deltaY) || (event.deltaMode === 1 ? event.deltaX * linePixels : event.deltaX);
@@ -908,12 +910,18 @@
       }
       travel.nudge(delta * METRES_PER_PIXEL, performance.now());
     }
-    let touchY = null;
-    function onTouchStart(event) { touchY = event.touches[0].clientY; }
+    let touchY = null, touchX = null, touchAxis = null;
+    function onTouchStart(event) { touchY = event.touches[0].clientY; touchX = event.touches[0].clientX; touchAxis = null; }
     function onTouchMove(event) {
       if (touchY === null) return;
       event.preventDefault();
-      const y = event.touches[0].clientY;
+      const y = event.touches[0].clientY, x = event.touches[0].clientX;
+      // a swipe that starts sideways looks around; one that starts up or down travels
+      if (!touchAxis) {
+        if (Math.hypot(x - touchX, y - touchY) < 8) return;
+        touchAxis = Math.abs(x - touchX) > Math.abs(y - touchY) ? "x" : "y";
+      }
+      if (touchAxis === "x") { nudgeLook((touchX - x) / (window.innerWidth * 0.6)); touchX = x; touchY = y; return; }
       if (!still) travel.nudge((touchY - y) / (window.innerHeight * 0.75) * GAP, performance.now());
       else if (travel.gate(performance.now())) wheelBank += touchY - y;
       touchY = y;
@@ -928,8 +936,9 @@
       if (k === "Escape") { event.preventDefault(); exit(); return; }
       const inUi = event.target instanceof HTMLElement && event.target.closest("a,button") && (k === " " || k === "Enter");
       if (inUi) return;
-      if (["ArrowRight", "ArrowDown", "PageDown", " "].includes(k)) { event.preventDefault(); goTo(travel.target + 1); }
-      else if (["ArrowLeft", "ArrowUp", "PageUp"].includes(k)) { event.preventDefault(); goTo(travel.target - 1); }
+      if (["ArrowDown", "PageDown", " "].includes(k)) { event.preventDefault(); goTo(travel.target + 1); }
+      else if (["ArrowUp", "PageUp"].includes(k)) { event.preventDefault(); goTo(travel.target - 1); }
+      else if (k === "ArrowLeft" || k === "ArrowRight") { event.preventDefault(); nudgeLook(k === "ArrowLeft" ? -0.35 : 0.35); }
       else if (k === "Home") { event.preventDefault(); goTo(0); }
       else if (k === "End") { event.preventDefault(); goTo(last); }
       else if (k === "m" || k === "M") toggleSound();
@@ -949,16 +958,48 @@
       return { screen: screens.find(s => s.screen === hit.object) || null, card: zoomables.find(z => z.mesh === hit.object) || null };
     }
     const pick = event => pickAt(event).screen;
+    // Look around at a station: the camera slides sideways (and a little up or down) so the whole station can be seen.
+    // The mouse at the left or right edge of the screen, a drag, ← →, a sideways scroll or a sideways swipe move it;
+    // it stays where it was left and eases back once the guide rides on.
+    const LOOK = { RANGE: 5, RISE: 1.5, DIP: 0.6, EDGE: 0.08, RATE: 0.8 };
+    const look = { x: 0, y: 0, sx: 0, sy: 0, edge: 0, drag: null, dragged: false };
+    let lookable = false;   // the guide is resting at a stop (set every frame)
+    function nudgeLook(dx, dy = 0) {
+      if (!lookable) return;
+      look.x = Math.max(-1, Math.min(1, look.x + dx));
+      look.y = Math.max(-1, Math.min(1, look.y + dy));
+    }
     function onPointerMove(event) {
       parallax.x = (event.clientX / window.innerWidth - 0.5) * 2;
       parallax.y = (event.clientY / window.innerHeight - 0.5) * 2;
-      if (coarsePointer.matches) return;
+      if (event.pointerType !== "mouse") return;
+      // edge zones count only over the scene itself, not over the panel or buttons
+      const ex = event.clientX / window.innerWidth;
+      look.edge = event.target !== canvas ? 0 : ex < LOOK.EDGE ? (ex - LOOK.EDGE) / LOOK.EDGE : ex > 1 - LOOK.EDGE ? (ex - 1 + LOOK.EDGE) / LOOK.EDGE : 0;
+      if (look.drag) {
+        const dx = event.clientX - look.drag.x, dy = event.clientY - look.drag.y;
+        if (Math.abs(dx) + Math.abs(dy) > 0) {
+          if (Math.hypot(event.clientX - look.drag.x0, event.clientY - look.drag.y0) > 6) look.dragged = true;
+          nudgeLook(-dx / (window.innerWidth * 0.5), dy / (window.innerHeight * 0.5));
+          look.drag.x = event.clientX; look.drag.y = event.clientY;
+        }
+      }
       const hit = pickAt(event);
       hovered = hit.screen || null;
       hoveredCard = hit.card || null;
-      canvas.style.cursor = hovered || hoveredCard ? "pointer" : "";
+      canvas.style.cursor = hovered || hoveredCard ? "pointer" : look.drag && look.dragged ? "grabbing" : lookable && look.edge ? (look.edge < 0 ? "w-resize" : "e-resize") : "";
     }
+    function onPointerDown(event) {
+      if (event.pointerType === "mouse" && event.button === 0) { look.drag = { x: event.clientX, y: event.clientY, x0: event.clientX, y0: event.clientY }; look.dragged = false; }
+    }
+    function onPointerUp() {
+      look.drag = null;
+      if (canvas.style.cursor === "grabbing") canvas.style.cursor = "";
+    }
+    function onPointerLeave() { look.edge = 0; }
     function onCanvasClick(event) {
+      // the end of a drag is not a click
+      if (look.dragged) { look.dragged = false; return; }
       const hit = pickAt(event);
       // touch screens have no hover: a tap enlarges a card, another tap shrinks it
       if (hit.card) { hoveredCard = hoveredCard === hit.card ? null : hit.card; return; }
@@ -1074,6 +1115,7 @@
     // ---------- Frame loop ----------
     const camPos = new THREE.Vector3(), camTarget = new THREE.Vector3();
     const posA = new THREE.Vector3(), tgtA = new THREE.Vector3(), guidePos = new THREE.Vector3();
+    const lookSide = new THREE.Vector3(), lookShift = new THREE.Vector3(), lookAim = new THREE.Vector3();
     const smoother = t => t * t * t * (t * (t * 6 - 15) + 10);
     let frame = 0;
     let lastTime = performance.now();
@@ -1119,9 +1161,25 @@
         fov = camera.fov + (framingFov - camera.fov) * ease;
       }
       if (Math.abs(fov - camera.fov) > 0.01) { camera.fov = fov; camera.updateProjectionMatrix(); }
-      camera.position.copy(camPos);
+      // Look around: only while resting at a stop in the riding view; the slide stops short of any wall beside the camera
+      lookable = !cutTimer && travel.phase !== "ride" && travel.distanceTo(near) < 0.5 && view === "ride";
+      if (!lookable) { look.x = 0; look.y = 0; }
+      else if (look.edge) nudgeLook(look.edge * LOOK.RATE * dt / 1000);
+      const lookEase = still ? 1 : 1 - Math.exp(-dt * 0.006);
+      look.sx += (look.x - look.sx) * lookEase;
+      look.sy += (look.y - look.sy) * lookEase;
+      lookShift.set(0, 0, 0);
+      if (Math.abs(look.sx) + Math.abs(look.sy) > 0.001) {
+        lookSide.subVectors(camTarget, camPos).cross(camera.up).setY(0).normalize();
+        let slide = look.sx * LOOK.RANGE;
+        if (cityMode && slide) slide = Math.sign(slide) * Math.max(0, Math.min(Math.abs(slide), city.clearance(camPos, lookSide.clone().multiplyScalar(Math.sign(slide)), Math.abs(slide) + 1) - 1));
+        lookShift.copy(lookSide).multiplyScalar(slide);
+        lookShift.y = look.sy * (look.sy > 0 ? LOOK.RISE : LOOK.DIP);
+      }
+      camera.position.copy(camPos).add(lookShift);
       if (!still) { camera.position.x += parallax.x * 0.25; camera.position.y -= parallax.y * 0.15; }
-      camera.lookAt(camTarget);
+      // the aim moves a little further than the camera, so the view turns slightly toward the side being looked at
+      camera.lookAt(lookAim.copy(camTarget).addScaledVector(lookShift, 1.25));
       showStop(Math.round(k));
       panel.classList.toggle("is-travelling", !still && travel.speed > PANEL_HIDE_SPEED);
       // The scroll hint has done its job once the visitor moves; fading it keeps the guide's corner clear
@@ -1286,6 +1344,9 @@
     window.addEventListener("touchend", onTouchEnd, { passive: true });
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
+    canvas.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    document.documentElement.addEventListener("mouseleave", onPointerLeave);
     canvas.addEventListener("click", onCanvasClick);
     frame = requestAnimationFrame(draw);
     ui.focus({ preventScroll: true });
@@ -1302,6 +1363,9 @@
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointermove", onPointerMove);
+      canvas.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+      document.documentElement.removeEventListener("mouseleave", onPointerLeave);
       canvas.removeEventListener("click", onCanvasClick);
       ["pointerdown", "keydown", "touchstart", "wheel"].forEach(type => window.removeEventListener(type, wake));
       if (soundtrack) soundtrack.dispose();
