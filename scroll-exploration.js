@@ -1,5 +1,6 @@
 // Optional cinematic 3D journey through the portfolio: projects, profile, experience, publications and contact,
-// with a robot guide and a generative soundtrack. Three.js and its addons load from the CDN (see the import map in
+// with a generative soundtrack. It rides a motorcycle through a cyberpunk city (journey-city.js); if the city can't
+// load, or with ?journey=grid, it falls back to the original neon-grid world walked by the explorer guide. Three.js and its addons load from the CDN (see the import map in
 // index.html) only when the visitor clicks "Enter 3D journey". The regular page stays the default.
 (() => {
   const body = document.body;
@@ -114,7 +115,7 @@
     button.disabled = true;
     updateControls();
     try {
-      const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }, { GLTFLoader }, audio, explorerModule, travelModule] = await Promise.all([
+      const [THREE, { EffectComposer }, { RenderPass }, { UnrealBloomPass }, { OutputPass }, { ShaderPass }, { GLTFLoader }, audio, explorerModule, travelModule, cityModule] = await Promise.all([
         import("three"),
         import("three/addons/postprocessing/EffectComposer.js"),
         import("three/addons/postprocessing/RenderPass.js"),
@@ -124,10 +125,17 @@
         import("three/addons/loaders/GLTFLoader.js"),
         import("./journey-audio.js?v=1").catch(() => null),
         import("./journey-explorer.js?v=2").catch(() => null),
-        import("./journey-travel.js?v=9")
+        import("./journey-travel.js?v=10"),
+        import("./journey-city.js?v=1").catch(() => null)
       ]);
+      // The city world: its model, bikes and route; any failure falls back to the grid journey
+      let cityAssets = null;
+      if (cityModule && new URLSearchParams(window.location.search).get("journey") !== "grid") {
+        try { cityAssets = await cityModule.loadCity({ THREE, GLTFLoader }); }
+        catch (error) { console.warn("City journey unavailable, using the grid journey instead.", error); }
+      }
       if (document.fonts) await Promise.race([document.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
-      teardown = buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule });
+      teardown = buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule, cityModule, cityAssets });
       active = true;
       clearReturnParam();
     } catch (error) {
@@ -159,7 +167,7 @@
     }
   }
 
-  function buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule }) {
+  function buildJourney({ THREE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, ShaderPass, GLTFLoader, audio, explorerModule, travelModule, cityModule, cityAssets }) {
     const lite = coarsePointer.matches || window.innerWidth < 760;
     const still = reducedMotion.matches;
     const css = getComputedStyle(root);
@@ -191,6 +199,16 @@
     const camera = new THREE.PerspectiveCamera(lite ? 56 : 42, window.innerWidth / window.innerHeight, 0.1, 600);
     const disposables = [];
     const keep = obj => { disposables.push(obj); return obj; };
+
+    // ---------- City world (falls back to the grid if it can't be built or doesn't match the page's stops) ----------
+    let city = null;
+    const stopCount = projects.length + 2 + (sections.roles.length ? 1 : 0) + (sections.papers.length ? 1 : 0) + 1;
+    if (cityAssets && cityAssets.route.stops.length === stopCount) {
+      try { city = cityModule.createCity({ THREE, assets: cityAssets, scene, renderer, ink, neon, lite }); }
+      catch (error) { console.warn("City journey couldn't be built, using the grid journey instead.", error); city = null; }
+    } else if (cityAssets) console.warn("City route has a different number of stops than the page; using the grid journey.");
+    const cityMode = !!city;
+    if (cityMode) scene.fog.density = lite ? 0.009 : 0.0065;
 
     // ---------- Shared textures drawn on canvas ----------
     function radialTexture(stops) {
@@ -241,6 +259,16 @@
     const endZ = sectionZ;
     // Intro, sections and contact are non-VR stops: the guide holds the headset there
     stops.forEach(stop => { if (!stop.experience) stop.experience = "non-vr"; });
+    // City: every display stands at its place beside the road (route data), facing riders arriving along it
+    if (cityMode) stops.forEach((stop, i) => {
+      const r = city.stops[i], d = r.display, road = city.frameAt(r.s);
+      stop.roadS = r.s;
+      stop.rotY = d ? Math.atan2(d.nx, d.nz) : Math.atan2(-road.fwd.x, -road.fwd.z);
+      stop.normal = new THREE.Vector3(Math.sin(stop.rotY), 0, Math.cos(stop.rotY));
+      const base = road.pos.y;
+      if (stop.kind === "project") { const [, h] = cardSize(stop); stop.center = new THREE.Vector3(d.x, base + CARD_LIFT + h / 2, d.z); stop.side = -d.side; }
+      else stop.center = new THREE.Vector3(d ? d.x : road.pos.x, base + (stop.kind === "intro" || stop.kind === "outro" ? 3.6 : 3.4), d ? d.z : road.pos.z);
+    });
 
     // Sky: ink overhead, violet and magenta haze on the horizon
     const sky = new THREE.Mesh(new THREE.SphereGeometry(450, 32, 16), new THREE.ShaderMaterial({
@@ -252,7 +280,7 @@
           vec3 col = uInk + uGlow*band*0.42 + uHot*exp(-pow((h+0.02)*16.0,2.0))*0.16 + uGlow*haze*0.05;
           gl_FragColor = vec4(col,1.0); }`
     }));
-    sky.position.z = endZ / 2;
+    if (cityMode) sky.position.copy(city.centre); else sky.position.z = endZ / 2;
     scene.add(sky);
 
     // Floor: neon grid that fades into the fog; slightly see-through so mirrored screens read as reflections
@@ -278,17 +306,18 @@
     floor.rotation.x = -Math.PI / 2;
     floor.position.z = endZ / 2;
     floor.renderOrder = 1;
-    scene.add(floor);
+    if (!cityMode) scene.add(floor);   // the city has its own ground
 
     // Route: a thin light line down the centre of the walking path
     const routeCurve = new THREE.LineCurve3(new THREE.Vector3(0, 0.03, stops[0].center.z), new THREE.Vector3(0, 0.03, endZ));
-    scene.add(new THREE.Mesh(new THREE.TubeGeometry(routeCurve, 1, 0.025, 5, false), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 1.6), fog: true })));
+    if (!cityMode) scene.add(new THREE.Mesh(new THREE.TubeGeometry(routeCurve, 1, 0.025, 5, false), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 1.6), fog: true })));
 
     // ---------- Portals at the start and the end ----------
     const portalMaterials = [];
-    function addPortal(center, color) {
+    function addPortal(center, color, rotY = 0) {
       const group = new THREE.Group();
       group.position.copy(center);
+      group.rotation.y = rotY;
       const ring = new THREE.Mesh(new THREE.TorusGeometry(3.1, 0.05, 12, 160), new THREE.MeshBasicMaterial({ color: hdr(color, 2.2) }));
       const ringOuter = new THREE.Mesh(new THREE.TorusGeometry(3.45, 0.012, 8, 160), new THREE.MeshBasicMaterial({ color: hdr(color, 1.6) }));
       const veil = new THREE.ShaderMaterial({
@@ -309,7 +338,7 @@
       scene.add(group);
       return group;
     }
-    const portals = [addPortal(stops[0].center, neon[0]), addPortal(stops[stops.length - 1].center, neon[2])];
+    const portals = [addPortal(stops[0].center, neon[0], stops[0].rotY), addPortal(stops[stops.length - 1].center, neon[2], stops[stops.length - 1].rotY)];
 
     // ---------- Project screens ----------
     const screens = [];
@@ -354,7 +383,7 @@
       group.add(shadow, back, frame, screen);
 
       let reflection = null;
-      if (!lite) {
+      if (!lite && !cityMode) {
         reflection = new THREE.Mesh(unitPlane, new THREE.MeshBasicMaterial({ color: ink.clone().multiplyScalar(2), transparent: true, opacity: 0.5, depthWrite: false, side: THREE.DoubleSide }));
         // Mirror image below the see-through floor
         reflection.rotation.y = stop.rotY;
@@ -455,16 +484,21 @@
     const orbiters = [];
     stops.forEach(stop => {
       const c = stop.center;
+      // Each section station is built around its own centre and turned to face the road (in the grid, straight on)
+      const holder = new THREE.Group();
+      holder.position.set(c.x, 0, c.z);
+      holder.rotation.y = stop.kind === "profile" || stop.kind === "career" || stop.kind === "research" ? stop.rotY : 0;
+      scene.add(holder);
       if (stop.kind === "profile") {
         // A glowing core wrapped in a wireframe shell, with the skills orbiting as neon chips
         const core = new THREE.Group();
-        core.position.copy(c);
+        core.position.set(0, c.y, 0);
         const shell = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.IcosahedronGeometry(1.7, 1)), new THREE.LineBasicMaterial({ color: hdr(neon[1], 1.8) }));
         const heart = new THREE.Mesh(new THREE.OctahedronGeometry(0.75), new THREE.MeshBasicMaterial({ color: hdr(neon[0], 2.4) }));
         const glow = new THREE.Mesh(new THREE.PlaneGeometry(7, 7), new THREE.MeshBasicMaterial({ map: haloTexture, color: neon[1], transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false }));
         glow.position.z = -0.5;
         core.add(glow, shell, heart);
-        scene.add(core);
+        holder.add(core);
         floaters.push({ obj: core, baseY: c.y, spin: shell, heart });
         sections.skills.forEach((skill, n) => {
           const tex = canvasTexture(512, 112, (g, w, h) => {
@@ -482,7 +516,7 @@
       }
       if (stop.kind === "career") {
         // The roles on a curved holographic wall (experience above, education below), facing the camera
-        const focus = new THREE.Vector3(c.x, 0, c.z + 6);
+        const focus = new THREE.Vector3(0, 0, 6);
         const radius = 7.5;
         const rows = [sections.roles.filter(r => !r.education), sections.roles.filter(r => r.education)];
         rows.forEach((row, rowIndex) => {
@@ -499,7 +533,7 @@
             const angle = (n - (row.length - 1) / 2) * 0.4 + 0.12;
             card.position.set(focus.x + Math.sin(angle) * radius, rowIndex ? 1.7 : 4.15, focus.z - Math.cos(angle) * radius);
             card.rotation.y = -angle;
-            scene.add(card);
+            holder.add(card);
             floaters.push({ obj: card, baseY: card.position.y, phase: n + rowIndex * 3 });
           });
         });
@@ -515,9 +549,9 @@
           });
           const page = new THREE.Mesh(new THREE.PlaneGeometry(3, 4), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide }));
           const offset = n - (sections.papers.length - 1) / 2;
-          page.position.set(c.x + offset * 3.9, c.y, c.z - Math.abs(offset) * 1.2);
+          page.position.set(offset * 3.9, c.y, -Math.abs(offset) * 1.2);
           page.rotation.set(0, -offset * 0.28, offset * 0.03);
-          scene.add(page);
+          holder.add(page);
           floaters.push({ obj: page, baseY: c.y, phase: n * 1.7 });
         });
       }
@@ -529,10 +563,14 @@
     const key = new THREE.DirectionalLight(0xffffff, 2.2);
     const rim = new THREE.PointLight(neon[2], 18, 9, 2);
     lightRig.add(hemi, key, key.target, rim);
+    if (cityMode) { hemi.intensity = 0.25; key.intensity = 1.2; }
     scene.add(lightRig);
     const guide = { model: null, mixer: null, actions: {}, current: null, pos: new THREE.Vector3(), yaw: 0, k: 0, idleFor: 0, arrived: -1, gestures: 0 };
     function standPoint(i, out) {
       const stop = stops[i];
+      // City: the travel controller measures straight lines between stand points, so they sit on a line at their
+      // distances along the road; the bike is placed on the road itself from that distance
+      if (cityMode) return out.set(stop.roadS, 0, 0);
       const c = stop.center;
       // On the path, a step across from the card and a little in front of it, so the card never sits behind the guide
       // and the guide stands nearer the camera than the card does
@@ -611,10 +649,10 @@
           vColor = color; gl_PointSize = (0.05 + fract(seed * 3.7) * 0.07) * uScale / d; gl_Position = projectionMatrix * mv; }`,
       fragmentShader: "uniform sampler2D uMap; varying vec3 vColor; varying float vFade; void main(){ float a = texture2D(uMap, gl_PointCoord).a; gl_FragColor = vec4(vColor * a * vFade, 1.0); }"
     });
-    scene.add(new THREE.Points(dustGeometry, dustMaterial));
+    if (!cityMode) scene.add(new THREE.Points(dustGeometry, dustMaterial));
 
     const sculptures = [];
-    const sculptureCount = lite ? 4 : 9;
+    const sculptureCount = cityMode ? 0 : lite ? 4 : 9;
     const shapes = [() => new THREE.IcosahedronGeometry(5, 1), () => new THREE.TorusKnotGeometry(3.6, 0.9, 90, 8), () => new THREE.OctahedronGeometry(5.5, 0), () => new THREE.TorusGeometry(6, 0.4, 6, 40)];
     for (let i = 0; i < sculptureCount; i++) {
       const geometry = shapes[i % shapes.length]();
@@ -718,10 +756,12 @@
     const projectTotal = String(projects.length).padStart(2, "0");
     ui.innerHTML = `
       <div class="journey-ui__top"><span class="journey-ui__brand">3D Journey</span><span class="journey-ui__count" aria-hidden="true"></span>
-        <button type="button" class="journey-ui__sound" aria-pressed="false"><span class="journey-ui__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="journey-ui__sound-label">Sound off</span></button></div>
+        <button type="button" class="journey-ui__sound" aria-pressed="false"><span class="journey-ui__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="journey-ui__sound-label">Sound off</span></button>
+        ${cityMode ? `<button type="button" class="journey-ui__view" aria-pressed="false" aria-label="Camera view: riding. Press to switch to the overview">View · Ride</button>` : ""}</div>
       <div class="journey-ui__panel" aria-live="polite"></div>
       <nav class="journey-ui__progress" aria-label="Journey stops"><div class="journey-ui__track" aria-hidden="true"><i></i></div><div class="journey-ui__ticks"></div></nav>
-      <p class="journey-ui__hint" aria-hidden="true">${coarsePointer.matches ? "Swipe to travel" : "Scroll or use arrow keys to travel · Esc to exit"}</p>`;
+      <p class="journey-ui__hint" aria-hidden="true">${coarsePointer.matches ? (cityMode ? "Swipe to ride" : "Swipe to travel") : cityMode ? "Scroll or use arrow keys to ride · V changes the view · Esc to exit" : "Scroll or use arrow keys to travel · Esc to exit"}</p>
+      ${cityMode ? `<p class="journey-ui__credit">City: <a href="https://sketchfab.com/3d-models/cyberpunk-city-1-14d2eaa145ee42938e004115871adf6c" target="_blank" rel="noopener noreferrer">“Cyberpunk City - #1” by born2012</a>, <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></p>` : ""}`;
     const panel = ui.querySelector(".journey-ui__panel");
     const count = ui.querySelector(".journey-ui__count");
     const trackFill = ui.querySelector(".journey-ui__track i");
@@ -809,10 +849,14 @@
     const last = stops.length - 1;
     const travel = travelModule.createTravel({ THREE, count: stops.length, standPoint });
     const TRAVEL = travelModule.TRAVEL;
+    // City: the motorcycle's speeds and distances (restored on exit); commit, settle, gesture and dwell rules unchanged
+    const travelDefaults = { ...TRAVEL };
+    if (cityMode) Object.assign(TRAVEL, cityModule.BIKE_TRAVEL);
     const startStop = startStopFor(stops);
     travel.jumpTo(startStop);
     // Scroll is travel distance: NOTCHES_PER_STATION wheel notches cover one station gap
-    const METRES_PER_PIXEL = SPACING / (TRAVEL.NOTCHES_PER_STATION * TRAVEL.NOTCH_PIXELS);
+    const GAP = cityMode ? (stops[stops.length - 1].roadS - stops[0].roadS) / (stops.length - 1) : SPACING;   // a typical gap between stops
+    const METRES_PER_PIXEL = GAP / (TRAVEL.NOTCHES_PER_STATION * TRAVEL.NOTCH_PIXELS);
     const TRANSITION_SPEED = 1.1;             // m/s while the headset goes on or comes off
     const PUT_ON_DISTANCE = 2.8;              // metres before a VR stop where the headset goes on
     const TAKE_OFF_DISTANCE = 3.4;            // metres past a VR stop where it comes off again
@@ -856,7 +900,7 @@
       if (touchY === null) return;
       event.preventDefault();
       const y = event.touches[0].clientY;
-      if (!still) travel.nudge((touchY - y) / (window.innerHeight * 0.75) * SPACING, performance.now());
+      if (!still) travel.nudge((touchY - y) / (window.innerHeight * 0.75) * GAP, performance.now());
       else if (travel.gate(performance.now())) wheelBank += touchY - y;
       touchY = y;
     }
@@ -875,6 +919,7 @@
       else if (k === "Home") { event.preventDefault(); goTo(0); }
       else if (k === "End") { event.preventDefault(); goTo(last); }
       else if (k === "m" || k === "M") toggleSound();
+      else if ((k === "v" || k === "V") && cityMode) toggleView();
       else if (k === "Enter" && stops[shownStop]?.kind === "project") window.location.assign(projectLink(stops[shownStop]));
     }
     const raycaster = new THREE.Raycaster();
@@ -951,6 +996,59 @@
       } else bloom.enabled = false;
     }
 
+    // ---------- City: riding, stations and camera ----------
+    // Views: "ride" (riding camera, corner swings and station arrivals) or "overview" (high above the bike)
+    let view = "ride";
+    const viewButton = ui.querySelector(".journey-ui__view");
+    function toggleView() {
+      view = view === "ride" ? "overview" : "ride";
+      if (!viewButton) return;
+      viewButton.textContent = view === "ride" ? "View · Ride" : "View · Overview";
+      viewButton.setAttribute("aria-pressed", String(view === "overview"));
+      viewButton.setAttribute("aria-label", view === "ride" ? "Camera view: riding. Press to switch to the overview" : "Camera view: overview. Press to switch back to riding");
+    }
+    if (viewButton) viewButton.addEventListener("click", toggleView);
+    const ride = { lastStop: startStop, back: false, turn: 0, parked: -1 };
+    const bikeAt = new THREE.Vector3(), cityFollowPos = new THREE.Vector3(), cityFollowTarget = new THREE.Vector3();
+    const cityStopPos = new THREE.Vector3(), cityStopTarget = new THREE.Vector3();
+    // Speed cap: the bike slows for bends and eases into stops (the travel controller does the rest)
+    function cityCap(roadS) {
+      const goal = stops[travel.target].roadS, home = stops[ride.lastStop].roadS;
+      return city.speedCap({ s: roadS, v: travel.v, goal, home, riding: travel.phase === "ride" });
+    }
+    // Place the bike for this frame: riding along the road, or parked at the station with the character beside it
+    function cityRide(dt, roadS, near) {
+      if (travel.phase !== "ride") ride.lastStop = travel.target;
+      // riding back to an earlier stop turns the bike round; the short roll back after an uncommitted scroll doesn't
+      if (travel.v < -0.3) ride.back = travel.target < ride.lastStop; else if (travel.v > 0.3) ride.back = false;
+      ride.turn += ((ride.back ? 1 : 0) - ride.turn) * (still ? 1 : 1 - Math.exp(-dt * 0.004));
+      const atStation = travel.phase !== "ride" && travel.distanceTo(near) < 0.05;
+      if (atStation) {
+        if (ride.parked !== near) { city.parkAt(near); ride.parked = near; }
+        bikeAt.copy(city.park.position);
+      } else {
+        if (ride.parked !== -1) { city.unpark(); ride.parked = -1; }
+        bikeAt.copy(city.poseBike(roadS, travel.v, dt / 1000, ride.turn));
+      }
+      return atStation;
+    }
+    function cityFraming(roadS, near, dt, outPos, outTarget) {
+      const facing = Math.cos(ride.turn * Math.PI);
+      framingFov = lite || window.innerWidth < 760 ? 60 : 50;
+      if (view === "overview") { city.overviewShot(roadS, facing, bikeAt, outPos, outTarget); return; }
+      city.rideShot(roadS, facing, bikeAt, dt, cityFollowPos, cityFollowTarget);
+      // the station shot takes over in the last metres before a stop and hands back within a few metres of leaving;
+      // until the bike has stopped, the look target stays partly on it so the camera never gets ahead of the rider
+      const gap = Math.abs(roadS - stops[near].roadS), leaving = (roadS - stops[near].roadS) * travel.v > 0;
+      const w = still ? (gap < 0.5 ? 1 : 0) : smoother(1 - smoothstep(0.5, leaving ? 3 : 12, gap));
+      outPos.copy(cityFollowPos); outTarget.copy(cityFollowTarget);
+      if (w > 0) {
+        city.stationShot(near, cityStopPos, cityStopTarget, window.innerWidth < window.innerHeight);
+        outPos.lerp(cityStopPos, w); outTarget.lerp(cityStopTarget, w);
+        outTarget.lerp(bikeAt, Math.min(1, gap / 6) * 0.6);
+      }
+    }
+
     // ---------- Frame loop ----------
     const camPos = new THREE.Vector3(), camTarget = new THREE.Vector3();
     const posA = new THREE.Vector3(), tgtA = new THREE.Vector3(), guidePos = new THREE.Vector3();
@@ -967,15 +1065,16 @@
       if (!still) elapsed += dt / 1000;
 
       // Travel: a far jump teleports once the guide is free; headset changes slow it to a walk; a teleport holds it
-      if (pendingJump !== null && !(explorer && explorer.busy)) {
+      if (pendingJump !== null && (cityMode || !(explorer && explorer.busy))) {
         const i = pendingJump;
         pendingJump = null;
         const jump = () => { travel.jumpTo(i, performance.now(), true); worn = wornAt(i); snapCamera = true; };
-        if (explorer) explorer.teleport(wornAt(i), jump);
+        if (explorer && !cityMode) explorer.teleport(wornAt(i), jump);
         else jump();
       }
       // (With reduced motion the guide only cuts between stops, so this just times the dwell after each cut)
-      travel.update(dt, now, explorer && explorer.busy ? (explorer.teleporting ? 0 : TRANSITION_SPEED) : TRAVEL.MAX_SPEED);
+      const roadS = cityMode ? stops[0].roadS + travel.s : 0;
+      travel.update(dt, now, cityMode ? cityCap(roadS) : explorer && explorer.busy ? (explorer.teleporting ? 0 : TRANSITION_SPEED) : TRAVEL.MAX_SPEED);
       travel.position(guidePos);
       const k = travel.k;
 
@@ -983,9 +1082,12 @@
       const near = travel.nearest;
       const seg = Math.min(last - 1, Math.floor(k));
       worn = (wornAt(seg) && wornAt(seg + 1)) || (wornAt(near) && travel.distanceTo(near) < (worn ? TAKE_OFF_DISTANCE : PUT_ON_DISTANCE));
+      const roadNear = cityMode ? stops.reduce((best, st, i) => (Math.abs(st.roadS - roadS) < Math.abs(stops[best].roadS - roadS) ? i : best), 0) : near;
+      const parked = cityMode ? cityRide(dt, cityMode ? stops[0].roadS + travel.s : 0, roadNear) : false;
 
-      // Camera: framed on the guide, eased so it never jumps
-      framing(guidePos, posA, tgtA);
+      // Camera: framed on the guide (the bike in the city), eased so it never jumps
+      if (cityMode) cityFraming(stops[0].roadS + travel.s, roadNear, dt, posA, tgtA);
+      else framing(guidePos, posA, tgtA);
       let fov = framingFov;
       if (snapCamera || still) { camPos.copy(posA); camTarget.copy(tgtA); snapCamera = false; }
       else {
@@ -1019,7 +1121,21 @@
       // Guide: the explorer animates itself where the controller puts it; the fallback robot does the same with its clips
       const here = stops[near];
       const atStop = travel.distanceTo(near) < 0.5;
-      if (explorer) {
+      if (cityMode) {
+        // City: the rider is part of the riding bike; at a station the explorer stands beside the parked bike
+        const spot = parked ? city.stationSpots(roadNear) : null;
+        if (explorer) {
+          explorer.group.visible = parked;
+          if (parked) explorer.update({
+            dt, position: spot.character, speed: 0, heading: Math.atan2(camera.position.x - spot.character.x, camera.position.z - spot.character.z),
+            wantWorn: wornAt(roadNear), presentTo: here.kind === "project" ? here.center : null, camera: camera.position
+          });
+        }
+        lightRig.position.copy(parked ? spot.character : bikeAt);
+        key.position.set(camera.position.x - lightRig.position.x - 2, 5, camera.position.z - lightRig.position.z);
+        key.target.position.set(0, 1, 0);
+        rim.position.set(-1.2, 2.4, -1.6);
+      } else if (explorer) {
         explorer.update({
           dt, position: guidePos, speed: travel.speed, heading: travel.heading(), wantWorn: worn,
           presentTo: atStop && here.kind === "project" ? here.center : null, camera: camera.position
@@ -1114,13 +1230,13 @@
         explorer.ready.catch(error => {
           console.warn("Explorer scans unavailable, using the robot guide instead.", error);
           if (explorer) { explorer.dispose(); explorer = null; }
-          loadGuide();
+          if (!cityMode) loadGuide();
         });
       } catch (error) {
         explorer = null;
       }
     }
-    if (!explorer) loadGuide();
+    if (!explorer && !cityMode) loadGuide();
     const order = screens.slice().sort((a, b) => Math.abs(a.stop - startStop) - Math.abs(b.stop - startStop));
 
     (async () => { for (const entry of order) { if (cancelled) return; await loadArtwork(entry); } })();
@@ -1152,6 +1268,8 @@
       if (soundtrack) soundtrack.dispose();
       if (guide.mixer) guide.mixer.stopAllAction();
       if (explorer) explorer.dispose();
+      if (city) city.dispose();
+      Object.assign(TRAVEL, travelDefaults);
 
       canvas.style.cursor = "";
       canvas.classList.remove("is-cutting");

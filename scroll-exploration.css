@@ -61,15 +61,16 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
 .journey-ui__brand::before{content:"";width:28px;height:1px;background:currentColor;opacity:.6}
 .journey-ui__count{color:var(--text-3);font-variant-numeric:tabular-nums}
 
-/* Sound toggle: four bars that dance while the soundtrack plays */
-.journey-ui__sound{
+/* Sound toggle (four bars that dance while the soundtrack plays) and the city's camera-view toggle */
+.journey-ui__sound,.journey-ui__view{
   display:inline-flex;align-items:center;gap:8px;min-height:30px;padding:0 12px;
   border:1px solid var(--line-soft);border-radius:var(--radius-pill);background:var(--glass);color:var(--text-2);
   font:500 .62rem/1 var(--font-mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;
   transition:border-color .25s ease,color .25s ease;
 }
-.journey-ui__sound:hover{border-color:var(--pill-border);color:var(--text-1)}
-.journey-ui__sound:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
+.journey-ui__sound:hover,.journey-ui__view:hover{border-color:var(--pill-border);color:var(--text-1)}
+.journey-ui__sound:focus-visible,.journey-ui__view:focus-visible{outline:2px solid var(--focus-ring);outline-offset:3px}
+.journey-ui__view[aria-pressed="true"]{border-color:var(--pill-border);color:var(--accent)}
 .journey-ui__eq{display:inline-flex;align-items:flex-end;gap:2px;height:12px}
 .journey-ui__eq i{width:2px;height:3px;background:var(--text-4);border-radius:1px}
 .journey-ui__sound.is-on .journey-ui__eq i{background:var(--accent);animation:journey-eq 1s ease-in-out infinite}
@@ -170,6 +171,14 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
   color:var(--text-4);font-family:var(--font-mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;
 }
 .journey-ui.has-travelled .journey-ui__hint{opacity:0}
+/* Attribution for the city model (CC BY 4.0), always visible in the city journey */
+.journey-ui__credit{
+  position:absolute;right:max(4vw,calc((100vw - 1180px)/2));bottom:54px;margin:0;
+  color:var(--text-4);font-family:var(--font-mono);font-size:.56rem;letter-spacing:.08em;
+}
+.journey-ui__credit a{color:var(--text-3);text-decoration:underline;text-decoration-color:var(--line-soft);text-underline-offset:2px}
+.journey-ui__credit a:hover{color:var(--text-1)}
+.journey-ui__credit a:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 @media(max-width:760px){
   .journey-ui__top{top:22px;left:16px}
@@ -181,7 +190,8 @@ body.home.is-archipelago .cursor-glow{visibility:hidden}
   .journey-ui__hint{display:none}
   .journey-ui__top{gap:10px}
   .journey-ui__brand::before{display:none}
-  .journey-ui__sound{padding:0 10px}
+  .journey-ui__sound,.journey-ui__view{padding:0 10px}
+  .journey-ui__credit{top:60px;bottom:auto;right:16px;left:16px;text-align:right}
   .journey-ui__sound-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
   .journey-ui__list{max-height:22vh}
   .journey-ui__chips{display:none}
