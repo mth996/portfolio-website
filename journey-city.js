@@ -7,15 +7,15 @@
 const WHEEL_R = 0.335;                            // tyre radius of the optimised bikes (m)
 const WHEELS = { front: 0.728, rear: -0.726 };    // wheel centres in the bike's own frame (m)
 // Bike handling on top of the travel controller's speed cap (its commit, settle, gesture and dwell rules are untouched)
-export const BIKE_TRAVEL = { MAX_SPEED: 13, ACCEL: 4, BRAKE: 4.5, MIN_SPEED: 1.2, MAX_LAG: 15, TELEPORT_DISTANCE: 140 };
+export const BIKE_TRAVEL = { MAX_SPEED: 18, ACCEL: 6, BRAKE: 6, MIN_SPEED: 1.5, MAX_LAG: 20, TELEPORT_DISTANCE: 140 };
 const HANDLING = {
-  LATERAL: 0.4 * 9.81,  // m/s² sideways at a corner's speed limit
-  CORNER_BRAKE: 2.0,    // m/s² of gentle braking ahead of a corner
+  LATERAL: 0.5 * 9.81,  // m/s² sideways at a corner's speed limit
+  CORNER_BRAKE: 3.0,    // m/s² of braking ahead of a corner
   HOLD: 8,              // metres either side over which a bend's lowest limit holds
-  STOP_BRAKE: 2.5,      // m/s² of braking into a stop
-  STOP_FLOOR: 0.8,      // m/s the stop curve never goes below
-  LOOK: 1.0,            // s: no speeding up if the stop curve would need braking within this time
-  SETTLE_BACK: 2.5      // m/s rolling back to the stop it left after an uncommitted scroll
+  STOP_BRAKE: 3.5,      // m/s² of braking into a stop
+  STOP_FLOOR: 1.0,      // m/s the stop curve never goes below
+  LOOK: 0.8,            // s: no speeding up if the stop curve would need braking within this time
+  SETTLE_BACK: 3.0      // m/s rolling back to the stop it left after an uncommitted scroll
 };
 // Cameras: riding (behind and above), station (from the route data), overview (high above, behind)
 const OVERVIEW = { back: 26, up: 22, ahead: 14 };
@@ -229,8 +229,8 @@ export function createCity({ THREE, assets, scene, renderer, ink, neon, lite }) 
     const st = route.stops[i], f = frameAt(st.s);
     return {
       bike: new THREE.Vector3(st.bike[0], f.pos.y, st.bike[1]), heading: Math.atan2(f.fwd.x, f.fwd.z),
-      character: new THREE.Vector3(st.character[0], f.pos.y, st.character[1]),
-      display: st.display ? new THREE.Vector3(st.display.x, f.pos.y + (st.display.y0 + st.display.y1) / 2, st.display.z) : null
+      character: new THREE.Vector3(st.character[0], (st.characterY ?? f.pos.y) + 0.02, st.character[1]),
+      display: st.display ? new THREE.Vector3(st.display.x, f.pos.y + st.display.y0 + (st.display.y1 - st.display.y0) * (st.display.scale || 1) / 2, st.display.z) : null
     };
   }
   function parkAt(i) {
@@ -242,26 +242,62 @@ export function createCity({ THREE, assets, scene, renderer, ink, neon, lite }) 
 
   // ---------- Camera shots ----------
   const VARIANTS = route.cameraVariants;
+  // Riding styles [back, side, up, look ahead]: chase, low side (right), high crane, front three-quarter looking back at
+  // the rider, low side (left). Each is used only where it was checked clear of the city, with a clear view of the
+  // rider, for 6 m either side (route data, bit k of the sample's mask); elsewhere the chase (or corner) shot is used.
+  const STYLES = route.shotStyles || [[8.5, -1.6, 3.1, 7]];
+  const SEQUENCE = [0, 1, 3, 2, 4, 3, 1, 2];
   const fE = {};
   // Riding: behind and above the bike, looking down the road. Where the usual spot would sit inside a building or lose
   // sight of the rider (checked offline for every metre), the shot swings to the inside of the turn and moves in;
   // `blend` eases between the variants so the change is never a cut.
-  const camBlend = { back: VARIANTS[0][0], side: VARIANTS[0][1], up: VARIANTS[0][2] };
-  function rideShot(s, facing, bike, dt, outPos, outTarget) {
+  const camBlend = { back: VARIANTS[0][0], side: VARIANTS[0][1], up: VARIANTS[0][2], look: 7 };
+  // leg: index of the stop the bike left; progress 0 → 1 along that leg. The style changes per leg and again halfway
+  // along long legs; changes blend over about half a second.
+  function rideShot(s, facing, bike, dt, outPos, outTarget, leg = 0, progress = 0, legLength = 0) {
     frameAt(s, fE);
-    const vr = VARIANTS[fE.cam] || VARIANTS[0], k = 1 - Math.exp(-dt * 0.004);
-    camBlend.back += (vr[0] - camBlend.back) * k; camBlend.side += (vr[1] - camBlend.side) * k; camBlend.up += (vr[2] - camBlend.up) * k;
+    const mask = R[Math.max(0, Math.min(last, Math.round(s)))][5] ?? 1;
+    let want = SEQUENCE[(leg * 2 + (legLength > 60 && progress > 0.5 ? 1 : 0)) % SEQUENCE.length];
+    if (facing < 0.5 || fE.cam !== 0 || !(mask & (1 << want)) || !STYLES[want]) want = 0;
+    const style = want === 0 ? [...(VARIANTS[fE.cam] || VARIANTS[0]), 7] : STYLES[want];
+    const k = 1 - Math.exp(-dt * 0.0035);
+    camBlend.back += (style[0] - camBlend.back) * k; camBlend.side += (style[1] - camBlend.side) * k;
+    camBlend.up += (style[2] - camBlend.up) * k; camBlend.look += (style[3] - camBlend.look) * k;
     const f = fE.fwd.clone().multiplyScalar(facing), r = fE.right.clone().multiplyScalar(facing);
     outPos.copy(bike).addScaledVector(f, -camBlend.back).addScaledVector(r, camBlend.side); outPos.y = bike.y + camBlend.up;
-    // look further ahead the faster the bike goes is handled by the caller's damping; aim 7 m down the road
-    frameAt(s + 7 * facing, fA);
-    outTarget.copy(fA.pos).addScaledVector(fA.right, lane(fA.width)); outTarget.y = bike.y + 1.3;
+    // aim down the road (the front shot looks back at the rider)
+    frameAt(s + camBlend.look * facing, fA);
+    outTarget.copy(fA.pos).addScaledVector(fA.right, lane(fA.width)).lerp(bike, Math.max(0, 1 - camBlend.look / 4)); outTarget.y = bike.y + 1.1 + camBlend.look * 0.03;
   }
-  // Station: the arrival shot from the route data, framing the bike, the character and the display together
-  function stationShot(i, outPos, outTarget, portrait = false) {
-    const c = route.stops[i].camera;
+  // Station: the arrival shot from the route data (behind the stop, checked clear of the city with a view of the card,
+  // the character head to feet and the bike), fitted to the screen: at project stops it aims between the card and the
+  // character and moves along that line to the closest spot (from 0.55 to 1.6 times the checked distance) where the
+  // whole card, the character and the parked bike fit in the frame, so the card is as large as it can be
+  const fitCache = new Map(), probe = new THREE.PerspectiveCamera(50, 1, 0.1, 200), pt = new THREE.Vector3();
+  function stationShot(i, outPos, outTarget, portrait = false, fov = 50, aspect = 16 / 9) {
+    const st = route.stops[i], c = st.camera;
     outPos.set(c.pos[0], c.pos[1], c.pos[2]); outTarget.set(c.target[0], c.target[1], c.target[2]);
-    if (portrait) outPos.lerp(outTarget, -0.35);   // narrow screens: step back so the display still fits across
+    if (st.kind !== "project" || !st.display) { if (portrait) outPos.lerp(outTarget, -0.35); return; }
+    const key = i + ":" + fov.toFixed(1) + ":" + aspect.toFixed(2);
+    let fit = fitCache.get(key);
+    if (!fit) {
+      const spots = stationSpots(i), d = st.display, y = spots.character.y;
+      const along = new THREE.Vector3(-d.nz, 0, d.nx);
+      const k = d.scale || 1, H = (d.y1 - d.y0) * k, W = d.w * k;
+      const pts = [-1, 1].flatMap(sg => [d.y0, d.y0 + H].map(h => spots.display.clone().setY(y + h).addScaledVector(along, sg * W / 2)));
+      pts.push(spots.character.clone().setY(y + 1.9), spots.character.clone().setY(y), spots.bike.clone().setY(y + 1.2), spots.bike.clone());
+      const target = spots.display.clone().setY(y + d.y0 + H / 2).lerp(spots.character.clone().setY(y + 0.9), 0.45);
+      const dir = outPos.clone().sub(target), base = dir.length(); dir.normalize();
+      probe.fov = fov; probe.aspect = aspect; probe.updateProjectionMatrix();
+      let dist = base * 0.55;
+      for (; dist <= base * 1.6; dist += 0.5) {
+        probe.position.copy(target).addScaledVector(dir, dist); probe.lookAt(target); probe.updateMatrixWorld();
+        if (pts.every(p => { pt.copy(p).project(probe); return Math.abs(pt.x) < 0.92 && pt.y < 0.9 && pt.y > -0.92 && pt.z < 1; })) break;
+      }
+      fit = { pos: target.clone().addScaledVector(dir, Math.min(dist, base * 1.6)), target };
+      fitCache.set(key, fit);
+    }
+    outPos.copy(fit.pos); outTarget.copy(fit.target);
   }
   // Overview: high above and behind the bike, looking ahead over the city
   function overviewShot(s, facing, bike, outPos, outTarget) {

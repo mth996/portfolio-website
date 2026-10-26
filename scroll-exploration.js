@@ -126,7 +126,7 @@
         import("./journey-audio.js?v=1").catch(() => null),
         import("./journey-explorer.js?v=2").catch(() => null),
         import("./journey-travel.js?v=10"),
-        import("./journey-city.js?v=1").catch(() => null)
+        import("./journey-city.js?v=2").catch(() => null)
       ]);
       // The city world: its model, bikes and route; any failure falls back to the grid journey
       let cityAssets = null;
@@ -232,7 +232,8 @@
     const CARD_TURN = 0.44;      // cards turn ~25° toward the path
     const CARD_LIFT = 2.2;       // card bottom edge: always above the guide's head (1.9 m)
     const GUIDE_OFFSET = 0.8;    // the guide stands this far across the path from the active card
-    const cardSize = stop => stop.poster ? [3.5, 4.66] : [6.4, 3.6];
+    // (in the city a card may be enlarged where its spot has room: stop.cardScale from the route data)
+    const cardSize = stop => (stop.poster ? [3.5, 4.66] : [6.4, 3.6]).map(v => v * (stop.cardScale || 1));
     const stops = [
       { kind: "intro" },
       ...projects.map(p => ({ kind: "project", ...p })),
@@ -266,6 +267,7 @@
       stop.rotY = d ? Math.atan2(d.nx, d.nz) : Math.atan2(-road.fwd.x, -road.fwd.z);
       stop.normal = new THREE.Vector3(Math.sin(stop.rotY), 0, Math.cos(stop.rotY));
       const base = road.pos.y;
+      if (d && d.scale) stop.cardScale = d.scale;
       if (stop.kind === "project") { const [, h] = cardSize(stop); stop.center = new THREE.Vector3(d.x, base + CARD_LIFT + h / 2, d.z); stop.side = -d.side; }
       else stop.center = new THREE.Vector3(d ? d.x : road.pos.x, base + (stop.kind === "intro" || stop.kind === "outro" ? 3.6 : 3.4), d ? d.z : road.pos.z);
     });
@@ -482,6 +484,8 @@
     }
     const floaters = [];
     const orbiters = [];
+    // Experience cards and publication pages grow and come forward when hovered (or tapped on touch screens)
+    const zoomables = [];
     stops.forEach(stop => {
       const c = stop.center;
       // Each section station is built around its own centre and turned to face the road (in the grid, straight on)
@@ -534,6 +538,7 @@
             card.position.set(focus.x + Math.sin(angle) * radius, rowIndex ? 1.7 : 4.15, focus.z - Math.cos(angle) * radius);
             card.rotation.y = -angle;
             holder.add(card);
+            zoomables.push({ mesh: card, base: card.position.clone(), zoom: 0 });
             floaters.push({ obj: card, baseY: card.position.y, phase: n + rowIndex * 3 });
           });
         });
@@ -552,6 +557,7 @@
           page.position.set(offset * 3.9, c.y, -Math.abs(offset) * 1.2);
           page.rotation.set(0, -offset * 0.28, offset * 0.03);
           holder.add(page);
+          zoomables.push({ mesh: page, base: page.position.clone(), zoom: 0 });
           floaters.push({ obj: page, baseY: c.y, phase: n * 1.7 });
         });
       }
@@ -835,8 +841,16 @@
       panel.classList.add("is-changing");
       clearTimeout(panelTimer);
       panelTimer = setTimeout(() => {
-        // The panel sits on the active card's side of the screen; the guide has the other side
-        panel.classList.toggle("journey-ui__panel--right", stop.kind === "project" && stop.side > 0);
+        // The panel sits on the active card's side of the screen; the guide has the other side. In the city the
+        // panel goes on the side of the arrival shot away from the character, so the rider stays in view
+        let right = stop.kind === "project" && stop.side > 0;
+        if (cityMode && stop.kind === "project") {
+          const probe = new THREE.PerspectiveCamera(framingFov, camera.aspect, 0.1, 200), shotPos = new THREE.Vector3(), shotTarget = new THREE.Vector3();
+          city.stationShot(i, shotPos, shotTarget, window.innerWidth < window.innerHeight, framingFov, camera.aspect);
+          probe.position.copy(shotPos); probe.lookAt(shotTarget); probe.updateMatrixWorld();
+          right = city.stationSpots(i).character.clone().project(probe).x < 0.1;
+        }
+        panel.classList.toggle("journey-ui__panel--right", right);
         panel.innerHTML = panelHtml(stop);
         panel.querySelector("[data-exit]")?.addEventListener("click", () => exit());
         panel.querySelector("[data-goto]")?.addEventListener("click", event => exit(event.currentTarget.dataset.goto));
@@ -925,25 +939,32 @@
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const parallax = { x: 0, y: 0 };
-    let hovered = null;
-    function pick(event) {
+    let hovered = null;       // a project screen under the pointer
+    let hoveredCard = null;   // an Experience card or publication page under the pointer (or tapped)
+    function pickAt(event) {
       pointer.set((event.clientX / window.innerWidth) * 2 - 1, -(event.clientY / window.innerHeight) * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
-      const hit = raycaster.intersectObjects(screens.map(s => s.screen), false)[0];
-      return hit ? screens.find(s => s.screen === hit.object) : null;
+      const hit = raycaster.intersectObjects([...screens.map(s => s.screen), ...zoomables.map(z => z.mesh)], false)[0];
+      if (!hit) return {};
+      return { screen: screens.find(s => s.screen === hit.object) || null, card: zoomables.find(z => z.mesh === hit.object) || null };
     }
+    const pick = event => pickAt(event).screen;
     function onPointerMove(event) {
       parallax.x = (event.clientX / window.innerWidth - 0.5) * 2;
       parallax.y = (event.clientY / window.innerHeight - 0.5) * 2;
       if (coarsePointer.matches) return;
-      hovered = pick(event);
-      canvas.style.cursor = hovered ? "pointer" : "";
+      const hit = pickAt(event);
+      hovered = hit.screen || null;
+      hoveredCard = hit.card || null;
+      canvas.style.cursor = hovered || hoveredCard ? "pointer" : "";
     }
     function onCanvasClick(event) {
-      const hit = pick(event);
-      if (!hit) return;
-      if (hit.stop === shownStop) window.location.assign(projectLink(stops[hit.stop]));
-      else goTo(hit.stop);
+      const hit = pickAt(event);
+      // touch screens have no hover: a tap enlarges a card, another tap shrinks it
+      if (hit.card) { hoveredCard = hoveredCard === hit.card ? null : hit.card; return; }
+      if (!hit.screen) { if (coarsePointer.matches) hoveredCard = null; return; }
+      if (hit.screen.stop === shownStop) window.location.assign(projectLink(stops[hit.screen.stop]));
+      else goTo(hit.screen.stop);
     }
 
     // ---------- Sound ----------
@@ -1036,14 +1057,15 @@
       const facing = Math.cos(ride.turn * Math.PI);
       framingFov = lite || window.innerWidth < 760 ? 60 : 50;
       if (view === "overview") { city.overviewShot(roadS, facing, bikeAt, outPos, outTarget); return; }
-      city.rideShot(roadS, facing, bikeAt, dt, cityFollowPos, cityFollowTarget);
+      const from = stops[ride.lastStop].roadS, to = stops[travel.target].roadS, legLength = Math.abs(to - from);
+      city.rideShot(roadS, facing, bikeAt, dt, cityFollowPos, cityFollowTarget, Math.min(ride.lastStop, travel.target), legLength > 0 ? Math.abs(roadS - from) / legLength : 0, legLength);
       // the station shot takes over in the last metres before a stop and hands back within a few metres of leaving;
       // until the bike has stopped, the look target stays partly on it so the camera never gets ahead of the rider
       const gap = Math.abs(roadS - stops[near].roadS), leaving = (roadS - stops[near].roadS) * travel.v > 0;
       const w = still ? (gap < 0.5 ? 1 : 0) : smoother(1 - smoothstep(0.5, leaving ? 3 : 12, gap));
       outPos.copy(cityFollowPos); outTarget.copy(cityFollowTarget);
       if (w > 0) {
-        city.stationShot(near, cityStopPos, cityStopTarget, window.innerWidth < window.innerHeight);
+        city.stationShot(near, cityStopPos, cityStopTarget, window.innerWidth < window.innerHeight, framingFov, camera.aspect);
         outPos.lerp(cityStopPos, w); outTarget.lerp(cityStopTarget, w);
         outTarget.lerp(bikeAt, Math.min(1, gap / 6) * 0.6);
       }
@@ -1060,7 +1082,7 @@
     let lastDwellTick = null;
     function draw(now) {
       frame = requestAnimationFrame(draw);
-      const dt = Math.min(64, now - lastTime);
+      const dt = Math.max(0, Math.min(64, now - lastTime));   // never negative, never more than 64 ms
       lastTime = now;
       if (!still) elapsed += dt / 1000;
 
@@ -1126,6 +1148,7 @@
         const spot = parked ? city.stationSpots(roadNear) : null;
         if (explorer) {
           explorer.group.visible = parked;
+          if (parked && explorerLift) explorerLift.position.y = cityMode ? spot.character.y : 0;
           if (parked) explorer.update({
             dt, position: spot.character, speed: 0, heading: Math.atan2(camera.position.x - spot.character.x, camera.position.z - spot.character.z),
             wantWorn: wornAt(roadNear), presentTo: here.kind === "project" ? here.center : null, camera: camera.position
@@ -1192,8 +1215,20 @@
         const a = o.angle + (still ? 0 : t * 0.16);
         o.sprite.position.set(o.center.x + Math.cos(a) * o.radius, o.center.y + o.lift + Math.sin(a * 2) * 0.25, o.center.z + Math.sin(a) * o.radius * 0.55);
       });
+      const zoomEase = still ? 1 : 1 - Math.exp(-dt * 0.012);
+      zoomables.forEach(z => {
+        z.zoom += ((hoveredCard === z ? 1 : 0) - z.zoom) * zoomEase;
+        // grow and step forward along the card's own facing so it rises above its neighbours
+        const sc = 1 + z.zoom * 0.45, ry = z.mesh.rotation.y;
+        z.mesh.scale.setScalar(sc);
+        z.mesh.position.x = z.base.x + Math.sin(ry) * z.zoom * 1.2;
+        z.mesh.position.z = z.base.z + Math.cos(ry) * z.zoom * 1.2;
+        z.mesh.renderOrder = z.zoom > 0.01 ? 3 : 0;
+      });
       screens.forEach((s, n) => {
         const focus = Math.max(0, 1 - Math.abs(k - s.stop));
+        s.zoom = (s.zoom || 0) + ((hovered === s ? 1 : 0) - (s.zoom || 0)) * zoomEase;
+        s.group.scale.setScalar(1 + s.zoom * 0.18);
         s.group.position.y = s.baseY + (still ? 0 : Math.sin(t * 0.7 + n) * 0.08);
         // Focus and hover only lift the border slightly; it stays below the bloom threshold
         s.frame.material.color.copy(stops[s.stop].color).multiplyScalar(CARD_EDGE + focus * 0.25 + (hovered === s ? 0.2 : 0));
@@ -1215,6 +1250,7 @@
     showStop(startStop);
     // Guide: the explorer scans (journey-explorer.js); the robot steps in if they can't load
     let explorer = null;
+    let explorerLift = null;
     if (explorerModule) {
       try {
         explorer = explorerModule.createExplorer({
@@ -1226,7 +1262,10 @@
             else if (type === "arrive" || type === "headset-on-done" || type === "headset-off-done") soundtrack.chime();
           }
         });
-        scene.add(explorer.group);
+        // in the city the explorer stands on the road surface, which is above y = 0 in places
+        explorerLift = new THREE.Group();
+        explorerLift.add(explorer.group);
+        scene.add(explorerLift);
         explorer.ready.catch(error => {
           console.warn("Explorer scans unavailable, using the robot guide instead.", error);
           if (explorer) { explorer.dispose(); explorer = null; }
